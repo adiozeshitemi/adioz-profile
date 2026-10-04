@@ -12,10 +12,24 @@ Inside of your Astro project, you'll see the following folders and files:
 
 ```text
 /
+adioz-dev/
 ├── public/
+│   ├── favicon.svg
+│   └── _headers            <-- Edge security headers
 ├── src/
+│   ├── components/         <-- Reusable UI components
+│   │   ├── Header.astro
+│   │   ├── Hero.astro
+│   │   ├── SystemsGrid.astro
+│   │   ├── ProjectCard.astro
+│   │   └── Footer.astro
+│   ├── content/            <-- Markdown/MDX content collections
+│   │   └── projects/
+│   ├── layouts/
+│   │   └── Layout.astro    <-- Base HTML, metadata, and SEO
 │   └── pages/
-│       └── index.astro
+│       └── index.astro     <-- Main entry page
+├── astro.config.mjs
 └── package.json
 ```
 
