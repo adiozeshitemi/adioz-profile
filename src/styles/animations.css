@@ -13,30 +13,46 @@
 
   /* Background mesh blobs drifting between two positions */
   @keyframes mesh-drift-1 {
-    to { transform: translate3d(120px, 90px, 0) scale(1.15); }
+    to {
+      transform: translate3d(120px, 90px, 0) scale(1.15);
+    }
   }
   @keyframes mesh-drift-2 {
-    to { transform: translate3d(-140px, 120px, 0) scale(1.1); }
+    to {
+      transform: translate3d(-140px, 120px, 0) scale(1.1);
+    }
   }
   @keyframes mesh-drift-3 {
-    to { transform: translate3d(90px, -110px, 0) scale(1.2); }
+    to {
+      transform: translate3d(90px, -110px, 0) scale(1.2);
+    }
   }
 
   /* Expanding ring around the availability status dot */
   @keyframes status-ping {
-    0% { box-shadow: 0 0 0 0 rgb(52 211 153 / 0.55); }
-    70% { box-shadow: 0 0 0 9px rgb(52 211 153 / 0); }
-    100% { box-shadow: 0 0 0 0 rgb(52 211 153 / 0); }
+    0% {
+      box-shadow: 0 0 0 0 rgb(52 211 153 / 0.55);
+    }
+    70% {
+      box-shadow: 0 0 0 9px rgb(52 211 153 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(52 211 153 / 0);
+    }
   }
 
   /* Gradient sweep across text whose background-size is 200% */
   @keyframes text-shine {
-    to { background-position: 200% center; }
+    to {
+      background-position: 200% center;
+    }
   }
 
   /* Terminal caret visibility toggle */
   @keyframes caret-blink {
-    50% { opacity: 0; }
+    50% {
+      opacity: 0;
+    }
   }
 }
 

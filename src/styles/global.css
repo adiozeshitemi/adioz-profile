@@ -38,7 +38,11 @@
   }
 
   ::selection {
-    background-color: color-mix(in srgb, var(--color-accent-cyan) 28%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--color-accent-cyan) 28%,
+      transparent
+    );
     color: #fff;
   }
 
