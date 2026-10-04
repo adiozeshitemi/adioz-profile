@@ -15,10 +15,12 @@ Full-stack AI engineer with 8 years of experience in backend systems and web app
 
 ## 🚀 Key Features
 
-- **Data-Driven Design**: Content is entirely decoupled from the UI. The `src/data` directory acts as a mock database and is the only place numbers such as headline metrics live.
-- **API-Ready**: By utilizing TypeScript interfaces (`types.ts`), swapping the local JSON imports for a `fetch()` call to a backend API requires changing only a few lines in `index.astro`.
-- **Modular Components**: Every section of the site (Hero, Tech Stack, Experience) is isolated into its own directory within `src/components`, making updates and testing straightforward.
-- **Zero-JS by Default**: Leveraging Astro's architecture, the site ships static HTML and CSS; small scripts load only where interaction needs them (mobile menu, terminal, scroll effects).
+- **Static by Default**: Astro pre-renders the site to static HTML and CSS; no client-side JavaScript ships.
+- **Design Tokens in CSS**: Tailwind CSS v4 is configured in `src/styles/theme.css` with an `@theme` block (colors, fonts, radius, page width, easing and breakpoints); there is no `tailwind.config.*` file.
+- **Self-Hosted Fonts**: Montserrat and JetBrains Mono variable fonts are served from `public/fonts/`.
+- **Strict TypeScript**: `tsconfig.json` extends `astro/tsconfigs/strict` and defines path aliases (`@components/*`, `@layouts/*`, `@styles/*`, `@data/*`, `@utils/*`).
+- **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
+- **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, type-checks and builds on pull requests into `main`.
 
 ## 📚 Documentation
 
@@ -34,6 +36,8 @@ For a detailed breakdown of the project's layout and design philosophy, please r
 - [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff&style=for-the-badge)](https://www.typescriptlang.org/)
 
 ## 🔧 Getting Started
+
+Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24.
 
 1. **Clone the repository**
 
@@ -68,6 +72,12 @@ For a detailed breakdown of the project's layout and design philosophy, please r
 
    ```bash
    npm run preview
+   ```
+
+6. **Check formatting** (`npm run format` applies fixes)
+
+   ```bash
+   npm run format:check
    ```
 
 ## 📝 License

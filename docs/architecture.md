@@ -2,7 +2,7 @@
 
 ## Overview
 
-This portfolio is engineered as a high-performance, statically generated site using Astro. The core architectural philosophy is **strict decoupling of data from presentation**: the site renders from a typed data layer that starts as local JSON and is later served by a backend API, so the data source can change without touching the UI. This keeps the system maintainable, resource-efficient, and ready for seamless scaling and integrations.
+This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS, and no client-side JavaScript ships.
 
 ## Architecture Flow
 
@@ -10,69 +10,49 @@ This portfolio is engineered as a high-performance, statically generated site us
 flowchart LR
     %% Define invisible styling for subgraphs to remove backgrounds and borders
     classDef transparent fill:none,stroke:none;
-    classDef planned stroke-dasharray: 5 5;
 
-    subgraph DataLayer ["🗄️ Data Layer"]
+    subgraph Src ["📁 src/"]
         direction TB
-        API["Backend API (planned)"]
-        JSON[JSON Data Files]
-        Types[TypeScript Interfaces]
+        Styles["styles/ (theme, animations, global)"]
+        Layout["layouts/Layout.astro"]
+        Hero["components/Hero.astro"]
+        Page["pages/index.astro"]
     end
 
-    subgraph PresentationLayer ["🧩 Presentation Layer"]
-        direction TB
-        UI[UI Primitives]
-        Feature[Feature Sections]
-    end
-
-    subgraph AppShell ["📄 Routing & App Shell"]
-        direction TB
-        Layout[Layouts]
-        Pages[Pages / Routing]
-    end
-
-    API -.->|Replaces| JSON
-    JSON -.->|Type-checked by| Types
-    JSON ==>|Consumed by| Feature
-    UI ==>|Composed into| Feature
-    Feature ==>|Rendered in| Pages
-    Layout ==>|Wraps| Pages
-
-    Pages ==>|Astro Build| Static["⚡ Static HTML/CSS (Zero JS by default)"]
+    Styles ==>|Imported by| Layout
+    Layout ==>|Wraps| Page
+    Hero ==>|Rendered in| Page
+    Page ==>|astro check, astro build| Dist["⚡ dist/ (static HTML/CSS)"]
+    Public["🌍 public/ (fonts, images, favicons, resume)"] ==>|Copied as-is| Dist
 
     %% Apply transparent class to subgraphs
-    class DataLayer,PresentationLayer,AppShell transparent;
-    class API planned;
+    class Src transparent;
 ```
 
-## 1. The Data Layer (Content Decoupling)
+## 1. Pages and Components
 
-All portfolio content (experience, projects, skills, contact info) is isolated in [data directory](../src/data) as JSON files.
+- **`src/pages/index.astro`**: The only route (`/`). It renders `Hero` inside `Layout`.
+- **`src/layouts/Layout.astro`**: The HTML shell: `title` and `description` props with defaults, Open Graph tags, the SVG favicon, and the `global.css` import.
+- **`src/components/Hero.astro`**: The hero section: availability badge, headline, role, summary, and email and GitHub links.
 
-- **Why?** It acts as a mock API. By utilizing TypeScript interfaces (`types.ts`), the application enforces a strict schema for all content.
-- **Single Source of Numbers:** Headline metrics (years of experience, throughput, uptime, latency) live only in `src/data/stats.json`. Components, docs, and the README never restate them.
-- **Migration Ready:** Each JSON file has the shape of the planned backend API's response, so swapping local JSON for the API requires zero component changes. You simply update the data-fetching logic in the parent pages.
+## 2. Styling
 
-## 2. Component Hierarchy
+Tailwind CSS v4 runs through the `@tailwindcss/vite` plugin registered in `astro.config.mjs`; there is no `tailwind.config.*` file.
 
-The UI is built using a modular, composition-based approach:
+- **`src/styles/theme.css`**: Design tokens in an `@theme` block (colors, fonts, radius, page width, easing, breakpoints). Each token is a CSS variable on `:root` and drives a Tailwind utility.
+- **`src/styles/animations.css`**: Keyframes exposed as `animate-*` utilities, the `[data-reveal]` scroll transition, and reduced-motion rules.
+- **`src/styles/global.css`**: Imports Tailwind and both files above, declares `@font-face` rules for the self-hosted fonts, and sets base element styles.
 
-- **Layouts (`src/layouts/`)**: Global shells handling meta tags, fonts, and global CSS.
-- **UI Primitives (`src/components/UI/`)**: Dumb, reusable components (Buttons, Badges, Cards) that accept props and emit UI. No business logic.
-- **Feature Sections (`src/components/*/`)**: Smart components (e.g., `ExperienceSection`, `ProjectsSection`) that consume the data layer and orchestrate UI primitives. The Hero terminal prints scripted lines from the data layer and keeps its input and output in one component, which later becomes the client for the live chat tool.
+## 3. Static Assets
 
-## 3. Performance & Rendering
+`public/` is served as-is: the self-hosted Montserrat and JetBrains Mono variable fonts with their licenses, the avatar and Open Graph image, the SVG and ICO favicons, and the resume PDF.
 
-In alignment with resource-aware engineering:
+## 4. Rendering
 
-- **Zero-JS by Default:** Astro ships zero client-side JavaScript by default. Interactions are handled via standard HTML/CSS where possible; small scripts (Astro islands) cover only the mobile menu, the terminal, and scroll effects CSS cannot express, and all content stays readable with JavaScript disabled.
-- **Build-Time Generation (SSG):** The site is pre-rendered into static HTML/CSS during the build step, eliminating server-side rendering latency and reducing hosting compute requirements to zero.
+The site is pre-rendered at build time (SSG). `npm run build` runs `astro check` (strict TypeScript) and then `astro build`, writing static HTML and CSS to `dist/`.
 
-## 4. Styling Strategy
+## 5. Tooling
 
-Global design tokens, CSS resets, and Tailwind CSS v4 entry points live in `src/styles/`, while component-specific styles are scoped locally within `.astro` files. Tailwind v4 is configured in CSS: fonts, colors, and breakpoints are declared in an `@theme` block in `theme.css`, which `global.css` imports, and there is no `tailwind.config.*` file. This prevents global CSS leakage and bloat, ensuring that only the CSS required for the rendered page is shipped to the client.
-
-## 5. Planned Services
-
-- **Backend API:** A service on a small VPS (Docker + Caddy) serves realistic portfolio data and replaces the JSON files in the data layer.
-- **Terminal Chat:** The Hero terminal connects to that service and becomes a real chat tool.
+- **Formatting:** Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
+- **CI:** `.github/workflows/ci.yml` runs the format check, type check and build on pull requests into `main`, and other workflows can call it.
+- **Wrangler:** `wrangler.toml` configures the `adioz-dev` Cloudflare Worker to serve `dist/` as static assets; `npx wrangler dev` serves the build locally.
