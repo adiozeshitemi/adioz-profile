@@ -4,6 +4,10 @@ The directories and files currently in the repository.
 
 ```text
 adioz-dev/
+├── .github/
+│   └── workflows/
+│       └── ci.yml             # Quality gate: format check, type check and build
+│
 ├── .vscode/
 │   ├── extensions.json        # Recommended editor extensions (Astro)
 │   └── launch.json            # Dev server launch configuration
