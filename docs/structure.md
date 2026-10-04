@@ -37,14 +37,19 @@ adioz-dev/
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
 │       └── theme.css          # Design tokens (@theme)
 │
+├── .editorconfig              # Editor encoding, line endings and indentation
 ├── .gitignore
+├── .nvmrc                     # Node.js version (24)
+├── .prettierignore            # Files Prettier skips
+├── .prettierrc                # Prettier config (Astro plugin)
 ├── AGENTS.md                  # Agent instructions
 ├── astro.config.mjs           # ⚙️ Astro config (Tailwind Vite plugin)
 ├── CLAUDE.md                  # Symlink to AGENTS.md
 ├── package-lock.json
 ├── package.json               # 📦 Dependencies and scripts
 ├── README.md
-└── tsconfig.json              # 🦕 Strict TypeScript with path aliases
+├── tsconfig.json              # 🦕 Strict TypeScript with path aliases
+└── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/)
 ```
 
-Not listed: generated or ignored directories (`node_modules/`, `dist/`, `.astro/`) and `_`-prefixed prototype files.
+Not listed: generated or ignored directories (`node_modules/`, `dist/`, `.astro/`, `.wrangler/`) and `_`-prefixed prototype files.
