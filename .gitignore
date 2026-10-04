@@ -22,3 +22,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# local prototype files
+/_roadmap.md
+/_test.html
+/docs/_structure.md
