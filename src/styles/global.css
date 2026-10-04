@@ -1,1 +1,68 @@
 @import "tailwindcss";
+@import "./theme.css";
+@import "./animations.css";
+
+/*
+ * Self-hosted variable fonts served from public/fonts/. While a file is loading
+ * or missing, text renders in the fallback stacks of --font-sans and --font-mono.
+ */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter-variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-variable.woff2") format("woff2");
+}
+
+/* Base element styles that Tailwind's preflight does not set. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-accent-cyan) 28%, transparent);
+    color: #fff;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-canvas);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1c2130;
+    border: 2px solid var(--color-canvas);
+    border-radius: 99px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2a3145;
+  }
+}
