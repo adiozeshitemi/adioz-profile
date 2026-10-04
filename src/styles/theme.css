@@ -6,7 +6,9 @@
  */
 @theme static {
   /* Typography: Montserrat for all text; JetBrains Mono for the hero terminal only */
-  --font-sans: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans:
+    "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Surfaces */
@@ -31,7 +33,7 @@
   --color-success: #34d399;
 
   /* Shape and layout */
-  --radius-card: 1.125rem;    /* 18px */
+  --radius-card: 1.125rem; /* 18px */
   --container-page: 73.75rem; /* 1180px content width */
 
   /* Motion */
@@ -39,6 +41,6 @@
 
   /* Layout breakpoints (min-width): xs 420px, md 760px, lg 1040px */
   --breakpoint-xs: 26.25rem; /* 420px */
-  --breakpoint-md: 47.5rem;  /* 760px */
-  --breakpoint-lg: 65rem;    /* 1040px */
+  --breakpoint-md: 47.5rem; /* 760px */
+  --breakpoint-lg: 65rem; /* 1040px */
 }
