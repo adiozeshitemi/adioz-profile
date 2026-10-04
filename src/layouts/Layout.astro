@@ -13,7 +13,7 @@ const {
 ---
 
 <!doctype html>
-<html lang="en" class="dark scroll-smooth">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,16 +28,8 @@ const {
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://adioz.dev" />
-
-    <!-- Preconnect / Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
   </head>
-  <body class="bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-emerald-500/20 selection:text-emerald-400 min-h-screen flex flex-col justify-between">
+  <body class="min-h-screen flex flex-col justify-between">
     <slot />
   </body>
 </html>
