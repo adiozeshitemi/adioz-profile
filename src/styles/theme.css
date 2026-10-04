@@ -5,8 +5,8 @@
  * --container-* (max-w-*), --ease-* (ease-*) and --breakpoint-* (md:, max-md:, ...).
  */
 @theme static {
-  /* Typography */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Typography: Montserrat for all text; JetBrains Mono for the hero terminal only */
+  --font-sans: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Surfaces */

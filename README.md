@@ -1,57 +1,71 @@
-# Astro Starter Kit: Minimal
+# Adioz - The Full-stack AI engineer Portfolio
 
-```sh
-npm create astro@latest -- --template minimal
-```
+## Professional Summary
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+<table>
+<tr>
+<td valign="top">
+<img src="public/images/profile_pic.svg" alt="Adioz" height="179" style="border-radius: 12px;" />
+</td>
+<td width="560" valign="top">
+Full-stack AI engineer with 8 years of experience in backend systems and web applications. Takes AI into production for enterprise clients and owns each system from design to support. Builds tool-using agents that make real and auditable changes. Trains and distils models on GPU, then serves them on CPU. Believes AI should be as efficient as it is intelligent, so designs resource-aware AI: small, quantized models that meet tight latency budgets without wasted compute. Treats agents as production software, with typed tools, fail-closed guardrails and a named operator behind every change.
+</td>
+</tr>
+</table>
 
-## 🚀 Project Structure
+## 🚀 Key Features
 
-Inside of your Astro project, you'll see the following folders and files:
+* **Data-Driven Design**: Content is entirely decoupled from the UI. The `src/data` directory acts as a mock database and is the only place numbers such as headline metrics live.
+* **API-Ready**: By utilizing TypeScript interfaces (`types.ts`), swapping the local JSON imports for a `fetch()` call to a backend API requires changing only a few lines in `index.astro`.
+* **Modular Components**: Every section of the site (Hero, Tech Stack, Experience) is isolated into its own directory within `src/components`, making updates and testing straightforward.
+* **Zero-JS by Default**: Leveraging Astro's architecture, the site ships static HTML and CSS; small scripts load only where interaction needs them (mobile menu, terminal, scroll effects).
 
-```text
-/
-adioz-dev/
-├── public/
-│   ├── favicon.svg
-│   └── _headers            <-- Edge security headers
-├── src/
-│   ├── components/         <-- Reusable UI components
-│   │   ├── Header.astro
-│   │   ├── Hero.astro
-│   │   ├── SystemsGrid.astro
-│   │   ├── ProjectCard.astro
-│   │   └── Footer.astro
-│   ├── content/            <-- Markdown/MDX content collections
-│   │   └── projects/
-│   ├── layouts/
-│   │   └── Layout.astro    <-- Base HTML, metadata, and SEO
-│   └── pages/
-│       └── index.astro     <-- Main entry page
-├── astro.config.mjs
-└── package.json
-```
+## 📚 Documentation
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+For a detailed breakdown of the project's layout and design philosophy, please refer to the internal documentation:
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+* [System Architecture](docs/architecture.md)
+* [Project Structure](docs/structure.md)
 
-Any static assets, like images, can be placed in the `public/` directory.
+## 🛠️ Tech Stack
 
-## 🧞 Commands
+* [![Astro](https://img.shields.io/badge/Astro-BC52EE?logo=astro&logoColor=fff&style=for-the-badge)](https://astro.build)
+* [![Tailwind CSS](<https://img.shields.io/badge/Tailwind%20CSS%20v4-06B6D4?logo=tailwindcss&logoColor=fff&style=for-the-badge>)](https://tailwindcss.com/)
+* [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff&style=for-the-badge)](https://www.typescriptlang.org/)
 
-All commands are run from the root of the project, from a terminal:
+## 🔧 Getting Started
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+1. **Clone the repository**
 
-## 👀 Want to learn more?
+   ```bash
+   git clone https://github.com/adiozeshitemi/adioz-dev.git
+   cd adioz-dev
+   ```
+2. **Install dependencies**
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+3. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+4. **Build for production** (runs `astro check`, then writes the static site to `dist/`)
+
+   ```bash
+   npm run build
+   ```
+5. **Preview the production build**
+
+   ```bash
+   npm run preview
+   ```
+
+## 📝 License
+
+© 2026 Adioz. All rights reserved.
