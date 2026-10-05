@@ -10,7 +10,7 @@ interface Props {
 const { category } = Astro.props;
 ---
 
-<div class="cloud">
+<div class="cloud" data-reveal>
   <h3>{category.name}</h3>
   <ul class="tools">
     {category.tools.map((tool) => (

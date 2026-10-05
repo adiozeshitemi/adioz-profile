@@ -15,7 +15,7 @@ interface Props {
 const { project } = Astro.props;
 ---
 
-<article class="card">
+<article class="card spot" data-reveal>
   <h3>{project.title}</h3>
   <ul class="links">
     {project.links.map((link) => (

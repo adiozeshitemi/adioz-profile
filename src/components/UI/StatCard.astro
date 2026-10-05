@@ -4,6 +4,8 @@ import type { StatItem } from "../../data/types";
 /**
  * One stats.json entry as a <dt>/<dd> pair inside StatBanner's <dl>.
  * The <dt> label comes first in the markup; column-reverse shows the value above it.
+ * The number's data-count and data-decimals let src/scripts/motion.ts count
+ * up to it; the HTML holds the final value.
  */
 interface Props {
   stat: StatItem;
@@ -16,7 +18,9 @@ const value = stat.value.toFixed(stat.decimals ?? 0);
 <div class="stat">
   <dt class="label">{stat.label}</dt>
   <dd class="value">
-    <span>{value}</span>
+    <span data-count={stat.value} data-decimals={stat.decimals ?? 0}>
+      {value}
+    </span>
     <span class="suffix">{stat.suffix}</span>
   </dd>
 </div>

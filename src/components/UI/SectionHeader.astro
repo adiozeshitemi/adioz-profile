@@ -17,7 +17,7 @@ const { index, label, title, intro, id, align = "start" } = Astro.props;
 const number = String(index).padStart(2, "0");
 ---
 
-<header class:list={["section-header", align]}>
+<header class:list={["section-header", align]} data-reveal>
   <p class="label">
     {number} — {label}
   </p>

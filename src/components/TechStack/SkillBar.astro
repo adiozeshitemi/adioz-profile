@@ -17,7 +17,7 @@ const { skill } = Astro.props;
   <dt class="label">{skill.label}</dt>
   <dd class="level">{skill.level}</dd>
   <dd class="bar" aria-hidden="true">
-    <span class="fill" style={`width: ${skill.percent}%`}></span>
+    <span class="fill" style={`width: ${skill.percent}%`} data-fill></span>
   </dd>
 </div>
 
@@ -41,10 +41,11 @@ const { skill } = Astro.props;
     color: var(--color-ink-faint);
   }
 
+  /* overflow: clip, unlike hidden, adds no scroll container, so the fill's data-fill view timeline tracks the viewport. */
   .bar {
     grid-column: 1 / -1;
     height: 4px;
-    overflow: hidden;
+    overflow: clip;
     border-radius: 99px;
     background: color-mix(in srgb, var(--color-ink) 6%, transparent);
   }
