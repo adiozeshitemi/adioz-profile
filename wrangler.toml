@@ -1,5 +1,8 @@
 name = "adioz-dev"
 compatibility_date = "2026-10-04"
+# Version URLs: `wrangler versions upload --preview-alias <alias>` serves the
+# uploaded version at <alias>-adioz-dev.<subdomain>.workers.dev.
+preview_urls = true
 
 [assets]
 directory = "./dist"
