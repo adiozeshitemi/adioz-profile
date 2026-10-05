@@ -8,6 +8,7 @@ import aboutJson from "./about.json";
 import contactJson from "./contact.json";
 import experienceJson from "./experience.json";
 import footerJson from "./footer.json";
+import navigationJson from "./navigation.json";
 import profileJson from "./profile.json";
 import projectsJson from "./projects.json";
 import siteJson from "./site.json";
@@ -19,6 +20,7 @@ import type {
   ContactContent,
   ExperienceItem,
   FooterContent,
+  Navigation,
   Profile,
   ProjectItem,
   SiteMeta,
@@ -52,6 +54,7 @@ export const about: AboutContent = aboutJson;
 export const contact: ContactContent = contactJson;
 export const experience: ExperienceItem[] = experienceJson;
 export const footer: FooterContent = footerJson;
+export const navigation: Navigation = navigationJson;
 export const profile: Profile = profileJson;
 export const projects: ProjectItem[] = projectsJson;
 export const site: SiteMeta = siteJson;
