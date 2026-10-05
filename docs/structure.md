@@ -32,6 +32,9 @@ adioz-dev/
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
+│   │   ├── About/             # About section: bio, focus pillar cards, philosophy
+│   │   │   ├── AboutSection.astro
+│   │   │   └── CoreFocusCard.astro
 │   │   ├── Header/            # Sticky header: brand, section links, menu drawer
 │   │   │   ├── BrandLogo.astro
 │   │   │   ├── Header.astro
@@ -41,16 +44,17 @@ adioz-dev/
 │   │   │   ├── Hero.astro
 │   │   │   ├── SocialLinks.astro
 │   │   │   └── Terminal.astro
-│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, icons, stats, section headers
+│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, icons, stats, sections
 │   │       ├── Badge.astro
 │   │       ├── Button.astro
 │   │       ├── Emphasis.astro
 │   │       ├── Icon.astro
+│   │       ├── Section.astro
 │   │       ├── SectionHeader.astro
 │   │       ├── StatBanner.astro
 │   │       └── StatCard.astro
 │   ├── data/                  # 🗄️ Data layer
-│   │   ├── about.json         # About section: headline, bio, focus pillars, philosophy
+│   │   ├── about.json         # About section: id, label, headline, bio, pillars with icons, philosophy
 │   │   ├── contact.json       # Contact section heading, body and button label
 │   │   ├── experience.json    # Career timeline, from public/resume.pdf
 │   │   ├── footer.json        # Copyright, credit links and source link
@@ -64,10 +68,13 @@ adioz-dev/
 │   │   ├── terminal.json      # Hero terminal window title and lines
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
+│   │   ├── activity.svg
 │   │   ├── arrow-right.svg
 │   │   ├── arrow-up-right.svg
 │   │   ├── astro.svg
+│   │   ├── box.svg
 │   │   ├── cloudflare.svg
+│   │   ├── code-slash.svg
 │   │   ├── download.svg
 │   │   ├── email.svg
 │   │   ├── github.svg
