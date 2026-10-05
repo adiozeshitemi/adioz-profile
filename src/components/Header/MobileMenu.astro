@@ -1,0 +1,137 @@
+---
+/*
+ * Menu button and drawer for viewports narrower than --breakpoint-md. The
+ * drawer is a popover: closed, it is display: none, so keyboard and
+ * screen-reader users cannot reach its links; Escape or a click outside closes
+ * it, and the browser exposes the button's expanded state.
+ */
+import { navigation } from "../../data/index";
+import NavLinks from "./NavLinks.astro";
+---
+
+<button
+  type="button"
+  class="toggle"
+  popovertarget="site-menu"
+  aria-label={navigation.menuLabel}
+>
+  <span class="line"></span>
+  <span class="line"></span>
+  <span class="line"></span>
+</button>
+
+<nav id="site-menu" class="menu" popover aria-label={navigation.label}>
+  <NavLinks variant="drawer" />
+</nav>
+
+<script>
+  // Closes #site-menu when one of its links is followed, and when the viewport
+  // widens to --breakpoint-md (47.5rem), where the menu button is hidden.
+  const menu = document.getElementById("site-menu");
+
+  if (menu) {
+    const close = () => {
+      if (menu.matches(":popover-open")) menu.hidePopover();
+    };
+
+    menu.addEventListener("click", (event) => {
+      if (event.target instanceof Element && event.target.closest("a")) {
+        close();
+      }
+    });
+
+    matchMedia("(width >= 47.5rem)").addEventListener("change", (event) => {
+      if (event.matches) close();
+    });
+  }
+</script>
+
+<style>
+  .toggle {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    width: 2.625rem;
+    height: 2.625rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.6875rem;
+  }
+
+  .toggle:focus-visible {
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 2px;
+  }
+
+  .line {
+    display: block;
+    width: 1.0625rem;
+    height: 1.5px;
+    border-radius: 2px;
+    background: var(--color-ink);
+    transition:
+      transform 0.3s var(--ease-soft),
+      opacity 0.2s;
+  }
+
+  .line + .line {
+    margin-top: 4.5px;
+  }
+
+  /* The three lines form an X while the drawer is open. */
+  .toggle:has(+ .menu:popover-open) .line:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .toggle:has(+ .menu:popover-open) .line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .toggle:has(+ .menu:popover-open) .line:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  /* Replaces the user-agent popover box with a full-width panel under the header bar. */
+  .menu {
+    position: fixed;
+    inset: var(--spacing-header) 0 auto;
+    width: auto;
+    height: auto;
+    max-height: calc(100dvh - var(--spacing-header));
+    margin: 0;
+    padding: 0.875rem 1.25rem 1.625rem;
+    overflow-y: auto;
+    border: 0;
+    border-bottom: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-canvas) 96%, transparent);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    color: inherit;
+    opacity: 0;
+    transform: translateY(-0.75rem);
+    transition:
+      opacity 0.28s var(--ease-soft),
+      transform 0.28s var(--ease-soft),
+      overlay 0.28s allow-discrete,
+      display 0.28s allow-discrete;
+  }
+
+  .menu:popover-open {
+    opacity: 1;
+    transform: none;
+  }
+
+  @starting-style {
+    .menu:popover-open {
+      opacity: 0;
+      transform: translateY(-0.75rem);
+    }
+  }
+
+  /* --breakpoint-md: the header bar shows the links inline. */
+  @media (width >= 47.5rem) {
+    .toggle,
+    .menu {
+      display: none;
+    }
+  }
+</style>

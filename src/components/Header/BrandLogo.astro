@@ -1,0 +1,42 @@
+---
+/*
+ * Brand link to the top of the page: the logo mark from public/favicon.svg,
+ * the same file as the site icon, and profile.json's name as a lowercase
+ * wordmark.
+ */
+import { profile } from "../../data/index";
+---
+
+<a href="#top" class="brand">
+  <img src="/favicon.svg" alt="" width="30" height="30" class="mark" />
+  <span class="wordmark">{profile.name}</span>
+</a>
+
+<style>
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6875rem;
+    border-radius: 0.5625rem;
+  }
+
+  .brand:focus-visible {
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 4px;
+  }
+
+  /* Rounds the box-shadow to the mark's corner radius (rx 19.2 of 64 at 30px). */
+  .mark {
+    border-radius: 0.5625rem;
+    box-shadow: 0 0 22px
+      color-mix(in srgb, var(--color-accent-cyan) 35%, transparent);
+  }
+
+  .wordmark {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+    color: var(--color-ink);
+  }
+</style>
