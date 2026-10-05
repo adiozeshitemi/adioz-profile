@@ -35,9 +35,13 @@ adioz-dev/
 │   │   ├── About/             # About section: bio, focus pillar cards, philosophy
 │   │   │   ├── AboutSection.astro
 │   │   │   └── CoreFocusCard.astro
+│   │   ├── Contact/           # Contact section: email call to action
+│   │   │   └── ContactSection.astro
 │   │   ├── Experience/        # Experience section: timeline of roles
 │   │   │   ├── ExperienceItem.astro
 │   │   │   └── ExperienceSection.astro
+│   │   ├── Footer/            # Site footer: copyright, credits, source link
+│   │   │   └── Footer.astro
 │   │   ├── Header/            # Sticky header: brand, section links, menu drawer
 │   │   │   ├── BrandLogo.astro
 │   │   │   ├── Header.astro
@@ -65,7 +69,7 @@ adioz-dev/
 │   │       └── StatCard.astro
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: id, label, headline, bio, pillars with icons, philosophy
-│   │   ├── contact.json       # Contact section heading, body and button label
+│   │   ├── contact.json       # Contact section: id, label, heading, body, button label and icon
 │   │   ├── experience.json    # Experience section: id, label, headline and roles, from public/resume.pdf
 │   │   ├── footer.json        # Copyright, credit links and source link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
