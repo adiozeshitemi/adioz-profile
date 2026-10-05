@@ -2,7 +2,7 @@
 
 ## Overview
 
-This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS, and no client-side JavaScript ships. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`.
+This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS, and no client-side JavaScript ships. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`. The colors follow the device's light or dark color scheme.
 
 ## Architecture Flow
 
@@ -13,12 +13,14 @@ flowchart LR
 
     subgraph Src ["📁 src/"]
         direction TB
+        Data["data/ (JSON content, typed exports)"]
         Styles["styles/ (theme, animations, global)"]
         Layout["layouts/Layout.astro"]
         Hero["components/Hero.astro"]
         Page["pages/index.astro"]
     end
 
+    Data ==>|Imported by| Layout
     Styles ==>|Imported by| Layout
     Layout ==>|Wraps| Page
     Hero ==>|Rendered in| Page
@@ -33,19 +35,19 @@ flowchart LR
 ## 1. Pages, Components and Data
 
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Hero` inside `Layout`.
-- **`src/layouts/Layout.astro`**: The HTML shell: `title` and `description` props with defaults, Open Graph tags, the SVG favicon, and the `global.css` import.
-- **`src/components/Hero.astro`**: The hero section: availability badge, headline, role, summary, and email and GitHub links.
+- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme, preloads the Montserrat font, links the SVG and ICO favicons, and imports `global.css`.
+- **`src/components/Hero.astro`**: The hero section: availability badge, headline, role, summary, and email and GitHub links, styled with the theme's color tokens.
 - **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only, and every link is a `LinkItem` with a title, URL and icon name. In `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis.
-- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalLine[]`), `about.json` (`AboutContent`), `techStack.json` (`TechStack`: proficiency bars and tools grouped by category), `experience.json` (`ExperienceItem[]`), `projects.json` (`ProjectItem[]`), `contact.json` (`ContactContent`) and `footer.json` (`FooterContent`). The experience, projects, stats and tech stack categories follow the resume in `public/resume.pdf`.
-- **`src/data/index.ts`**: Exports each JSON file typed by its interface, so `astro check` (run by `npm run build` and CI) rejects a file whose structure no longer matches. JSON imports type strings as `string`, so it checks `TerminalLine.kind` when it loads and throws on an unknown kind. No page or component imports it.
+- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalLine[]`), `about.json` (`AboutContent`), `techStack.json` (`TechStack`: proficiency bars and tools grouped by category), `experience.json` (`ExperienceItem[]`), `projects.json` (`ProjectItem[]`), `contact.json` (`ContactContent`), `footer.json` (`FooterContent`) and `site.json` (`SiteMeta`: the default meta description and Open Graph image). The experience, projects, stats and tech stack categories follow the resume in `public/resume.pdf`.
+- **`src/data/index.ts`**: Exports each JSON file typed by its interface, so `astro check` (run by `npm run build` and CI) rejects a file whose structure no longer matches. JSON imports type strings as `string`, so it checks `TerminalLine.kind` when it loads and throws on an unknown kind. `Layout.astro` imports `profile` and `site` from it, so an unknown kind fails the build.
 
 ## 2. Styling
 
 Tailwind CSS v4 runs through the `@tailwindcss/vite` plugin registered in `astro.config.mjs`; there is no `tailwind.config.*` file.
 
-- **`src/styles/theme.css`**: Design tokens in an `@theme` block (colors, fonts, radius, page width, easing, breakpoints). Each token is a CSS variable on `:root` and drives a Tailwind utility.
+- **`src/styles/theme.css`**: Design tokens in an `@theme` block (colors, fonts, radius, page width, easing, breakpoints) for the dark scheme, and a `prefers-color-scheme: light` block that overrides the color tokens for the light scheme. Text colors meet WCAG AA (4.5:1) in both schemes. Each token is a CSS variable on `:root` and drives a Tailwind utility.
 - **`src/styles/animations.css`**: Keyframes exposed as `animate-*` utilities, the `[data-reveal]` scroll transition, and reduced-motion rules.
-- **`src/styles/global.css`**: Imports Tailwind and both files above, declares `@font-face` rules for the self-hosted fonts, and sets base element styles.
+- **`src/styles/global.css`**: Imports Tailwind and both files above, declares `@font-face` rules for the self-hosted fonts, and sets base element styles, including `color-scheme: light dark`.
 
 ## 3. Static Assets
 

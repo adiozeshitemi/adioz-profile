@@ -10,6 +10,7 @@ import experienceJson from "./experience.json";
 import footerJson from "./footer.json";
 import profileJson from "./profile.json";
 import projectsJson from "./projects.json";
+import siteJson from "./site.json";
 import statsJson from "./stats.json";
 import techStackJson from "./techStack.json";
 import terminalJson from "./terminal.json";
@@ -20,6 +21,7 @@ import type {
   FooterContent,
   Profile,
   ProjectItem,
+  SiteMeta,
   StatItem,
   TechStack,
   TerminalLine,
@@ -52,6 +54,7 @@ export const experience: ExperienceItem[] = experienceJson;
 export const footer: FooterContent = footerJson;
 export const profile: Profile = profileJson;
 export const projects: ProjectItem[] = projectsJson;
+export const site: SiteMeta = siteJson;
 export const stats: StatItem[] = statsJson;
 export const techStack: TechStack = techStackJson;
 export const terminal: TerminalLine[] = terminalJson.map(toTerminalLine);

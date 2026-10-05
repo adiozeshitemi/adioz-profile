@@ -25,6 +25,7 @@
 /* Base element styles that Tailwind's preflight does not set. */
 @layer base {
   html {
+    color-scheme: light dark;
     scroll-behavior: smooth;
   }
 
@@ -43,7 +44,7 @@
       var(--color-accent-cyan) 28%,
       transparent
     );
-    color: #fff;
+    color: var(--color-ink);
   }
 
   button:not(:disabled),
@@ -61,12 +62,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #1c2130;
+    background: color-mix(in srgb, var(--color-ink) 10%, var(--color-canvas));
     border: 2px solid var(--color-canvas);
     border-radius: 99px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #2a3145;
+    background: color-mix(in srgb, var(--color-ink) 18%, var(--color-canvas));
   }
 }

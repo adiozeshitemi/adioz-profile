@@ -41,18 +41,19 @@ adioz-dev/
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── profile.json       # Name, role, hero copy, availability, GitHub/LinkedIn/email links
 │   │   ├── projects.json      # Key projects and their links, from public/resume.pdf
+│   │   ├── site.json          # Default meta description and Open Graph image
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Proficiency bars and tools grouped by category
 │   │   ├── terminal.json      # Hero terminal lines
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── layouts/               # 🏗️ Page shells
-│   │   └── Layout.astro       # HTML shell, meta tags, global CSS import
+│   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Keyframes, reveal transition, reduced-motion rules
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
-│       └── theme.css          # Design tokens (@theme)
+│       └── theme.css          # Design tokens (@theme) and light-scheme overrides
 │
 ├── .editorconfig              # Editor encoding, line endings and indentation
 ├── .gitignore
@@ -60,7 +61,7 @@ adioz-dev/
 ├── .prettierignore            # Files Prettier skips
 ├── .prettierrc                # Prettier config (Astro plugin)
 ├── AGENTS.md                  # Agent instructions
-├── astro.config.mjs           # ⚙️ Astro config (Tailwind Vite plugin)
+├── astro.config.mjs           # ⚙️ Astro config (site URL, Tailwind Vite plugin)
 ├── CLAUDE.md                  # Symlink to AGENTS.md
 ├── package-lock.json
 ├── package.json               # 📦 Dependencies and scripts
