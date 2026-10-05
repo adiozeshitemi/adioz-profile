@@ -9,7 +9,10 @@
 export interface LinkItem {
   /** Visible label and accessible name, e.g. "GitHub". */
   title: string;
-  /** An `https:` URL, or a `mailto:` URL for email. */
+  /**
+   * An `https:` URL, a `mailto:` URL for email, a `#` link to a section of the
+   * page, or the path of a file in public/, e.g. "/resume.pdf".
+   */
   url: string;
   /** Icon name, e.g. "github". */
   icon: string;
@@ -21,12 +24,18 @@ export interface Profile {
   name: string;
   /** Job title, e.g. "Full-stack AI engineer". */
   role: string;
+  /** Specialty shown after the role, e.g. "Agents & Resource-aware AI". */
+  specialty: string;
   /** Hero headline that follows the name, e.g. "takes AI into production.". */
   headline: string;
   /** Hero summary paragraph; text inside `**` pairs renders as strong emphasis. */
   summary: string;
   /** Availability badge text, e.g. "Available for Senior/Staff Engineering Roles". */
   availability: string;
+  /** Hero call-to-action links in display order; the first renders as the primary button. */
+  actions: LinkItem[];
+  /** Download link for the resume in public/, shown after the hero call-to-action buttons. */
+  resume: LinkItem;
   /** GitHub, LinkedIn and email links in display order; the email link is the only `mailto:` URL. */
   links: LinkItem[];
 }
@@ -84,6 +93,14 @@ export type TerminalLineKind = "cmd" | "out" | "ok" | "key";
 export interface TerminalLine {
   kind: TerminalLineKind;
   text: string;
+}
+
+/** Content of the hero terminal. */
+export interface TerminalContent {
+  /** Window title in the terminal's title bar, e.g. "zsh — 120×32". */
+  title: string;
+  /** Lines printed in order. */
+  lines: TerminalLine[];
 }
 
 /** Content of the about section. */

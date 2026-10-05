@@ -1,9 +1,27 @@
 {
   "name": "Adioz",
   "role": "Full-stack AI engineer",
+  "specialty": "Agents & Resource-aware AI",
   "headline": "takes AI into production.",
   "summary": "Builds **backend systems and web applications**, and takes AI into production for enterprise clients, owning each system from design to support: tool-using agents that make real, auditable changes, and **small, quantized models** that meet tight latency budgets on CPU.",
   "availability": "Available for Senior/Staff Engineering Roles",
+  "actions": [
+    {
+      "title": "Get in touch",
+      "url": "#contact",
+      "icon": "arrow-right"
+    },
+    {
+      "title": "View work",
+      "url": "#work",
+      "icon": "arrow-up-right"
+    }
+  ],
+  "resume": {
+    "title": "Download resume",
+    "url": "/resume.pdf",
+    "icon": "download"
+  },
   "links": [
     {
       "title": "GitHub",
