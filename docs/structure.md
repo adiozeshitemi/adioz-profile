@@ -6,7 +6,8 @@ The directories and files currently in the repository.
 adioz-dev/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml             # Quality gate: format check, type check and build
+│       ├── ci.yml             # Quality gate: format check, type check and build
+│       └── deploy.yml         # Deploy main to production, other branches to previews
 │
 ├── .vscode/
 │   ├── extensions.json        # Recommended editor extensions (Astro)
@@ -53,7 +54,7 @@ adioz-dev/
 ├── package.json               # 📦 Dependencies and scripts
 ├── README.md
 ├── tsconfig.json              # 🦕 Strict TypeScript with path aliases
-└── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/)
+└── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/, preview URLs)
 ```
 
 Not listed: generated or ignored directories (`node_modules/`, `dist/`, `.astro/`, `.wrangler/`) and `_`-prefixed prototype files.
