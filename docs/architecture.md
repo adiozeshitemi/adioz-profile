@@ -30,11 +30,12 @@ flowchart LR
     class Src transparent;
 ```
 
-## 1. Pages and Components
+## 1. Pages, Components and Data
 
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Hero` inside `Layout`.
 - **`src/layouts/Layout.astro`**: The HTML shell: `title` and `description` props with defaults, Open Graph tags, the SVG favicon, and the `global.css` import.
 - **`src/components/Hero.astro`**: The hero section: availability badge, headline, role, summary, and email and GitHub links.
+- **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only; in `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis.
 
 ## 2. Styling
 
