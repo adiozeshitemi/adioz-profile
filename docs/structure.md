@@ -6,7 +6,7 @@ The directories and files currently in the repository.
 adioz-dev/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml             # Quality gate: format check, type check and build
+│       ├── ci.yml             # Quality gate: format check, unit tests, type check and build
 │       └── deploy.yml         # Production deploy on every push to main
 │
 ├── .vscode/
@@ -103,9 +103,18 @@ adioz-dev/
 │   ├── scripts/               # 📜 Client scripts
 │   │   └── motion.ts          # Header scroll state, stat counters, card spotlight
 │   └── styles/                # 🎨 Global styling
-│       ├── animations.css     # Keyframes, reveal transition, reduced-motion rules
+│       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
 │       └── theme.css          # Design tokens (@theme) and light-scheme overrides
+│
+├── tests/                     # 🧪 Vitest unit tests (npm test)
+│   ├── fixtures/
+│   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
+│   ├── data.test.ts           # Data rules and load-time errors
+│   ├── page.test.ts           # Assembled landing page
+│   ├── render.ts              # Container API rendering and happy-dom parsing
+│   ├── sections.test.ts       # Header, sections and footer
+│   └── ui.test.ts             # UI primitives
 │
 ├── .editorconfig              # Editor encoding, line endings and indentation
 ├── .gitignore
@@ -119,6 +128,7 @@ adioz-dev/
 ├── package.json               # 📦 Dependencies and scripts
 ├── README.md
 ├── tsconfig.json              # 🦕 Strict TypeScript with path aliases
+├── vitest.config.ts           # 🧪 Vitest config (Astro's getViteConfig)
 └── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/, adioz.dev Custom Domain)
 ```
 
