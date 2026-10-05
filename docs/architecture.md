@@ -2,7 +2,7 @@
 
 ## Overview
 
-This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS, and no client-side JavaScript ships. GitHub Actions deploy `main` to Cloudflare Workers as static assets.
+This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS, and no client-side JavaScript ships. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`.
 
 ## Architecture Flow
 
@@ -24,7 +24,7 @@ flowchart LR
     Hero ==>|Rendered in| Page
     Page ==>|astro check, astro build| Dist["⚡ dist/ (static HTML/CSS)"]
     Public["🌍 public/ (fonts, images, favicons, resume)"] ==>|Copied as-is| Dist
-    Dist ==>|deploy.yml on push to main| Workers["☁️ Cloudflare Workers"]
+    Dist ==>|deploy.yml on push to main| Workers["☁️ Cloudflare Workers (adioz.dev)"]
 
     %% Apply transparent class to subgraphs
     class Src transparent;
@@ -57,4 +57,5 @@ The site is pre-rendered at build time (SSG). `npm run build` runs `astro check`
 - **Formatting:** Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
 - **CI:** `.github/workflows/ci.yml` runs the format check, type check and build on pull requests into `main`; `deploy.yml` also runs it before every deployment.
 - **Deploy:** `.github/workflows/deploy.yml` runs on every push to `main` and calls `ci.yml` first. Once that passes, the deploy job builds the site and runs `wrangler deploy` through the official Wrangler action (Wrangler 4.147.0), authenticating with the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. It writes the production URL to the run summary. Deployments never overlap: a newer push waits for the running deployment to finish.
-- **Wrangler:** `wrangler.toml` configures the `adioz-dev` Cloudflare Worker to serve `dist/` as static assets; `npx wrangler dev` serves the build locally.
+- **Wrangler:** `wrangler.toml` configures the `adioz-dev` Cloudflare Worker to serve `dist/` as static assets at the `adioz.dev` Custom Domain, with the `workers.dev` URL and preview URLs disabled; `npx wrangler dev` serves the build locally.
+- **Domain:** the `adioz.dev` zone is on Cloudflare DNS. Deploying the Worker creates the Custom Domain's DNS record and certificate. `www.adioz.dev` has a proxied placeholder record (`AAAA 100::`) and a Redirect Rule that sends `https://www.*` to `https://${1}` with a 301. Always Use HTTPS redirects plain-HTTP requests to HTTPS before that rule runs, and the edge accepts TLS 1.2 and 1.3 only. The Email Routing MX and TXT records forward `contact@adioz.dev`.

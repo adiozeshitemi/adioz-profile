@@ -54,7 +54,7 @@ adioz-dev/
 ├── package.json               # 📦 Dependencies and scripts
 ├── README.md
 ├── tsconfig.json              # 🦕 Strict TypeScript with path aliases
-└── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/)
+└── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/, adioz.dev Custom Domain)
 ```
 
 Not listed: generated or ignored directories (`node_modules/`, `dist/`, `.astro/`, `.wrangler/`) and `_`-prefixed prototype files.

@@ -21,7 +21,7 @@ Full-stack AI engineer with 8 years of experience in backend systems and web app
 - **Strict TypeScript**: `tsconfig.json` extends `astro/tsconfigs/strict` and defines path aliases (`@components/*`, `@layouts/*`, `@styles/*`, `@data/*`, `@utils/*`).
 - **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
 - **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, type-checks and builds on pull requests into `main` and before every deployment.
-- **Continuous Deployment**: `.github/workflows/deploy.yml` deploys every push to `main` to Cloudflare Workers once the quality gate passes.
+- **Continuous Deployment**: `.github/workflows/deploy.yml` deploys every push to `main` to Cloudflare Workers at `adioz.dev` once the quality gate passes.
 
 ## 📚 Documentation
 
