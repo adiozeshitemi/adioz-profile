@@ -76,6 +76,14 @@ export interface FocusPillar {
   tags: string[];
 }
 
+/** Content of the tech stack section. */
+export interface TechStack {
+  /** Proficiency bars in display order. */
+  skills: SkillItem[];
+  /** Tool groups in display order. */
+  categories: TechStackCategory[];
+}
+
 /** One proficiency bar in the tech stack section. */
 export interface SkillItem {
   /** Skill name, e.g. "Rust Systems & Tokio Async". */

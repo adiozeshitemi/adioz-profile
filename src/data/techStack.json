@@ -1,0 +1,62 @@
+{
+  "skills": [
+    {
+      "label": "Rust Systems & Tokio Async",
+      "level": "Expert",
+      "percent": 95
+    },
+    {
+      "label": "Java & Spring Boot Reactive",
+      "level": "Expert",
+      "percent": 92
+    },
+    {
+      "label": "Kafka Streaming & ClickHouse",
+      "level": "Advanced",
+      "percent": 88
+    },
+    {
+      "label": "Cloud & DevOps (AWS / Docker / K8s)",
+      "level": "Advanced",
+      "percent": 85
+    },
+    {
+      "label": "Embedded AI Engine (Candle / ONNX)",
+      "level": "Advanced",
+      "percent": 80
+    }
+  ],
+  "categories": [
+    {
+      "name": "AI & ML",
+      "tools": [
+        "Model training and distillation",
+        "Quantization",
+        "Candle",
+        "Burn",
+        "ONNX Runtime"
+      ]
+    },
+    {
+      "name": "Backend & Systems",
+      "tools": ["Rust", "Java", "Golang", "Python"]
+    },
+    {
+      "name": "Frontend & Mobile",
+      "tools": ["Astro", "Angular", "Next.js", "Jetpack Compose"]
+    },
+    {
+      "name": "Infrastructure/Databases",
+      "tools": [
+        "Docker",
+        "Kubernetes",
+        "Kafka",
+        "ClickHouse",
+        "PostgreSQL",
+        "Redis",
+        "AWS",
+        "Cloudflare"
+      ]
+    }
+  ]
+}

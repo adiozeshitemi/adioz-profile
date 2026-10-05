@@ -37,6 +37,7 @@ adioz-dev/
 │   │   ├── about.json         # About section: headline, bio, focus pillars, philosophy
 │   │   ├── profile.json       # Name, role, hero copy, availability, GitHub/LinkedIn/email links
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
+│   │   ├── techStack.json     # Proficiency bars and tools grouped by category
 │   │   ├── terminal.json      # Hero terminal lines
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── layouts/               # 🏗️ Page shells
