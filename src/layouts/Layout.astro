@@ -1,35 +1,81 @@
 ---
 import "../styles/global.css";
+import { profile, site } from "../data/index";
 
 interface Props {
+  /** Page title; defaults to "<name> | <role>" from profile.json. */
   title?: string;
+  /** Meta and Open Graph description; defaults to site.json. */
   description?: string;
+  /** Open Graph image path under public/; defaults to site.json. */
+  image?: string;
+  /** Alt text for the Open Graph image; defaults to site.json. */
+  imageAlt?: string;
 }
 
 const {
-  title = "Adioz | Full-stack AI engineer",
-  description = "Full-stack AI engineer who takes AI into production for enterprise clients: tool-using agents that make auditable changes, and small, quantized models that meet tight latency budgets.",
+  title = `${profile.name} | ${profile.role}`,
+  description = site.description,
+  image = site.image,
+  imageAlt = site.imageAlt,
 } = Astro.props;
+
+// Absolute URLs from `site` in astro.config.mjs.
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const imageUrl = new URL(image, Astro.site);
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- theme-color values match --color-canvas for each scheme in theme.css. -->
+    <meta
+      name="theme-color"
+      content="#f6f7fb"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#05060b"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link
+      rel="preload"
+      href="/fonts/montserrat-variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/jetbrains-mono-variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
     <meta name="generator" content={Astro.generator} />
 
     <title>{title}</title>
     <meta name="description" content={description} />
 
-    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://adioz.dev" />
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
-  <body class="min-h-screen flex flex-col justify-between">
+  <body class="min-h-screen flex flex-col">
     <slot />
+    <script>
+      import "../scripts/motion";
+    </script>
   </body>
 </html>

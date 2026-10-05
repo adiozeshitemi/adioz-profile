@@ -1,0 +1,84 @@
+---
+import type { StatItem } from "../../data/types";
+
+/**
+ * One stats.json entry as a <dt>/<dd> pair inside StatBanner's <dl>.
+ * The <dt> label comes first in the markup; column-reverse shows the value above it.
+ * The number's data-count and data-decimals let src/scripts/motion.ts count
+ * up to it; the HTML holds the final value.
+ */
+interface Props {
+  stat: StatItem;
+}
+
+const { stat } = Astro.props;
+const value = stat.value.toFixed(stat.decimals ?? 0);
+---
+
+<div class="stat">
+  <dt class="label">{stat.label}</dt>
+  <dd class="value">
+    <span data-count={stat.value} data-decimals={stat.decimals ?? 0}>
+      {value}
+    </span>
+    <span class="suffix">{stat.suffix}</span>
+  </dd>
+</div>
+
+<style>
+  .stat {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    padding: 1.375rem 1.125rem;
+    background: color-mix(in srgb, var(--color-canvas-raised) 72%, transparent);
+    backdrop-filter: blur(8px);
+    transition: background-color 0.3s;
+  }
+
+  /* --breakpoint-md */
+  @media (width >= 47.5rem) {
+    .stat {
+      padding: 1.625rem 1.5rem;
+    }
+  }
+
+  .stat:hover {
+    background: color-mix(
+      in srgb,
+      var(--color-ink) 5%,
+      var(--color-canvas-raised)
+    );
+  }
+
+  /* Flex layout drops the whitespace between the number and suffix spans. */
+  .value {
+    display: flex;
+    align-items: baseline;
+    font-size: clamp(1.7rem, 3.4vw, 2.35rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    background: linear-gradient(
+      120deg,
+      var(--color-ink),
+      var(--color-ink-muted)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .suffix {
+    color: var(--color-accent-cyan);
+    -webkit-text-fill-color: var(--color-accent-cyan);
+  }
+
+  .label {
+    margin-top: 0.5625rem;
+    font-size: 0.71875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+</style>

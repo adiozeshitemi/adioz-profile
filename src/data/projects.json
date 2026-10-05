@@ -1,0 +1,50 @@
+{
+  "id": "work",
+  "label": "Featured Projects",
+  "headline": "Systems built for scale",
+  "projects": [
+    {
+      "title": "BBRaiN",
+      "description": "One AI engine for search, recommendations and personalization across all media.",
+      "tags": ["Rust", "Axum", "Burn", "CLIP", "Tantivy"],
+      "links": [
+        {
+          "title": "Website",
+          "url": "https://www.thebbrain.io/",
+          "icon": "globe"
+        },
+        {
+          "title": "Baze streaming platform",
+          "url": "https://www.baze.co.ke",
+          "icon": "globe"
+        },
+        {
+          "title": "Viewer app",
+          "url": "https://bbrain.co.ke/",
+          "icon": "globe"
+        },
+        {
+          "title": "CMS studio",
+          "url": "https://bbrain.co.ke/studio",
+          "icon": "globe"
+        }
+      ],
+      "featured": true,
+      "metric": "Powers content discovery on Baze streaming platform"
+    },
+    {
+      "title": "Hisiya",
+      "description": "AI sentiment intelligence for African markets. Reads brand sentiment in Swahili, Sheng, Pidgin and Amharic languages.",
+      "tags": ["Swahili", "Sheng", "Pidgin", "Amharic"],
+      "links": [
+        {
+          "title": "Website",
+          "url": "https://www.hisiya.io/",
+          "icon": "globe"
+        }
+      ],
+      "featured": true,
+      "metric": "Turns conversations into a brand-health score, trends and benchmarks"
+    }
+  ]
+}

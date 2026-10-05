@@ -6,7 +6,7 @@ The directories and files currently in the repository.
 adioz-dev/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml             # Quality gate: format check, type check and build
+│       ├── ci.yml             # Quality gate: format check, unit tests, type check and build
 │       └── deploy.yml         # Production deploy on every push to main
 │
 ├── .vscode/
@@ -27,20 +27,94 @@ adioz-dev/
 │   │   ├── og.png             # Social share preview image (1200×630)
 │   │   └── profile_pic.svg    # Profile avatar
 │   ├── favicon.ico            # Favicon fallback (16, 32, 48 px)
-│   ├── favicon.svg            # AD logo mark
-│   └── resume.pdf             # Downloadable resume
+│   ├── favicon.svg            # AD logo mark (site icon and header brand)
+│   └── resume.pdf             # Downloadable resume; source of the experience and projects data
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
-│   │   └── Hero.astro         # Hero section
+│   │   ├── About/             # About section: bio, focus pillar cards, philosophy
+│   │   │   ├── AboutSection.astro
+│   │   │   └── CoreFocusCard.astro
+│   │   ├── Contact/           # Contact section: email call to action
+│   │   │   └── ContactSection.astro
+│   │   ├── Experience/        # Experience section: timeline of roles
+│   │   │   ├── ExperienceItem.astro
+│   │   │   └── ExperienceSection.astro
+│   │   ├── Footer/            # Site footer: copyright, credits, source link
+│   │   │   └── Footer.astro
+│   │   ├── Header/            # Sticky header: brand, section links, menu drawer
+│   │   │   ├── BrandLogo.astro
+│   │   │   ├── Header.astro
+│   │   │   ├── MobileMenu.astro
+│   │   │   └── NavLinks.astro
+│   │   ├── Hero/              # First screen: copy, call-to-action links, terminal, stats
+│   │   │   ├── Hero.astro
+│   │   │   ├── SocialLinks.astro
+│   │   │   └── Terminal.astro
+│   │   ├── Projects/          # Featured projects section: project cards
+│   │   │   ├── ProjectCard.astro
+│   │   │   └── ProjectsSection.astro
+│   │   ├── TechStack/         # Tech stack section: skill bars, tool categories
+│   │   │   ├── SkillBar.astro
+│   │   │   ├── TagCloud.astro
+│   │   │   └── TechStackSection.astro
+│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, icons, stats, sections
+│   │       ├── Badge.astro
+│   │       ├── Button.astro
+│   │       ├── Emphasis.astro
+│   │       ├── Icon.astro
+│   │       ├── Section.astro
+│   │       ├── SectionHeader.astro
+│   │       ├── StatBanner.astro
+│   │       └── StatCard.astro
+│   ├── data/                  # 🗄️ Data layer
+│   │   ├── about.json         # About section: id, label, headline, bio, pillars with icons, philosophy
+│   │   ├── contact.json       # Contact section: id, label, heading, body, button label and icon
+│   │   ├── experience.json    # Experience section: id, label, headline and roles, from public/resume.pdf
+│   │   ├── footer.json        # Copyright, credit links and source link
+│   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
+│   │   ├── navigation.json    # Header section links, contact link and menu labels
+│   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and social links
+│   │   ├── projects.json      # Projects section: id, label, headline and projects, from public/resume.pdf
+│   │   ├── site.json          # Default meta description and Open Graph image
+│   │   ├── stats.json         # Headline metrics (the only place their values live)
+│   │   ├── techStack.json     # Stack section: id, label, headline, intro, skill bars, tools by category
+│   │   ├── terminal.json      # Hero terminal window title and lines
+│   │   └── types.ts           # TypeScript interfaces for the portfolio content
+│   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
+│   │   ├── activity.svg
+│   │   ├── arrow-right.svg
+│   │   ├── arrow-up-right.svg
+│   │   ├── astro.svg
+│   │   ├── box.svg
+│   │   ├── cloudflare.svg
+│   │   ├── code-slash.svg
+│   │   ├── download.svg
+│   │   ├── email.svg
+│   │   ├── github.svg
+│   │   ├── globe.svg
+│   │   ├── LICENSE.md
+│   │   ├── linkedin.svg
+│   │   └── tailwindcss.svg
 │   ├── layouts/               # 🏗️ Page shells
-│   │   └── Layout.astro       # HTML shell, meta tags, global CSS import
+│   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
+│   ├── scripts/               # 📜 Client scripts
+│   │   └── motion.ts          # Header scroll state, stat counters, card spotlight
 │   └── styles/                # 🎨 Global styling
-│       ├── animations.css     # Keyframes, reveal transition, reduced-motion rules
+│       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
-│       └── theme.css          # Design tokens (@theme)
+│       └── theme.css          # Design tokens (@theme) and light-scheme overrides
+│
+├── tests/                     # 🧪 Vitest unit tests (npm test)
+│   ├── fixtures/
+│   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
+│   ├── data.test.ts           # Data rules and load-time errors
+│   ├── page.test.ts           # Assembled landing page
+│   ├── render.ts              # Container API rendering and happy-dom parsing
+│   ├── sections.test.ts       # Header, sections and footer
+│   └── ui.test.ts             # UI primitives
 │
 ├── .editorconfig              # Editor encoding, line endings and indentation
 ├── .gitignore
@@ -48,12 +122,13 @@ adioz-dev/
 ├── .prettierignore            # Files Prettier skips
 ├── .prettierrc                # Prettier config (Astro plugin)
 ├── AGENTS.md                  # Agent instructions
-├── astro.config.mjs           # ⚙️ Astro config (Tailwind Vite plugin)
+├── astro.config.mjs           # ⚙️ Astro config (site URL, Tailwind Vite plugin)
 ├── CLAUDE.md                  # Symlink to AGENTS.md
 ├── package-lock.json
 ├── package.json               # 📦 Dependencies and scripts
 ├── README.md
 ├── tsconfig.json              # 🦕 Strict TypeScript with path aliases
+├── vitest.config.ts           # 🧪 Vitest config (Astro's getViteConfig)
 └── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/, adioz.dev Custom Domain)
 ```
 

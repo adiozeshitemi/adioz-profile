@@ -1,0 +1,17 @@
+[
+  {
+    "value": 8,
+    "suffix": "+",
+    "label": "Years experience"
+  },
+  {
+    "value": 30,
+    "suffix": "%",
+    "label": "Inter-service overhead cut"
+  },
+  {
+    "value": 99,
+    "suffix": "%",
+    "label": "Uptime held"
+  }
+]

@@ -1,0 +1,146 @@
+---
+/*
+ * One experience.json role on the timeline: its years, role, company and
+ * location, highlights and technologies. Its dot sits on the timeline rail at
+ * the --rail offset that ExperienceSection sets.
+ */
+import type { ExperienceItem } from "../../data/types";
+import Badge from "../UI/Badge.astro";
+import Emphasis from "../UI/Emphasis.astro";
+
+interface Props {
+  item: ExperienceItem;
+  /** Text in place of the end year of an ongoing role, e.g. "Present". */
+  ongoing: string;
+}
+
+const { item, ongoing } = Astro.props;
+const { start, end } = item.period;
+// A role that starts and ends in the same year shows that year alone.
+const hasEnd = end !== start;
+---
+
+<article class="role" data-reveal>
+  <p class="when">
+    <time datetime={String(start)}>{start}</time>
+    {hasEnd && (
+      <>
+        {" — "}
+        {end === null ? ongoing : <time datetime={String(end)}>{end}</time>}
+      </>
+    )}
+  </p>
+  <h3>{item.role}</h3>
+  <p class="company">
+    {item.company}
+    {item.location && <span class="location">{item.location}</span>}
+  </p>
+  <ul class="highlights">
+    {item.highlights.map((highlight) => (
+      <li>
+        <Emphasis text={highlight} />
+      </li>
+    ))}
+  </ul>
+  <ul class="tags">
+    {item.technologies.map((technology) => (
+      <li>
+        <Badge>{technology}</Badge>
+      </li>
+    ))}
+  </ul>
+</article>
+
+<style>
+  .role {
+    position: relative;
+    padding-bottom: 2.875rem;
+  }
+
+  .role:last-child {
+    padding-bottom: 0;
+  }
+
+  /* Timeline dot, centred on the rail drawn by ExperienceSection. */
+  .role::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: calc(-1 * var(--rail));
+    width: 15px;
+    height: 15px;
+    border: 1.5px solid var(--color-accent-cyan);
+    border-radius: 50%;
+    background: var(--color-canvas);
+    box-shadow: 0 0 0 4px
+      color-mix(in srgb, var(--color-accent-cyan) 9%, transparent);
+  }
+
+  .when {
+    margin-bottom: 0.5rem;
+    font-size: 0.71875rem;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-accent-cyan);
+  }
+
+  h3 {
+    font-size: 1.16rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .company {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5625rem;
+    margin: 0.3125rem 0 0.875rem;
+    font-size: 0.92rem;
+    color: var(--color-ink-muted);
+  }
+
+  .location {
+    font-size: 0.71875rem;
+    color: var(--color-ink-faint);
+  }
+
+  .highlights {
+    display: grid;
+    gap: 0.5625rem;
+  }
+
+  .highlights li {
+    position: relative;
+    padding-left: 1.25rem;
+    font-size: 0.925rem;
+    line-height: 1.7;
+    color: var(--color-ink-muted);
+  }
+
+  .highlights li::before {
+    content: "";
+    position: absolute;
+    top: 11px;
+    left: 2px;
+    width: 6px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: var(--color-accent-violet);
+    opacity: 0.75;
+  }
+
+  .highlights :global(strong) {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4375rem;
+    margin-top: 0.875rem;
+  }
+</style>

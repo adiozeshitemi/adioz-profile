@@ -1,8 +1,12 @@
 /*
- * Design tokens for the site's dark theme.
+ * Design tokens for the site's dark and light color schemes.
  * Every variable is emitted on :root and drives a Tailwind utility namespace:
  * --color-* (bg-*, text-*, border-*), --font-* (font-*), --radius-* (rounded-*),
- * --container-* (max-w-*), --ease-* (ease-*) and --breakpoint-* (md:, max-md:, ...).
+ * --container-* (max-w-*), --spacing-* (h-*, top-*, scroll-pt-*, ...),
+ * --ease-* (ease-*) and --breakpoint-* (md:, max-md:, ...).
+ * The @theme values are the dark scheme; the prefers-color-scheme: light block
+ * below overrides the color tokens. Text colors meet WCAG AA (4.5:1) on the
+ * canvas, raised canvas and card surfaces in both schemes.
  */
 @theme static {
   /* Typography: Montserrat for all text; JetBrains Mono for the hero terminal only */
@@ -20,7 +24,7 @@
   /* Text */
   --color-ink: #e9ecf6;
   --color-ink-muted: #8b94ac;
-  --color-ink-faint: #5c6479;
+  --color-ink-faint: #727b94;
 
   /* Borders and dividers */
   --color-line: rgb(255 255 255 / 0.075);
@@ -31,10 +35,13 @@
   --color-accent-violet: #a78bfa;
   --color-accent-pink: #f472b6;
   --color-success: #34d399;
+  /* Text on the cyan-to-violet accent gradient */
+  --color-on-accent: #05060b;
 
   /* Shape and layout */
   --radius-card: 1.125rem; /* 18px */
   --container-page: 73.75rem; /* 1180px content width */
+  --spacing-header: 4.25rem; /* 68px header bar height */
 
   /* Motion */
   --ease-soft: cubic-bezier(0.22, 0.68, 0.24, 1);
@@ -43,4 +50,49 @@
   --breakpoint-xs: 26.25rem; /* 420px */
   --breakpoint-md: 47.5rem; /* 760px */
   --breakpoint-lg: 65rem; /* 1040px */
+}
+
+/* Light scheme: the color tokens for devices that prefer light. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-canvas: #f6f7fb;
+    --color-canvas-raised: #eceff6;
+    --color-card: rgb(255 255 255 / 0.72);
+    --color-card-hover: #ffffff;
+
+    --color-ink: #0b1020;
+    --color-ink-muted: #4b5470;
+    --color-ink-faint: #5f6883;
+
+    --color-line: rgb(11 16 32 / 0.09);
+    --color-line-strong: rgb(11 16 32 / 0.16);
+
+    --color-accent-cyan: #0e7490;
+    --color-accent-violet: #6d28d9;
+    --color-accent-pink: #be185d;
+    --color-success: #047555;
+    --color-on-accent: #ffffff;
+  }
+}
+
+/*
+ * Elements with data-scheme="dark" keep the dark color tokens in both color
+ * schemes (the hero terminal). The values repeat the @theme colors above.
+ */
+[data-scheme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #05060b;
+  --color-canvas-raised: #0a0c15;
+  --color-card: rgb(255 255 255 / 0.024);
+  --color-card-hover: rgb(255 255 255 / 0.05);
+  --color-ink: #e9ecf6;
+  --color-ink-muted: #8b94ac;
+  --color-ink-faint: #727b94;
+  --color-line: rgb(255 255 255 / 0.075);
+  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-accent-cyan: #22d3ee;
+  --color-accent-violet: #a78bfa;
+  --color-accent-pink: #f472b6;
+  --color-success: #34d399;
+  --color-on-accent: #05060b;
 }

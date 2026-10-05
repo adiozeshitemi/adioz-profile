@@ -1,0 +1,40 @@
+---
+import type { SvgComponent } from "astro/types";
+
+/** SVG components from src/icons/, keyed by file name without ".svg". */
+const icons: Record<string, SvgComponent> = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<{ default: SvgComponent }>("../../icons/*.svg", {
+      eager: true,
+    }),
+  ).map(([path, module]) => [
+    path.slice(path.lastIndexOf("/") + 1, -".svg".length),
+    module.default,
+  ]),
+);
+
+interface Props {
+  /** File name in src/icons/ without ".svg", e.g. "github". */
+  name: string;
+  /** Accessible name; without it the icon is decorative and hidden from assistive technology. */
+  label?: string;
+  /** Width and height in pixels. */
+  size?: number;
+  class?: string;
+}
+
+const { name, label, size = 16, class: className } = Astro.props;
+const Svg = icons[name];
+if (!Svg) {
+  throw new Error(`Icon "${name}" has no file src/icons/${name}.svg`);
+}
+---
+
+<Svg
+  width={size}
+  height={size}
+  class={className}
+  role={label ? "img" : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : "true"}
+/>

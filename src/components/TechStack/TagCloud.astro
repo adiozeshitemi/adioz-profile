@@ -1,0 +1,39 @@
+---
+/* One techStack.json category: its name as a heading and its tools as chips. */
+import type { TechStackCategory } from "../../data/types";
+import Badge from "../UI/Badge.astro";
+
+interface Props {
+  category: TechStackCategory;
+}
+
+const { category } = Astro.props;
+---
+
+<div class="cloud" data-reveal>
+  <h3>{category.name}</h3>
+  <ul class="tools">
+    {category.tools.map((tool) => (
+      <li>
+        <Badge variant="chip">{tool}</Badge>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  h3 {
+    margin-bottom: 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5625rem;
+  }
+</style>

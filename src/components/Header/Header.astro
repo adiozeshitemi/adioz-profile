@@ -1,0 +1,106 @@
+---
+import { navigation } from "../../data/index";
+import BrandLogo from "./BrandLogo.astro";
+import MobileMenu from "./MobileMenu.astro";
+import NavLinks from "./NavLinks.astro";
+---
+
+<header class="site-header">
+  <div class="progress" aria-hidden="true"></div>
+  <div class="inner">
+    <BrandLogo />
+    <nav class="links" aria-label={navigation.label}>
+      <NavLinks />
+    </nav>
+    <MobileMenu />
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    border-bottom: 1px solid var(--color-line);
+    /* 85% canvas keeps ink-muted link text at 4.5:1 or more over any page content beneath. */
+    background: color-mix(in srgb, var(--color-canvas) 85%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+  }
+
+  /* src/scripts/motion.ts sets data-at-top while the page is within 40px of the top. */
+  .site-header[data-at-top] {
+    border-bottom-color: transparent;
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* motion.ts sets data-motion after the first state, so the state on load does not animate. */
+  .site-header[data-motion] {
+    transition:
+      background-color 0.35s var(--ease-soft),
+      border-color 0.35s var(--ease-soft),
+      -webkit-backdrop-filter 0.35s,
+      backdrop-filter 0.35s;
+  }
+
+  /*
+   * Scroll progress: a 2px bar along the header's top edge, scaled to the
+   * page's scroll position. Hidden where scroll timelines are unsupported.
+   */
+  .progress {
+    display: none;
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-cyan),
+      var(--color-accent-violet),
+      var(--color-accent-pink)
+    );
+    box-shadow: 0 0 16px
+      color-mix(in srgb, var(--color-accent-cyan) 60%, transparent);
+    transform-origin: left;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .progress {
+      display: block;
+      animation: header-progress linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+
+  @keyframes header-progress {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: var(--container-page);
+    height: var(--spacing-header);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  .links {
+    display: none;
+  }
+
+  /* --breakpoint-md: inline links replace the menu button. */
+  @media (width >= 47.5rem) {
+    .inner {
+      padding-inline: 1.75rem;
+    }
+
+    .links {
+      display: block;
+    }
+  }
+</style>

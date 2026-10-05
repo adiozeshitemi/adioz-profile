@@ -1,0 +1,35 @@
+{
+  "id": "about",
+  "label": "Core Engineering Focus",
+  "headline": "AI as efficient as it is intelligent",
+  "bio": [
+    "I take AI into production for enterprise clients and own each system from design to support: agents that act within guardrails, and models sized to the latency budget and hardware they run on."
+  ],
+  "pillars": [
+    {
+      "title": "Tool-Using Agents",
+      "icon": "code-slash",
+      "description": "Agents built as production software: typed tools, fail-closed guardrails, and a named operator behind every change they make.",
+      "tags": ["Typed tools", "Guardrails", "Auditable changes"]
+    },
+    {
+      "title": "Resource-Aware AI",
+      "icon": "activity",
+      "description": "Trains and distils models on GPU, then serves small, quantized models on CPU that meet tight latency budgets without wasted compute.",
+      "tags": [
+        "Distillation",
+        "INT8 quantization",
+        "CPU-only inference",
+        "Burn",
+        "Candle"
+      ]
+    },
+    {
+      "title": "Backend & Web Systems",
+      "icon": "box",
+      "description": "The services and web applications AI features run inside, built with Rust and Java and owned from API design to production support.",
+      "tags": ["Rust", "Axum", "Spring Boot", "Kafka", "PostgreSQL"]
+    }
+  ],
+  "philosophy": "AI should be as efficient as it is intelligent: small, quantized models that meet tight latency budgets without wasted compute."
+}

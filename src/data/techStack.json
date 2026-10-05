@@ -1,0 +1,119 @@
+{
+  "id": "stack",
+  "label": "Tech Stack",
+  "headline": "Architectural toolkit",
+  "intro": "The languages, data systems, and ML runtimes behind production AI.",
+  "skills": [
+    {
+      "label": "Rust Systems & Tokio Async",
+      "level": "Expert",
+      "percent": 95
+    },
+    {
+      "label": "Java & Spring Boot",
+      "level": "Expert",
+      "percent": 92
+    },
+    {
+      "label": "Kafka Streaming & ClickHouse",
+      "level": "Advanced",
+      "percent": 88
+    },
+    {
+      "label": "Cloud & DevOps (AWS / Docker / K8s)",
+      "level": "Advanced",
+      "percent": 85
+    },
+    {
+      "label": "Embedded AI Engine (Burn / Candle)",
+      "level": "Advanced",
+      "percent": 80
+    }
+  ],
+  "categories": [
+    {
+      "name": "Agentic AI",
+      "tools": [
+        "Tool-using and ReAct agents/evaluation",
+        "Typed audited tools",
+        "Retrieval (RAG)",
+        "Local SLMs"
+      ]
+    },
+    {
+      "name": "ML Engineering",
+      "tools": [
+        "Burn",
+        "Candle",
+        "PyTorch",
+        "CLIP",
+        "Embeddings",
+        "Model training and evaluation"
+      ]
+    },
+    {
+      "name": "Resource-Aware AI",
+      "tools": [
+        "Multi-teacher distillation into small students",
+        "INT8 quantization",
+        "Truncatable embeddings (MRL)",
+        "CPU-only inference",
+        "Zero-copy memory-mapped weights",
+        "SIMD scoring",
+        "Cached teacher passes",
+        "Accuracy-driven model sizing",
+        "Latency and memory budgets",
+        "Load profiling"
+      ]
+    },
+    {
+      "name": "Backend",
+      "tools": [
+        "Rust (Tokio, Axum)",
+        "Java (Spring Boot)",
+        "Golang (gRPC)",
+        "Python",
+        "REST",
+        "Microservices"
+      ]
+    },
+    {
+      "name": "Frontend",
+      "tools": [
+        "Angular",
+        "TypeScript",
+        "RxJS",
+        "Next.js",
+        "Rust/WebAssembly",
+        "HTML5/SCSS"
+      ]
+    },
+    {
+      "name": "Data",
+      "tools": [
+        "PostgreSQL",
+        "MongoDB",
+        "SQLite",
+        "ClickHouse",
+        "Kafka",
+        "Redis",
+        "Tantivy (full-text search)",
+        "Qdrant"
+      ]
+    },
+    {
+      "name": "DevOps & Security",
+      "tools": [
+        "Kubernetes",
+        "AWS",
+        "GCP",
+        "GitHub Actions",
+        "CI quality gates",
+        "JWT",
+        "OAuth2",
+        "RBAC",
+        "Offensive Rust (Exploit PoCs, Custom Security Tooling, Low-Level Memory Security)"
+      ]
+    }
+  ]
+}

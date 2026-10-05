@@ -1,0 +1,105 @@
+---
+/*
+ * The contact section from contact.json: a centred panel with the numbered
+ * heading and body, a button that opens the mailto: link in profile.json, and
+ * the address it writes to. A profile.json with no mailto: link fails the
+ * build. The section spacing and page container match UI/Section.astro.
+ */
+import { contact, profile, sectionNumber } from "../../data/index";
+import Button from "../UI/Button.astro";
+import SectionHeader from "../UI/SectionHeader.astro";
+
+const email = profile.links.find((link) => link.url.startsWith("mailto:"));
+if (!email) {
+  throw new Error("profile.json: no mailto: link for the contact section");
+}
+const address = new URL(email.url).pathname;
+const titleId = `${contact.id}-title`;
+---
+
+<section id={contact.id} class="contact" aria-labelledby={titleId}>
+  <div class="inner">
+    <div class="panel spot" data-reveal>
+      <SectionHeader
+        index={sectionNumber(contact.id)}
+        label={contact.label}
+        title={contact.heading}
+        intro={contact.body}
+        id={titleId}
+        align="center"
+      />
+      <div class="cta">
+        <Button href={email.url} icon={contact.ctaIcon}>
+          {contact.ctaLabel}
+        </Button>
+      </div>
+      <p class="address">
+        <a href={email.url}>{address}</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    padding-block: 4.5rem;
+  }
+
+  .inner {
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  /* Cyan and violet glows in opposite corners over the card surface. */
+  .panel {
+    overflow: hidden;
+    padding: clamp(2.5rem, 6vw, 4.5rem);
+    border: 1px solid var(--color-line);
+    border-radius: 1.625rem;
+    background:
+      radial-gradient(
+        120% 140% at 12% 0%,
+        color-mix(in srgb, var(--color-accent-cyan) 10%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        120% 140% at 88% 100%,
+        color-mix(in srgb, var(--color-accent-violet) 12%, transparent),
+        transparent 55%
+      ),
+      var(--color-card);
+    text-align: center;
+  }
+
+  .address {
+    margin-top: 1.625rem;
+    font-size: 0.8125rem;
+  }
+
+  .address a {
+    color: var(--color-ink-muted);
+    transition: color 0.3s;
+  }
+
+  .address a:hover {
+    color: var(--color-accent-cyan);
+  }
+
+  .address a:focus-visible {
+    border-radius: 0.25rem;
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 3px;
+  }
+
+  /* --breakpoint-md */
+  @media (width >= 47.5rem) {
+    .contact {
+      padding-block: clamp(5rem, 11vw, 8.75rem);
+    }
+
+    .inner {
+      padding-inline: 1.75rem;
+    }
+  }
+</style>
