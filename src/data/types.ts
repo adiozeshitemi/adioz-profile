@@ -163,6 +163,20 @@ export interface TechStackCategory {
   tools: string[];
 }
 
+/** Content of the experience section. */
+export interface ExperienceContent {
+  /** Section id, the target of its navigation.json link, e.g. "experience". */
+  id: string;
+  /** Section name after its number, e.g. "Experience". */
+  label: string;
+  /** Section headline, e.g. "Production Trace & Impact". */
+  headline: string;
+  /** Text in place of the end year of an ongoing role, e.g. "Present". */
+  ongoing: string;
+  /** Roles in display order, most recent first. */
+  roles: ExperienceItem[];
+}
+
 /** One role in the experience timeline. */
 export interface ExperienceItem {
   role: string;
@@ -182,6 +196,18 @@ export interface YearRange {
   start: number;
   /** Last year, or null while the role is ongoing. */
   end: number | null;
+}
+
+/** Content of the featured projects section. */
+export interface ProjectsContent {
+  /** Section id, the target of its navigation.json link, e.g. "work". */
+  id: string;
+  /** Section name after its number, e.g. "Featured Projects". */
+  label: string;
+  /** Section headline, e.g. "Systems built for scale". */
+  headline: string;
+  /** Projects in display order; the section shows those with `featured` set. */
+  projects: ProjectItem[];
 }
 
 /** One project card in the featured projects section. */

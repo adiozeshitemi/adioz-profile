@@ -1,67 +1,73 @@
-[
-  {
-    "role": "Lead Engineer (AI & Backend)",
-    "company": "BBR (Big Bold Red Agency)",
-    "period": { "start": 2025, "end": null },
-    "highlights": [
-      "**End-to-end ownership:** Own BBRaiN across its Rust inference service, vendor hub, admin console and GPU training pipeline; deployed inside each client's own cloud (VPC).",
-      "**Agentic AI in production:** Built an admin assistant agent that turns plain-language requests into audited configuration changes through typed write tools.",
-      "**AI in the binary:** Serve vision, embedding and ranking models from a single Rust service on CPU, with no GPU runtime, within a tight latency budget.",
-      "**Guardrails and licensing:** Built fail-closed content safety controls, per-feature licensing, and custom security validation tooling in Rust (Offensive Rust methodologies) to prevent adversarial manipulation and unauthorized feature execution."
-    ],
-    "technologies": [
-      "Rust",
-      "Axum",
-      "Burn",
-      "PyTorch",
-      "CLIP",
-      "Tantivy",
-      "Rhai",
-      "safetensors",
-      "Postman",
-      "Docker"
-    ]
-  },
-  {
-    "role": "Junior AI Engineer",
-    "company": "Berrijam",
-    "period": { "start": 2023, "end": 2025 },
-    "highlights": [
-      "**AI integration:** Integrated ML models and LLM APIs into Go, Java and Python microservices over REST and gRPC.",
-      "**LLM features:** Built prompt, retrieval (RAG) and structured-output features for client-facing tools.",
-      "**Data preparation:** Cleaned, transformed and validated client datasets for modelling and analytics.",
-      "**Prototype to production:** Turned validated AI prototypes into services with Docker, CI pipelines and monitoring.",
-      "**Evaluation and docs:** Tested model outputs against baselines and documented APIs."
-    ],
-    "technologies": ["Golang", "Java", "Python", "gRPC", "Docker"]
-  },
-  {
-    "role": "Fullstack Engineer (Java & Go)",
-    "company": "Zone01",
-    "period": { "start": 2023, "end": 2025 },
-    "highlights": [
-      "**Service performance:** Cut inter-service overhead by 30% by moving services to Golang and gRPC.",
-      "**Streaming pipelines:** Ran Kafka pipelines with sub-second ingestion for real-time monitoring.",
-      "**Team standards:** Set code-quality and DevSecOps standards and mentored engineers."
-    ],
-    "technologies": ["Java", "Golang", "gRPC", "Kafka"]
-  },
-  {
-    "role": "Backend Engineer (Golang & Java)",
-    "company": "Upwork",
-    "period": { "start": 2018, "end": 2024 },
-    "highlights": [
-      "**Real-time systems:** Built Golang (REST, WebSockets) and Java Spring Boot backends for international startups.",
-      "**Full-stack delivery:** Integrated Angular frontends with Go and Java backends through well-documented APIs.",
-      "**Reliability:** Deployed Dockerized services with auto-scaling and monitoring, holding 99% uptime."
-    ],
-    "technologies": [
-      "Golang",
-      "Java",
-      "Spring Boot",
-      "WebSockets",
-      "Angular",
-      "Docker"
-    ]
-  }
-]
+{
+  "id": "experience",
+  "label": "Experience",
+  "headline": "Production Trace & Impact",
+  "ongoing": "Present",
+  "roles": [
+    {
+      "role": "Lead Engineer (AI & Backend)",
+      "company": "BBR (Big Bold Red Agency)",
+      "period": { "start": 2025, "end": null },
+      "highlights": [
+        "**End-to-end ownership:** Own BBRaiN across its Rust inference service, vendor hub, admin console and GPU training pipeline; deployed inside each client's own cloud (VPC).",
+        "**Agentic AI in production:** Built an admin assistant agent that turns plain-language requests into audited configuration changes through typed write tools.",
+        "**AI in the binary:** Serve vision, embedding and ranking models from a single Rust service on CPU, with no GPU runtime, within a tight latency budget.",
+        "**Guardrails and licensing:** Built fail-closed content safety controls, per-feature licensing, and custom security validation tooling in Rust (Offensive Rust methodologies) to prevent adversarial manipulation and unauthorized feature execution."
+      ],
+      "technologies": [
+        "Rust",
+        "Axum",
+        "Burn",
+        "PyTorch",
+        "CLIP",
+        "Tantivy",
+        "Rhai",
+        "safetensors",
+        "Postman",
+        "Docker"
+      ]
+    },
+    {
+      "role": "Junior AI Engineer",
+      "company": "Berrijam",
+      "period": { "start": 2023, "end": 2025 },
+      "highlights": [
+        "**AI integration:** Integrated ML models and LLM APIs into Go, Java and Python microservices over REST and gRPC.",
+        "**LLM features:** Built prompt, retrieval (RAG) and structured-output features for client-facing tools.",
+        "**Data preparation:** Cleaned, transformed and validated client datasets for modelling and analytics.",
+        "**Prototype to production:** Turned validated AI prototypes into services with Docker, CI pipelines and monitoring.",
+        "**Evaluation and docs:** Tested model outputs against baselines and documented APIs."
+      ],
+      "technologies": ["Golang", "Java", "Python", "gRPC", "Docker"]
+    },
+    {
+      "role": "Fullstack Engineer (Java & Go)",
+      "company": "Zone01",
+      "period": { "start": 2023, "end": 2025 },
+      "highlights": [
+        "**Service performance:** Cut inter-service overhead by 30% by moving services to Golang and gRPC.",
+        "**Streaming pipelines:** Ran Kafka pipelines with sub-second ingestion for real-time monitoring.",
+        "**Team standards:** Set code-quality and DevSecOps standards and mentored engineers."
+      ],
+      "technologies": ["Java", "Golang", "gRPC", "Kafka"]
+    },
+    {
+      "role": "Backend Engineer (Golang & Java)",
+      "company": "Upwork",
+      "period": { "start": 2018, "end": 2024 },
+      "highlights": [
+        "**Real-time systems:** Built Golang (REST, WebSockets) and Java Spring Boot backends for international startups.",
+        "**Full-stack delivery:** Integrated Angular frontends with Go and Java backends through well-documented APIs.",
+        "**Reliability:** Deployed Dockerized services with auto-scaling and monitoring, holding 99% uptime."
+      ],
+      "technologies": [
+        "Golang",
+        "Java",
+        "Spring Boot",
+        "WebSockets",
+        "Angular",
+        "Docker"
+      ]
+    }
+  ]
+}
