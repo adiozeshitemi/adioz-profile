@@ -100,6 +100,8 @@ adioz-dev/
 │   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
+│   ├── scripts/               # 📜 Client scripts
+│   │   └── motion.ts          # Header scroll state, stat counters, card spotlight
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Keyframes, reveal transition, reduced-motion rules
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
