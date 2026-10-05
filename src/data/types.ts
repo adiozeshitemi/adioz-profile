@@ -31,6 +31,16 @@ export interface Profile {
   links: LinkItem[];
 }
 
+/** Site-wide defaults for the page head; the default title is `Profile.name | Profile.role`. */
+export interface SiteMeta {
+  /** Default meta and Open Graph description. */
+  description: string;
+  /** Open Graph image path under public/, e.g. "/images/og.png". */
+  image: string;
+  /** Alt text for the Open Graph image. */
+  imageAlt: string;
+}
+
 /** One headline metric in the hero stats banner. */
 export interface StatItem {
   /** Number the counter animates to. */
