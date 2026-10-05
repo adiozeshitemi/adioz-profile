@@ -44,6 +44,10 @@ adioz-dev/
 │   │   │   ├── Hero.astro
 │   │   │   ├── SocialLinks.astro
 │   │   │   └── Terminal.astro
+│   │   ├── TechStack/         # Tech stack section: skill bars, tool categories
+│   │   │   ├── SkillBar.astro
+│   │   │   ├── TagCloud.astro
+│   │   │   └── TechStackSection.astro
 │   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, icons, stats, sections
 │   │       ├── Badge.astro
 │   │       ├── Button.astro
@@ -64,7 +68,7 @@ adioz-dev/
 │   │   ├── projects.json      # Key projects and their links, from public/resume.pdf
 │   │   ├── site.json          # Default meta description and Open Graph image
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
-│   │   ├── techStack.json     # Proficiency bars and tools grouped by category
+│   │   ├── techStack.json     # Stack section: id, label, headline, intro, skill bars, tools by category
 │   │   ├── terminal.json      # Hero terminal window title and lines
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
