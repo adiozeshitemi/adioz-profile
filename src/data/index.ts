@@ -1,8 +1,9 @@
 /*
  * Typed exports of the portfolio content. Each JSON file is assigned to its
  * interface from types.ts, so `astro check` rejects a file whose structure no
- * longer matches. JSON imports type every string as `string`, so the
- * TerminalLineKind union is checked when this module loads instead.
+ * longer matches. Rules a type cannot express are checked when this module
+ * loads: each terminal line's TerminalLineKind (JSON imports type every string
+ * as `string`) and each skill's percent, an integer from 0 to 100.
  */
 import aboutJson from "./about.json";
 import contactJson from "./contact.json";
@@ -25,6 +26,7 @@ import type {
   ProjectItem,
   SiteMeta,
   StatItem,
+  SkillItem,
   TechStack,
   TerminalContent,
   TerminalLine,
@@ -51,6 +53,20 @@ function toTerminalLine(line: { kind: string; text: string }): TerminalLine {
   return { kind: line.kind, text: line.text };
 }
 
+/** Returns the skill; throws when its percent is not an integer from 0 to 100. */
+function toSkillItem(skill: SkillItem): SkillItem {
+  if (
+    !Number.isInteger(skill.percent) ||
+    skill.percent < 0 ||
+    skill.percent > 100
+  ) {
+    throw new Error(
+      `techStack.json: percent ${skill.percent} of "${skill.label}" is not an integer from 0 to 100`,
+    );
+  }
+  return skill;
+}
+
 export const about: AboutContent = aboutJson;
 export const contact: ContactContent = contactJson;
 export const experience: ExperienceItem[] = experienceJson;
@@ -60,7 +76,10 @@ export const profile: Profile = profileJson;
 export const projects: ProjectItem[] = projectsJson;
 export const site: SiteMeta = siteJson;
 export const stats: StatItem[] = statsJson;
-export const techStack: TechStack = techStackJson;
+export const techStack: TechStack = {
+  ...techStackJson,
+  skills: techStackJson.skills.map(toSkillItem),
+};
 export const terminal: TerminalContent = {
   title: terminalJson.title,
   lines: terminalJson.lines.map(toTerminalLine),

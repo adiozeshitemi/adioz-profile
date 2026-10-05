@@ -131,6 +131,14 @@ export interface FocusPillar {
 
 /** Content of the tech stack section. */
 export interface TechStack {
+  /** Section id, the target of its navigation.json link, e.g. "stack". */
+  id: string;
+  /** Section name after its number, e.g. "Tech Stack". */
+  label: string;
+  /** Section headline, e.g. "Architectural toolkit". */
+  headline: string;
+  /** Intro paragraph under the headline. */
+  intro: string;
   /** Proficiency bars in display order. */
   skills: SkillItem[];
   /** Tool groups in display order. */
