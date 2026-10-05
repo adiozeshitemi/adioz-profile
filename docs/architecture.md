@@ -36,7 +36,7 @@ flowchart LR
 - **`src/layouts/Layout.astro`**: The HTML shell: `title` and `description` props with defaults, Open Graph tags, the SVG favicon, and the `global.css` import.
 - **`src/components/Hero.astro`**: The hero section: availability badge, headline, role, summary, and email and GitHub links.
 - **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only, and every link is a `LinkItem` with a title, URL and icon name. In `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis.
-- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalLine[]`), `about.json` (`AboutContent`) and `techStack.json` (`TechStack`: proficiency bars and tools grouped by category). No page or component imports them.
+- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalLine[]`), `about.json` (`AboutContent`), `techStack.json` (`TechStack`: proficiency bars and tools grouped by category), `experience.json` (`ExperienceItem[]`) and `projects.json` (`ProjectItem[]`). The experience and projects match the resume in `public/resume.pdf`. No page or component imports them.
 
 ## 2. Styling
 

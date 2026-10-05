@@ -28,14 +28,16 @@ adioz-dev/
 │   │   └── profile_pic.svg    # Profile avatar
 │   ├── favicon.ico            # Favicon fallback (16, 32, 48 px)
 │   ├── favicon.svg            # AD logo mark
-│   └── resume.pdf             # Downloadable resume
+│   └── resume.pdf             # Downloadable resume; source of the experience and projects data
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
 │   │   └── Hero.astro         # Hero section
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: headline, bio, focus pillars, philosophy
+│   │   ├── experience.json    # Career timeline, from public/resume.pdf
 │   │   ├── profile.json       # Name, role, hero copy, availability, GitHub/LinkedIn/email links
+│   │   ├── projects.json      # Key projects and their links, from public/resume.pdf
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Proficiency bars and tools grouped by category
 │   │   ├── terminal.json      # Hero terminal lines
