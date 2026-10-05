@@ -1,0 +1,171 @@
+---
+/*
+ * The hero terminal: terminal.json's title in a window bar, its lines as the
+ * output, and an input line with a caret. Each output line appears 400ms after
+ * the previous one, then the input line, through CSS animation delays alone;
+ * the text is in the HTML from the start, and with reduced motion every line
+ * shows at once.
+ */
+import { terminal } from "../../data/index";
+---
+
+<div class="terminal" data-scheme="dark">
+  <div class="bar" aria-hidden="true">
+    <span class="light"></span>
+    <span class="light"></span>
+    <span class="light"></span>
+    <span class="title">{terminal.title}</span>
+  </div>
+  <div class="body">
+    <div class="output">
+      {terminal.lines.map((line, index) => (
+        <p
+          class:list={["line", line.kind]}
+          style={`--line: ${index}`}
+          set:text={line.text}
+        />
+      ))}
+    </div>
+    <p class="input" style={`--line: ${terminal.lines.length}`}>
+      <span class="caret"></span>
+    </p>
+  </div>
+</div>
+
+<style>
+  .terminal {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 0.875rem;
+    background: linear-gradient(
+      180deg,
+      rgb(15 18 28 / 0.94),
+      rgb(9 11 18 / 0.97)
+    );
+    box-shadow:
+      0 30px 80px -30px rgb(0 0 0 / 0.9),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 2%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+
+  /* A softer shadow on the light canvas. */
+  @media (prefers-color-scheme: light) {
+    .terminal {
+      box-shadow:
+        0 30px 80px -30px rgb(15 23 42 / 0.35),
+        inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 2%, transparent);
+    }
+  }
+
+  /* Cyan glow fading down from the window bar. */
+  .terminal::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-accent-cyan) 5%, transparent),
+      transparent 40%
+    );
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.875rem;
+    border-bottom: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-ink) 2%, transparent);
+  }
+
+  .light {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+  }
+
+  .light:nth-child(1) {
+    background: #ff5f57;
+  }
+
+  .light:nth-child(2) {
+    background: #febc2e;
+  }
+
+  .light:nth-child(3) {
+    background: #28c840;
+  }
+
+  .title {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-muted);
+  }
+
+  .body {
+    min-height: 17.875rem;
+    padding: 1.25rem 1.25rem 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.85;
+  }
+
+  /* pre-wrap keeps runs of spaces in terminal.json text; set:text leaves no template whitespace around it. */
+  .line {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .cmd {
+    color: var(--color-ink);
+  }
+
+  .out {
+    color: var(--color-ink-muted);
+  }
+
+  .ok {
+    color: var(--color-success);
+  }
+
+  .key {
+    color: var(--color-accent-cyan);
+  }
+
+  /* --line is the line's position: line n appears at 600ms + n × 400ms. */
+  .line,
+  .input {
+    animation: terminal-print 1ms both;
+    animation-delay: calc(600ms + var(--line) * 400ms);
+  }
+
+  @keyframes terminal-print {
+    from {
+      visibility: hidden;
+    }
+  }
+
+  .caret {
+    display: inline-block;
+    width: 8px;
+    height: 15px;
+    vertical-align: -2px;
+    background: var(--color-accent-cyan);
+    box-shadow: 0 0 10px
+      color-mix(in srgb, var(--color-accent-cyan) 80%, transparent);
+    animation: var(--animate-caret-blink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .line,
+    .input,
+    .caret {
+      animation: none;
+    }
+  }
+</style>
