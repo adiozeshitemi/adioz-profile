@@ -9,13 +9,15 @@ interface Props {
   intro?: string;
   /** id of the <h2>, for the section's aria-labelledby. */
   id?: string;
+  /** start: aligned left; center: centred, with the intro narrowed to 52ch. */
+  align?: "start" | "center";
 }
 
-const { index, label, title, intro, id } = Astro.props;
+const { index, label, title, intro, id, align = "start" } = Astro.props;
 const number = String(index).padStart(2, "0");
 ---
 
-<header class="section-header">
+<header class:list={["section-header", align]}>
   <p class="label">
     {number} — {label}
   </p>
@@ -70,5 +72,16 @@ const number = String(index).padStart(2, "0");
 
   .intro :global(p + p) {
     margin-top: 1rem;
+  }
+
+  .center {
+    margin-inline: auto;
+    margin-bottom: 2.125rem;
+    text-align: center;
+  }
+
+  .center .intro {
+    max-width: 52ch;
+    margin-inline: auto;
   }
 </style>

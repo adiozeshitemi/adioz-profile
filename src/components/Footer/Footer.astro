@@ -1,0 +1,127 @@
+---
+/*
+ * The site footer from footer.json: "© <build year>" with the copyright
+ * statement, then each credit group and the source link: one per line below
+ * --breakpoint-md, and in one line separated by " · " from --breakpoint-md.
+ * The links are underlined so they stand apart from the text around them, and
+ * they open in a new tab.
+ */
+import { footer } from "../../data/index";
+import type { LinkItem } from "../../data/types";
+import Icon from "../UI/Icon.astro";
+
+const year = new Date().getFullYear();
+const linkAttributes = (link: LinkItem) => ({
+  href: link.url,
+  target: "_blank",
+  rel: "noopener noreferrer",
+});
+---
+
+<footer class="site-footer">
+  <div class="inner">
+    <p>
+      © {year} {footer.copyright}
+    </p>
+    <ul class="credits">
+      {footer.credits.map((group) => (
+        <li>
+          {group.label}{" "}
+          {group.links.map((link, index) => (
+            <>
+              {index > 0 && " & "}
+              <a {...linkAttributes(link)}>
+                <Icon name={link.icon} size={13} />
+                {link.title}
+              </a>
+            </>
+          ))}
+        </li>
+      ))}
+      <li>
+        <a {...linkAttributes(footer.source)}>
+          <Icon name={footer.source.icon} size={13} />
+          {footer.source.title}
+        </a>
+      </li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    padding-block: 2.125rem;
+    border-top: 1px solid var(--color-line);
+    font-size: 0.75rem;
+    color: var(--color-ink-faint);
+  }
+
+  .inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+    text-align: center;
+  }
+
+  .credits {
+    display: grid;
+    justify-items: center;
+    gap: 0.375rem;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+    text-underline-offset: 0.25em;
+    transition:
+      color 0.25s,
+      text-decoration-color 0.25s;
+  }
+
+  a:hover {
+    color: var(--color-accent-cyan);
+    text-decoration-color: currentColor;
+  }
+
+  a:focus-visible {
+    border-radius: 0.25rem;
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 3px;
+  }
+
+  /*
+   * --breakpoint-md: copyright and credits at either end of one row, the
+   * credit items in a line separated by " · ". The separator's empty
+   * alternative text keeps screen readers from reading it; browsers without
+   * alternative text use the plain declaration.
+   */
+  @media (width >= 47.5rem) {
+    .inner {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1.25rem;
+      padding-inline: 1.75rem;
+      text-align: start;
+    }
+
+    .credits {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .credits li + li::before {
+      content: "·";
+      content: "·" / "";
+      margin-inline: 0.5rem;
+    }
+  }
+</style>
