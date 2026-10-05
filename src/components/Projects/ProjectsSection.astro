@@ -1,0 +1,30 @@
+---
+/* The featured projects section: a ProjectCard for each projects.json project with `featured` set. */
+import { projects } from "../../data/index";
+import Section from "../UI/Section.astro";
+import ProjectCard from "./ProjectCard.astro";
+
+const featured = projects.projects.filter((project) => project.featured);
+---
+
+<Section id={projects.id} label={projects.label} title={projects.headline}>
+  <div class="grid">
+    {featured.map((project) => (
+      <ProjectCard project={project} />
+    ))}
+  </div>
+</Section>
+
+<style>
+  .grid {
+    display: grid;
+    gap: 1.125rem;
+  }
+
+  /* --breakpoint-md */
+  @media (width >= 47.5rem) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

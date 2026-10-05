@@ -1,0 +1,149 @@
+---
+/*
+ * One projects.json project: its title and links, description, tags and
+ * metric line; https: links open in a new tab. The description grows to fill
+ * the card, so the tags and metric lines of cards in a row line up.
+ */
+import type { ProjectItem } from "../../data/types";
+import Badge from "../UI/Badge.astro";
+import Icon from "../UI/Icon.astro";
+
+interface Props {
+  project: ProjectItem;
+}
+
+const { project } = Astro.props;
+---
+
+<article class="card">
+  <h3>{project.title}</h3>
+  <ul class="links">
+    {project.links.map((link) => (
+      <li>
+        <a
+          href={link.url}
+          {...(link.url.startsWith("https:")
+            ? { target: "_blank", rel: "noopener noreferrer" }
+            : {})}
+        >
+          <Icon name={link.icon} size={14} />
+          {link.title}
+        </a>
+      </li>
+    ))}
+  </ul>
+  <p class="description">{project.description}</p>
+  <ul class="tags">
+    {project.tags.map((tag) => (
+      <li>
+        <Badge>{tag}</Badge>
+      </li>
+    ))}
+  </ul>
+  <p class="metric">{project.metric}</p>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 1.875rem 1.75rem 1.625rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+    transition:
+      transform 0.4s var(--ease-soft),
+      border-color 0.35s,
+      background-color 0.35s;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-line-strong);
+    background: var(--color-card-hover);
+  }
+
+  h3 {
+    margin-bottom: 0.625rem;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .description {
+    flex: 1;
+    font-size: 0.925rem;
+    line-height: 1.72;
+    color: var(--color-ink-muted);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4375rem;
+    margin-top: 1.375rem;
+  }
+
+  /* Card hover raises the tags to ink-muted text and line-strong borders. */
+  .card:hover :global(.tag) {
+    border-color: var(--color-line-strong);
+    color: var(--color-ink-muted);
+  }
+
+  .metric {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-line);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-success);
+  }
+
+  /* The dot centres on the first line: half the 1.5 line height, less its 2.5px radius. */
+  .metric::before {
+    content: "";
+    flex-shrink: 0;
+    margin-top: calc(0.75em - 2.5px);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success);
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-ink-muted);
+    text-underline-offset: 0.25em;
+    transition: color 0.25s;
+  }
+
+  a:hover {
+    color: var(--color-accent-cyan);
+    text-decoration: underline;
+  }
+
+  a:focus-visible {
+    border-radius: 0.25rem;
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 3px;
+  }
+</style>
