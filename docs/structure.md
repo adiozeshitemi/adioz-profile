@@ -7,7 +7,7 @@ adioz-dev/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml             # Quality gate: format check, type check and build
-│       └── deploy.yml         # Deploy main to production, other branches to previews
+│       └── deploy.yml         # Production deploy on every push to main
 │
 ├── .vscode/
 │   ├── extensions.json        # Recommended editor extensions (Astro)
@@ -54,7 +54,7 @@ adioz-dev/
 ├── package.json               # 📦 Dependencies and scripts
 ├── README.md
 ├── tsconfig.json              # 🦕 Strict TypeScript with path aliases
-└── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/, preview URLs)
+└── wrangler.toml              # ☁️ Cloudflare Worker config (static assets from dist/)
 ```
 
 Not listed: generated or ignored directories (`node_modules/`, `dist/`, `.astro/`, `.wrangler/`) and `_`-prefixed prototype files.
