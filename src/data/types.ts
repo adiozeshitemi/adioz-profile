@@ -105,6 +105,10 @@ export interface TerminalContent {
 
 /** Content of the about section. */
 export interface AboutContent {
+  /** Section id, the target of its navigation.json link, e.g. "about". */
+  id: string;
+  /** Section name after its number, e.g. "Core Engineering Focus". */
+  label: string;
   /** Section headline, e.g. "AI as efficient as it is intelligent". */
   headline: string;
   /** Bio paragraphs in reading order. */
@@ -118,6 +122,8 @@ export interface AboutContent {
 /** One core focus area in the about section. */
 export interface FocusPillar {
   title: string;
+  /** Icon name, e.g. "code-slash". */
+  icon: string;
   description: string;
   /** Topic labels shown as tags, e.g. "Quantization". */
   tags: string[];
