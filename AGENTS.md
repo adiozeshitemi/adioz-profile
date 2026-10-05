@@ -1,12 +1,13 @@
 ## Development
 
-When starting the dev server, use background mode:
+Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24. The `package.json` scripts:
 
-```
-astro dev --background
-```
+- `npm run dev`: starts the Astro dev server, at `http://localhost:4321` by default. It runs in the foreground until stopped.
+- `npm run build`: runs `astro check` (strict TypeScript), then `astro build`, writing the static site to `dist/`.
+- `npm run preview`: serves the `dist/` build locally.
+- `npm run format:check`: checks formatting with Prettier; `npm run format` rewrites files to fix it.
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+Run `npm run format:check` and `npm run build` before committing. CI (`.github/workflows/ci.yml`) runs the same two commands on pull requests into `main` and before every deployment.
 
 ## Documentation
 

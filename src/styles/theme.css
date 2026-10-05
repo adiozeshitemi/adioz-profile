@@ -2,7 +2,8 @@
  * Design tokens for the site's dark and light color schemes.
  * Every variable is emitted on :root and drives a Tailwind utility namespace:
  * --color-* (bg-*, text-*, border-*), --font-* (font-*), --radius-* (rounded-*),
- * --container-* (max-w-*), --ease-* (ease-*) and --breakpoint-* (md:, max-md:, ...).
+ * --container-* (max-w-*), --spacing-* (h-*, top-*, scroll-pt-*, ...),
+ * --ease-* (ease-*) and --breakpoint-* (md:, max-md:, ...).
  * The @theme values are the dark scheme; the prefers-color-scheme: light block
  * below overrides the color tokens. Text colors meet WCAG AA (4.5:1) on the
  * canvas, raised canvas and card surfaces in both schemes.
@@ -40,6 +41,7 @@
   /* Shape and layout */
   --radius-card: 1.125rem; /* 18px */
   --container-page: 73.75rem; /* 1180px content width */
+  --spacing-header: 4.25rem; /* 68px header bar height */
 
   /* Motion */
   --ease-soft: cubic-bezier(0.22, 0.68, 0.24, 1);

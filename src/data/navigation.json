@@ -1,0 +1,11 @@
+{
+  "label": "Primary",
+  "menuLabel": "Menu",
+  "links": [
+    { "title": "About", "url": "#about" },
+    { "title": "Stack", "url": "#stack" },
+    { "title": "Experience", "url": "#experience" },
+    { "title": "Work", "url": "#work" }
+  ],
+  "cta": { "title": "Contact", "url": "#contact" }
+}

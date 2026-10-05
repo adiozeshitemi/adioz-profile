@@ -1,0 +1,99 @@
+---
+import { navigation } from "../../data/index";
+
+interface Props {
+  /** bar: inline links and a button-style contact link; drawer: a stacked list for the menu drawer. */
+  variant?: "bar" | "drawer";
+}
+
+const { variant = "bar" } = Astro.props;
+---
+
+<ul class:list={["links", variant]}>
+  {navigation.links.map((link) => (
+    <li>
+      <a href={link.url}>{link.title}</a>
+    </li>
+  ))}
+  <li>
+    <a href={navigation.cta.url} class="cta">
+      {navigation.cta.title}
+    </a>
+  </li>
+</ul>
+
+<style>
+  .links {
+    display: flex;
+  }
+
+  a {
+    display: block;
+    font-weight: 500;
+    color: var(--color-ink-muted);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 2px;
+  }
+
+  .bar {
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .bar a {
+    padding: 0.5rem 0.875rem;
+    border-radius: 99px;
+    font-size: 0.84375rem;
+    transition:
+      color 0.22s,
+      background-color 0.22s;
+  }
+
+  .bar a:hover {
+    background: color-mix(in srgb, var(--color-ink) 4.5%, transparent);
+    color: var(--color-ink);
+  }
+
+  .bar .cta {
+    margin-left: 0.625rem;
+    padding: 0.5625rem 1.125rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 0.625rem;
+    background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    transition:
+      background-color 0.22s,
+      border-color 0.22s,
+      transform 0.22s;
+  }
+
+  .bar .cta:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--color-accent-cyan) 45%, transparent);
+    background: color-mix(in srgb, var(--color-accent-cyan) 12%, transparent);
+  }
+
+  .drawer {
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .drawer a {
+    padding: 0.8125rem 0.25rem;
+    border-bottom: 1px solid var(--color-line);
+    font-size: 0.9375rem;
+  }
+
+  .drawer li:last-child a {
+    border-bottom: none;
+  }
+
+  .drawer a:hover {
+    color: var(--color-ink);
+  }
+</style>

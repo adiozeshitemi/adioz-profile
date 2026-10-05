@@ -24,9 +24,11 @@
 
 /* Base element styles that Tailwind's preflight does not set. */
 @layer base {
+  /* scroll-padding-top keeps fragment-link targets below the sticky header. */
   html {
     color-scheme: light dark;
     scroll-behavior: smooth;
+    scroll-padding-top: var(--spacing-header);
   }
 
   body {

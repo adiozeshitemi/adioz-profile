@@ -31,6 +31,26 @@ export interface Profile {
   links: LinkItem[];
 }
 
+/** A link to a section of the page, e.g. "About" to "#about". */
+export interface NavLink {
+  /** Visible label and accessible name. */
+  title: string;
+  /** `#` followed by the id of the target section. */
+  url: string;
+}
+
+/** The header navigation: inline links on wide screens, a menu drawer on narrow ones. */
+export interface Navigation {
+  /** Accessible name of the navigation landmark, e.g. "Primary". */
+  label: string;
+  /** Accessible name of the button that opens the menu drawer, e.g. "Menu". */
+  menuLabel: string;
+  /** Section links in display order. */
+  links: NavLink[];
+  /** Contact link after the section links, styled as a button in the header bar. */
+  cta: NavLink;
+}
+
 /** Site-wide defaults for the page head; the default title is `Profile.name | Profile.role`. */
 export interface SiteMeta {
   /** Default meta and Open Graph description. */

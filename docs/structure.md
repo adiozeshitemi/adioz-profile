@@ -27,11 +27,16 @@ adioz-dev/
 │   │   ├── og.png             # Social share preview image (1200×630)
 │   │   └── profile_pic.svg    # Profile avatar
 │   ├── favicon.ico            # Favicon fallback (16, 32, 48 px)
-│   ├── favicon.svg            # AD logo mark
+│   ├── favicon.svg            # AD logo mark (site icon and header brand)
 │   └── resume.pdf             # Downloadable resume; source of the experience and projects data
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
+│   │   ├── Header/            # Sticky header: brand, section links, menu drawer
+│   │   │   ├── BrandLogo.astro
+│   │   │   ├── Header.astro
+│   │   │   ├── MobileMenu.astro
+│   │   │   └── NavLinks.astro
 │   │   ├── UI/                # Reusable primitives: buttons, badges, icons, stats, section headers
 │   │   │   ├── Badge.astro
 │   │   │   ├── Button.astro
@@ -46,6 +51,7 @@ adioz-dev/
 │   │   ├── experience.json    # Career timeline, from public/resume.pdf
 │   │   ├── footer.json        # Copyright, credit links and source link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
+│   │   ├── navigation.json    # Header section links, contact link and menu labels
 │   │   ├── profile.json       # Name, role, hero copy, availability, GitHub/LinkedIn/email links
 │   │   ├── projects.json      # Key projects and their links, from public/resume.pdf
 │   │   ├── site.json          # Default meta description and Open Graph image
