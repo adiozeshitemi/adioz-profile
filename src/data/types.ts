@@ -226,10 +226,16 @@ export interface ProjectItem {
 
 /** Copy for the contact section; the email button opens the `mailto:` link in `Profile.links`. */
 export interface ContactContent {
+  /** Section id, the target of its navigation.json link, e.g. "contact". */
+  id: string;
+  /** Section name after its number, e.g. "Get In Touch". */
+  label: string;
   heading: string;
   body: string;
   /** Label of the email button, e.g. "Send an email". */
   ctaLabel: string;
+  /** Icon name after the email button's label, e.g. "arrow-right". */
+  ctaIcon: string;
 }
 
 /** Content of the site footer. */
