@@ -33,6 +33,8 @@ adioz-dev/
 ├── src/
 │   ├── components/            # 🧩 UI components
 │   │   └── Hero.astro         # Hero section
+│   ├── data/                  # 🗄️ Data layer
+│   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── layouts/               # 🏗️ Page shells
 │   │   └── Layout.astro       # HTML shell, meta tags, global CSS import
 │   ├── pages/                 # 📄 File-based routes
