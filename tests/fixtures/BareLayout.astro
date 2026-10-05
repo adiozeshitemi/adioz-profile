@@ -1,0 +1,9 @@
+---
+/*
+ * Stands in for src/layouts/Layout.astro in page tests: renders only the page
+ * body, because Layout.astro's head builds absolute URLs from Astro.site,
+ * which the Astro Container API leaves unset.
+ */
+---
+
+<slot />
