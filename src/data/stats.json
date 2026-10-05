@@ -5,19 +5,13 @@
     "label": "Years experience"
   },
   {
-    "value": 50,
-    "suffix": "k+",
-    "label": "Req / sec handled"
+    "value": 30,
+    "suffix": "%",
+    "label": "Inter-service overhead cut"
   },
   {
-    "value": 99.99,
-    "decimals": 2,
+    "value": 99,
     "suffix": "%",
-    "label": "Uptime Target"
-  },
-  {
-    "value": 75,
-    "suffix": "%",
-    "label": "p99 Latency Reduced"
+    "label": "Uptime held"
   }
 ]
