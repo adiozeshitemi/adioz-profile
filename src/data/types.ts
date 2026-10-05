@@ -1,8 +1,19 @@
 /*
  * Content types for the portfolio's data layer. Every type holds only
  * JSON-compatible values: strings, numbers, booleans, null, arrays and plain
- * objects.
+ * objects. Every link is a LinkItem, so link labels, URLs and icon names live
+ * in the data.
  */
+
+/** A labelled link with an icon. */
+export interface LinkItem {
+  /** Visible label and accessible name, e.g. "GitHub". */
+  title: string;
+  /** An `https:` URL, or a `mailto:` URL for email. */
+  url: string;
+  /** Icon name, e.g. "github". */
+  icon: string;
+}
 
 /** The site owner's identity, shown in the hero. */
 export interface Profile {
@@ -16,22 +27,13 @@ export interface Profile {
   summary: string;
   /** Availability badge text, e.g. "Available for Senior/Staff Engineering Roles". */
   availability: string;
-  social: SocialLinks;
-}
-
-/** Contact links for the hero icons and the contact section. */
-export interface SocialLinks {
-  /** GitHub profile URL. */
-  github: string;
-  /** LinkedIn profile URL. */
-  linkedin: string;
-  /** Email address without the `mailto:` scheme. */
-  email: string;
+  /** GitHub, LinkedIn and email links in display order; the email link is the only `mailto:` URL. */
+  links: LinkItem[];
 }
 
 /** One headline metric in the hero stats banner. */
 export interface StatItem {
-  /** Number the counter animates to, e.g. 99.99. */
+  /** Number the counter animates to. */
   value: number;
   /** Fraction digits shown for `value`; 0 when omitted. */
   decimals?: number;
@@ -119,17 +121,15 @@ export interface ProjectItem {
   description: string;
   /** Technology and domain labels shown as tags. */
   tags: string[];
-  /** Source repository URL, or null for a closed-source project. */
-  repoUrl: string | null;
-  /** Public site or product URL, or null when none is public. */
-  liveUrl: string | null;
+  /** Source repository and public site links in display order, e.g. a "Source" link with the "github" icon. */
+  links: LinkItem[];
   /** Whether the project is listed under Featured Projects. */
   featured: boolean;
   /** One-line outcome shown under the tags, e.g. "Sub-15ms ML recommendation latency". */
   metric: string;
 }
 
-/** Copy for the contact section; the email address is `SocialLinks.email`. */
+/** Copy for the contact section; the email button opens the `mailto:` link in `Profile.links`. */
 export interface ContactContent {
   heading: string;
   body: string;
@@ -141,8 +141,16 @@ export interface ContactContent {
 export interface FooterContent {
   /** Rights holder and statement shown after "© <year> ", e.g. "Adioz. All rights reserved.". */
   copyright: string;
-  /** Credit lines joined with " · ", e.g. "Built with Astro & Tailwind CSS". */
-  credits: string[];
-  /** URL of the site's source repository. */
-  sourceUrl: string;
+  /** Credit groups in display order, separated by " · ". */
+  credits: CreditGroup[];
+  /** Link to the site's source repository. */
+  source: LinkItem;
+}
+
+/** A footer credit, e.g. "Built with" followed by links to the Astro and Tailwind CSS docs. */
+export interface CreditGroup {
+  /** Text before the links, e.g. "Built with". */
+  label: string;
+  /** Links to each tool's documentation. */
+  links: LinkItem[];
 }

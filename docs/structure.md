@@ -34,6 +34,10 @@ adioz-dev/
 │   ├── components/            # 🧩 UI components
 │   │   └── Hero.astro         # Hero section
 │   ├── data/                  # 🗄️ Data layer
+│   │   ├── about.json         # About section: headline, bio, focus pillars, philosophy
+│   │   ├── profile.json       # Name, role, hero copy, availability, GitHub/LinkedIn/email links
+│   │   ├── stats.json         # Headline metrics (the only place their values live)
+│   │   ├── terminal.json      # Hero terminal lines
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── layouts/               # 🏗️ Page shells
 │   │   └── Layout.astro       # HTML shell, meta tags, global CSS import

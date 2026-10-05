@@ -35,7 +35,8 @@ flowchart LR
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Hero` inside `Layout`.
 - **`src/layouts/Layout.astro`**: The HTML shell: `title` and `description` props with defaults, Open Graph tags, the SVG favicon, and the `global.css` import.
 - **`src/components/Hero.astro`**: The hero section: availability badge, headline, role, summary, and email and GitHub links.
-- **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only; in `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis.
+- **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only, and every link is a `LinkItem` with a title, URL and icon name. In `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis.
+- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalLine[]`) and `about.json` (`AboutContent`). No page or component imports them.
 
 ## 2. Styling
 
