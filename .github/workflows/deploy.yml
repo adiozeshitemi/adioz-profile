@@ -46,6 +46,8 @@ jobs:
           wranglerVersion: "4.147.0"
           command: deploy
 
+      # Wrangler reports a workers.dev target as a URL and a Custom Domain
+      # target as "<hostname> (custom domain)".
       - name: Write the deployment URL to the run summary
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
@@ -54,4 +56,5 @@ jobs:
             echo "::error::Wrangler reported no deployment URL."
             exit 1
           fi
-          echo "**Production:** $DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
+          host="${DEPLOYMENT_URL%% *}"
+          echo "**Production:** https://${host#https://}" >> "$GITHUB_STEP_SUMMARY"
