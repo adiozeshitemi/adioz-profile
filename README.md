@@ -20,7 +20,8 @@ Full-stack AI engineer with 8 years of experience in backend systems and web app
 - **Self-Hosted Fonts**: Montserrat and JetBrains Mono variable fonts are served from `public/fonts/`.
 - **Strict TypeScript**: `tsconfig.json` extends `astro/tsconfigs/strict` and defines path aliases (`@components/*`, `@layouts/*`, `@styles/*`, `@data/*`, `@utils/*`).
 - **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
-- **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, type-checks and builds on pull requests into `main`.
+- **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, type-checks and builds on pull requests into `main` and before every deployment.
+- **Continuous Deployment**: `.github/workflows/deploy.yml` deploys every push to `main` to Cloudflare Workers once the quality gate passes.
 
 ## 📚 Documentation
 

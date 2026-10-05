@@ -6,7 +6,8 @@ The directories and files currently in the repository.
 adioz-dev/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml             # Quality gate: format check, type check and build
+│       ├── ci.yml             # Quality gate: format check, type check and build
+│       └── deploy.yml         # Production deploy on every push to main
 │
 ├── .vscode/
 │   ├── extensions.json        # Recommended editor extensions (Astro)
