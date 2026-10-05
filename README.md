@@ -17,6 +17,8 @@ Full-stack AI engineer with a background in backend systems and web applications
 
 - **Static by Default**: Astro pre-renders the site to static HTML and CSS; no client-side JavaScript ships.
 - **Design Tokens in CSS**: Tailwind CSS v4 is configured in `src/styles/theme.css` with an `@theme` block (colors, fonts, radius, page width, easing and breakpoints); there is no `tailwind.config.*` file.
+- **Light and Dark Themes**: the color tokens follow the device's `prefers-color-scheme` setting, with no toggle or JavaScript, and text meets WCAG AA contrast in both schemes.
+- **Search and Social Metadata**: `Layout.astro` sets the canonical URL and the Open Graph and Twitter card tags from `site` in `astro.config.mjs` and `src/data/site.json`.
 - **Self-Hosted Fonts**: Montserrat and JetBrains Mono variable fonts are served from `public/fonts/`.
 - **Strict TypeScript**: `tsconfig.json` extends `astro/tsconfigs/strict` and defines path aliases (`@components/*`, `@layouts/*`, `@styles/*`, `@data/*`, `@utils/*`).
 - **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
