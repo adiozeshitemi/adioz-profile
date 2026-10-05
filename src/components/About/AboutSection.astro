@@ -19,7 +19,9 @@ import CoreFocusCard from "./CoreFocusCard.astro";
       <CoreFocusCard pillar={pillar} />
     ))}
   </div>
-  <p class="philosophy">{about.philosophy}</p>
+  <p class="philosophy" data-reveal>
+    {about.philosophy}
+  </p>
 </Section>
 
 <style>

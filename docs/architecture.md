@@ -2,7 +2,7 @@
 
 ## Overview
 
-This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS; the only client-side JavaScript is a short inline script for the mobile menu. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`. The colors follow the device's light or dark color scheme.
+This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS; the only client-side JavaScript is two short inline scripts, one for the mobile menu and one for motion effects, and every section is complete without them. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`. The colors follow the device's light or dark color scheme.
 
 ## Architecture Flow
 
@@ -15,6 +15,7 @@ flowchart LR
         direction TB
         Data["data/ (JSON content, typed exports)"]
         Styles["styles/ (theme, animations, global)"]
+        Scripts["scripts/motion.ts"]
         Icons["icons/ (SVG icons)"]
         UI["components/UI/ (primitives)"]
         Sections["components/ (header, page sections, footer)"]
@@ -28,6 +29,7 @@ flowchart LR
     UI ==>|Used by| Sections
     Data ==>|Imported by| Layout
     Styles ==>|Imported by| Layout
+    Scripts ==>|Loaded by| Layout
     Sections ==>|Rendered in| Page
     Layout ==>|Wraps| Page
     Page ==>|astro check, astro build| Dist["⚡ dist/ (static HTML/CSS)"]
@@ -41,9 +43,9 @@ flowchart LR
 ## 1. Pages, Components and Data
 
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Header`; `Hero`, `AboutSection`, `TechStackSection`, `ExperienceSection`, `ProjectsSection` and `ContactSection` inside `<main>`; and `Footer`, all inside `Layout`.
-- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme, preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, and imports `global.css`.
+- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme, preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, imports `global.css`, and loads `src/scripts/motion.ts`.
 - **`src/components/Header/`**: The site header, built from `navigation.json` and `profile.json`:
-  - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background. It holds the brand link, the section links (from 760px) and the menu button (below 760px).
+  - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background, transparent while the page is within 40px of the top (`data-at-top`, set by `motion.ts`). It holds the brand link, the section links (from 760px), the menu button (below 760px), and a scroll progress bar along its top edge.
   - `BrandLogo.astro`: a link to the top of the page with the logo mark, `public/favicon.svg` (the same file as the site icon), and `Profile.name` as a lowercase wordmark.
   - `NavLinks.astro`: the section links followed by the contact link, as an inline `bar` (the contact link styled as a button) or a stacked `drawer` list.
   - `MobileMenu.astro`: the menu button and the menu drawer, an HTML popover. While closed, the drawer is not rendered, so keyboard and screen-reader users cannot reach its links; `Escape` or a click outside closes it, and the browser exposes the button's expanded state. A short inline script closes the drawer when one of its links is followed or the viewport widens to 760px.
@@ -71,7 +73,7 @@ flowchart LR
   - `Badge.astro`: a `tag` (outlined label), `chip` (tool label) or `status` (pill with a pulsing success dot).
   - `Emphasis.astro`: renders text with each `**` pair as `<strong>`; an unpaired `**` fails the build.
   - `Icon.astro`: inlines `src/icons/<name>.svg` at a given pixel size. The icon is hidden from assistive technology unless it has a `label`, and a name with no SVG file fails the build.
-  - `StatCard.astro`: one `stats.json` entry as a `<dt>` label and a `<dd>` value with its suffix, shown value first.
+  - `StatCard.astro`: one `stats.json` entry as a `<dt>` label and a `<dd>` value with its suffix, shown value first. The number carries `data-count` and `data-decimals` for the counter in `motion.ts`.
   - `StatBanner.astro`: a `<dl>` of `StatCard`s, every `stats.json` entry by default. It has one column on narrow screens, two from 420px (an odd last stat spans both), and one column per stat from 760px.
   - `Section.astro`: a numbered page section: the `<section>` with its id and accessible name, the page-width container, and a `SectionHeader` numbered by `sectionNumber`, with the paragraphs of its `intro` slot under the title.
   - `SectionHeader.astro`: a section's number and name (for example `01 — Core Engineering Focus`), its `<h2>` title and an optional intro, given as a string or as paragraphs in its default slot; `align="center"` centres it.
@@ -85,9 +87,19 @@ flowchart LR
 Tailwind CSS v4 runs through the `@tailwindcss/vite` plugin registered in `astro.config.mjs`; there is no `tailwind.config.*` file.
 
 - **`src/styles/theme.css`**: Design tokens in an `@theme` block (colors, fonts, radius, page width, header height, easing, breakpoints) for the dark scheme, a `prefers-color-scheme: light` block that overrides the color tokens for the light scheme, and a `[data-scheme="dark"]` scope that keeps the dark color tokens in both schemes. Text colors meet WCAG AA (4.5:1) in both schemes. Each token is a CSS variable on `:root` and drives a Tailwind utility.
-- **`src/styles/animations.css`**: Keyframes exposed as `animate-*` utilities, the `[data-reveal]` scroll transition, and reduced-motion rules.
+- **`src/styles/animations.css`**: Keyframes exposed as `animate-*` utilities, the scroll-driven `[data-reveal]` and `[data-fill]` animations, the `.spot` card spotlight, and reduced-motion rules.
 - **`src/styles/global.css`**: Imports Tailwind and both files above, declares `@font-face` rules for the self-hosted fonts, and sets base element styles, including `color-scheme: light dark` and a `scroll-padding-top` of the header height, so a section reached through a link starts below the sticky header.
 - **Component styles**: the components in `src/components/` use scoped `<style>` blocks that read the tokens as CSS variables (for example `var(--color-ink)`), so they follow both color schemes. Their media queries use the `--breakpoint-*` widths.
+
+### Motion
+
+Motion adds to markup that is complete without it. Where a browser lacks the features, or the visitor prefers reduced motion, every element shows in its final state.
+
+- **Scroll-driven CSS**: inside `@supports (animation-timeline: view())` and `prefers-reduced-motion: no-preference`, `[data-reveal]` elements (section headers, cards, timeline roles, tool groups, the terminal and the contact panel) fade and rise into place as they enter the viewport, and the skill bars' `[data-fill]` grows from zero. The header's progress bar scales with `animation-timeline: scroll(root)` and is hidden where scroll timelines are unsupported.
+- **`src/scripts/motion.ts`**: one small script, inlined into the page, for the effects CSS cannot express:
+  - the header's `data-at-top` state, with its transitions enabled only after the first frame;
+  - stat counters, which count up to each `data-count` value over one second the first time it enters the viewport, and are skipped for reduced motion;
+  - the card spotlight, which writes the pointer position into `--mx` and `--my` on each `.spot` element.
 
 ## 3. Static Assets
 

@@ -13,7 +13,7 @@ import TagCloud from "./TagCloud.astro";
 <Section id={techStack.id} label={techStack.label} title={techStack.headline}>
   <p slot="intro">{techStack.intro}</p>
   <div class="layout">
-    <dl class="skills">
+    <dl class="skills" data-reveal>
       {techStack.skills.map((skill) => (
         <SkillBar skill={skill} />
       ))}

@@ -20,7 +20,7 @@ const { start, end } = item.period;
 const hasEnd = end !== start;
 ---
 
-<article class="role">
+<article class="role" data-reveal>
   <p class="when">
     <time datetime={String(start)}>{start}</time>
     {hasEnd && (

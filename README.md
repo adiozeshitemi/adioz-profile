@@ -15,7 +15,8 @@ Full-stack AI engineer with a background in backend systems and web applications
 
 ## 🚀 Key Features
 
-- **Static by Default**: Astro pre-renders the site to static HTML and CSS; the only client-side JavaScript is a short inline script for the mobile menu.
+- **Static by Default**: Astro pre-renders the site to static HTML and CSS; the only client-side JavaScript is two short inline scripts, for the mobile menu and for motion.
+- **Progressive Motion**: scroll-driven CSS reveals sections, fills the skill bars and drives a scroll progress bar where browsers support it; a small script adds the stat counters, the header's scroll state and the card spotlight. Every section is complete without them, and reduced motion turns them off.
 - **Design Tokens in CSS**: Tailwind CSS v4 is configured in `src/styles/theme.css` with an `@theme` block (colors, fonts, radius, page width, header height, easing and breakpoints); there is no `tailwind.config.*` file.
 - **Light and Dark Themes**: the color tokens follow the device's `prefers-color-scheme` setting, with no toggle or JavaScript, and text meets WCAG AA contrast in both schemes.
 - **Accessible Navigation**: a sticky header with section links from `src/data/navigation.json`; on narrow screens they open in an HTML popover drawer that `Escape` closes and that keyboard and screen-reader users cannot reach while closed.

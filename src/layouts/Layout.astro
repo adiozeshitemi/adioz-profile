@@ -74,5 +74,8 @@ const imageUrl = new URL(image, Astro.site);
   </head>
   <body class="min-h-screen flex flex-col">
     <slot />
+    <script>
+      import "../scripts/motion";
+    </script>
   </body>
 </html>
