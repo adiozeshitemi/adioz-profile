@@ -1,0 +1,69 @@
+---
+/*
+ * The tech stack section from techStack.json: a SkillBar per skill and a
+ * TagCloud per tool category. From --breakpoint-lg the skills sit beside the
+ * categories and stay in view while the longer category column scrolls.
+ */
+import { techStack } from "../../data/index";
+import Section from "../UI/Section.astro";
+import SkillBar from "./SkillBar.astro";
+import TagCloud from "./TagCloud.astro";
+---
+
+<Section id={techStack.id} label={techStack.label} title={techStack.headline}>
+  <p slot="intro">{techStack.intro}</p>
+  <div class="layout">
+    <dl class="skills">
+      {techStack.skills.map((skill) => (
+        <SkillBar skill={skill} />
+      ))}
+    </dl>
+    <div class="categories">
+      {techStack.categories.map((category) => (
+        <TagCloud category={category} />
+      ))}
+    </div>
+  </div>
+</Section>
+
+<style>
+  .layout {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .skills {
+    display: grid;
+    gap: 1.625rem;
+  }
+
+  .categories {
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  /* --breakpoint-md */
+  @media (width >= 47.5rem) {
+    .categories {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* --breakpoint-lg: skills beside the categories, kept in view below the sticky header. */
+  @media (width >= 65rem) {
+    .layout {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: 3.25rem;
+    }
+
+    .skills {
+      position: sticky;
+      top: calc(var(--spacing-header) + 2rem);
+    }
+
+    .categories {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
