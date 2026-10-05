@@ -1,0 +1,59 @@
+---
+/*
+ * A numbered page section: the <section> with its id and accessible name, the
+ * page-width container, and a SectionHeader numbered by sectionNumber(id).
+ * Paragraphs in the "intro" slot render under the title; the default slot
+ * holds the section's content.
+ */
+import { sectionNumber } from "../../data/index";
+import SectionHeader from "./SectionHeader.astro";
+
+interface Props {
+  /** Section id, the target of its navigation.json link, e.g. "about". */
+  id: string;
+  /** Section name after its number, e.g. "Core Engineering Focus". */
+  label: string;
+  /** Text of the section's <h2>. */
+  title: string;
+}
+
+const { id, label, title } = Astro.props;
+const titleId = `${id}-title`;
+const index = sectionNumber(id);
+---
+
+<section id={id} class="section" aria-labelledby={titleId}>
+  <div class="inner">
+    {Astro.slots.has("intro") ? (
+      <SectionHeader index={index} label={label} title={title} id={titleId}>
+        <slot name="intro" />
+      </SectionHeader>
+    ) : (
+      <SectionHeader index={index} label={label} title={title} id={titleId} />
+    )}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .section {
+    padding-block: 4.5rem;
+  }
+
+  .inner {
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  /* --breakpoint-md */
+  @media (width >= 47.5rem) {
+    .section {
+      padding-block: clamp(5rem, 11vw, 8.75rem);
+    }
+
+    .inner {
+      padding-inline: 1.75rem;
+    }
+  }
+</style>

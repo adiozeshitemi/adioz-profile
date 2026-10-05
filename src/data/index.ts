@@ -65,3 +65,19 @@ export const terminal: TerminalContent = {
   title: terminalJson.title,
   lines: terminalJson.lines.map(toTerminalLine),
 };
+
+/**
+ * The number shown before a section's label: its position among the
+ * navigation.json links, counting the contact link last, from 1. Throws when
+ * no link targets the section, so a section missing from the header
+ * navigation fails the build.
+ */
+export function sectionNumber(id: string): number {
+  const index = [...navigation.links, navigation.cta].findIndex(
+    (link) => link.url === `#${id}`,
+  );
+  if (index === -1) {
+    throw new Error(`navigation.json: no link targets section "${id}"`);
+  }
+  return index + 1;
+}

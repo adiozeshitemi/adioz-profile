@@ -5,6 +5,7 @@ interface Props {
   /** Section name after the number, e.g. "Core Engineering Focus". */
   label: string;
   title: string;
+  /** Intro paragraph under the title; paragraphs in the default slot follow it. */
   intro?: string;
   /** id of the <h2>, for the section's aria-labelledby. */
   id?: string;
@@ -19,7 +20,12 @@ const number = String(index).padStart(2, "0");
     {number} — {label}
   </p>
   <h2 id={id}>{title}</h2>
-  {intro && <p class="intro">{intro}</p>}
+  {(intro || Astro.slots.has("default")) && (
+    <div class="intro">
+      {intro && <p>{intro}</p>}
+      <slot />
+    </div>
+  )}
 </header>
 
 <style>
@@ -60,5 +66,9 @@ const number = String(index).padStart(2, "0");
     max-width: 60ch;
     font-size: 1.02rem;
     color: var(--color-ink-muted);
+  }
+
+  .intro :global(p + p) {
+    margin-top: 1rem;
   }
 </style>

@@ -1,0 +1,55 @@
+---
+/*
+ * The about section from about.json: the bio paragraphs under the headline,
+ * a CoreFocusCard for each pillar, and the philosophy statement after them.
+ */
+import { about } from "../../data/index";
+import Section from "../UI/Section.astro";
+import CoreFocusCard from "./CoreFocusCard.astro";
+---
+
+<Section id={about.id} label={about.label} title={about.headline}>
+  <Fragment slot="intro">
+    {about.bio.map((paragraph) => (
+      <p>{paragraph}</p>
+    ))}
+  </Fragment>
+  <div class="pillars">
+    {about.pillars.map((pillar) => (
+      <CoreFocusCard pillar={pillar} />
+    ))}
+  </div>
+  <p class="philosophy">{about.philosophy}</p>
+</Section>
+
+<style>
+  .pillars {
+    display: grid;
+    gap: 1.125rem;
+  }
+
+  .philosophy {
+    max-width: 60ch;
+    margin-top: 3rem;
+    padding-left: 1.25rem;
+    border-left: 2px solid var(--color-accent-cyan);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.6;
+    color: var(--color-ink);
+  }
+
+  /* --breakpoint-md */
+  @media (width >= 47.5rem) {
+    .pillars {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* --breakpoint-lg */
+  @media (width >= 65rem) {
+    .pillars {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
