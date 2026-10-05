@@ -106,8 +106,8 @@ export interface TechStackCategory {
 export interface ExperienceItem {
   role: string;
   company: string;
-  /** Work location, e.g. "Nairobi / Remote". */
-  location: string;
+  /** Work location, e.g. "Nairobi / Remote"; omitted when not stated. */
+  location?: string;
   period: YearRange;
   /** Description bullet points; text inside `**` pairs renders as strong emphasis. */
   highlights: string[];
