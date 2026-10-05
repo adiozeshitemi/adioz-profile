@@ -1,0 +1,17 @@
+---
+interface Props {
+  /** Text in which each pair of `**` marks the text between them as strong emphasis. */
+  text: string;
+}
+
+const { text } = Astro.props;
+
+// Splitting on "**" puts the emphasized runs at odd indexes; an even count of
+// runs means a "**" has no partner.
+const runs = text.split("**");
+if (runs.length % 2 === 0) {
+  throw new Error(`Unpaired "**" in: ${text}`);
+}
+---
+
+{runs.map((run, index) => (index % 2 === 1 ? <strong>{run}</strong> : run))}

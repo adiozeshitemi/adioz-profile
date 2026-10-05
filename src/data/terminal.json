@@ -1,20 +1,23 @@
-[
-  { "kind": "cmd", "text": "$ adioz whoami" },
-  {
-    "kind": "out",
-    "text": "Full-stack AI engineer: backend systems & web applications"
-  },
-  { "kind": "cmd", "text": "$ adioz principles" },
-  {
-    "kind": "ok",
-    "text": "-> agents: typed tools, fail-closed guardrails, named operator"
-  },
-  {
-    "kind": "ok",
-    "text": "-> models: train & distil on GPU, serve quantized on CPU"
-  },
-  { "kind": "cmd", "text": "$ adioz ready-for-hire" },
-  { "kind": "ok", "text": "true" },
-  { "kind": "cmd", "text": "$ adioz chat" },
-  { "kind": "key", "text": "live chat opens here soon" }
-]
+{
+  "title": "zsh — 120×32",
+  "lines": [
+    { "kind": "cmd", "text": "$ adioz whoami" },
+    {
+      "kind": "out",
+      "text": "Full-stack AI engineer: backend systems & web applications"
+    },
+    { "kind": "cmd", "text": "$ adioz principles" },
+    {
+      "kind": "ok",
+      "text": "-> agents: typed tools, fail-closed guardrails, named operator"
+    },
+    {
+      "kind": "ok",
+      "text": "-> models: train & distil on GPU, serve quantized on CPU"
+    },
+    { "kind": "cmd", "text": "$ adioz ready-for-hire" },
+    { "kind": "ok", "text": "true" },
+    { "kind": "cmd", "text": "$ adioz chat" },
+    { "kind": "key", "text": "live chat opens here soon" }
+  ]
+}

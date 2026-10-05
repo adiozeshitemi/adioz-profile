@@ -26,6 +26,7 @@ import type {
   SiteMeta,
   StatItem,
   TechStack,
+  TerminalContent,
   TerminalLine,
   TerminalLineKind,
 } from "./types";
@@ -60,4 +61,7 @@ export const projects: ProjectItem[] = projectsJson;
 export const site: SiteMeta = siteJson;
 export const stats: StatItem[] = statsJson;
 export const techStack: TechStack = techStackJson;
-export const terminal: TerminalLine[] = terminalJson.map(toTerminalLine);
+export const terminal: TerminalContent = {
+  title: terminalJson.title,
+  lines: terminalJson.lines.map(toTerminalLine),
+};

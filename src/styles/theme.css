@@ -74,3 +74,25 @@
     --color-on-accent: #ffffff;
   }
 }
+
+/*
+ * Elements with data-scheme="dark" keep the dark color tokens in both color
+ * schemes (the hero terminal). The values repeat the @theme colors above.
+ */
+[data-scheme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #05060b;
+  --color-canvas-raised: #0a0c15;
+  --color-card: rgb(255 255 255 / 0.024);
+  --color-card-hover: rgb(255 255 255 / 0.05);
+  --color-ink: #e9ecf6;
+  --color-ink-muted: #8b94ac;
+  --color-ink-faint: #727b94;
+  --color-line: rgb(255 255 255 / 0.075);
+  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-accent-cyan: #22d3ee;
+  --color-accent-violet: #a78bfa;
+  --color-accent-pink: #f472b6;
+  --color-success: #34d399;
+  --color-on-accent: #05060b;
+}

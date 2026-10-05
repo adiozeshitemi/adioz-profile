@@ -37,14 +37,18 @@ adioz-dev/
 │   │   │   ├── Header.astro
 │   │   │   ├── MobileMenu.astro
 │   │   │   └── NavLinks.astro
-│   │   ├── UI/                # Reusable primitives: buttons, badges, icons, stats, section headers
-│   │   │   ├── Badge.astro
-│   │   │   ├── Button.astro
-│   │   │   ├── Icon.astro
-│   │   │   ├── SectionHeader.astro
-│   │   │   ├── StatBanner.astro
-│   │   │   └── StatCard.astro
-│   │   └── Hero.astro         # Hero section
+│   │   ├── Hero/              # First screen: copy, call-to-action links, terminal, stats
+│   │   │   ├── Hero.astro
+│   │   │   ├── SocialLinks.astro
+│   │   │   └── Terminal.astro
+│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, icons, stats, section headers
+│   │       ├── Badge.astro
+│   │       ├── Button.astro
+│   │       ├── Emphasis.astro
+│   │       ├── Icon.astro
+│   │       ├── SectionHeader.astro
+│   │       ├── StatBanner.astro
+│   │       └── StatCard.astro
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: headline, bio, focus pillars, philosophy
 │   │   ├── contact.json       # Contact section heading, body and button label
@@ -52,18 +56,19 @@ adioz-dev/
 │   │   ├── footer.json        # Copyright, credit links and source link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
-│   │   ├── profile.json       # Name, role, hero copy, availability, GitHub/LinkedIn/email links
+│   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and social links
 │   │   ├── projects.json      # Key projects and their links, from public/resume.pdf
 │   │   ├── site.json          # Default meta description and Open Graph image
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Proficiency bars and tools grouped by category
-│   │   ├── terminal.json      # Hero terminal lines
+│   │   ├── terminal.json      # Hero terminal window title and lines
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
 │   │   ├── arrow-right.svg
 │   │   ├── arrow-up-right.svg
 │   │   ├── astro.svg
 │   │   ├── cloudflare.svg
+│   │   ├── download.svg
 │   │   ├── email.svg
 │   │   ├── github.svg
 │   │   ├── globe.svg
