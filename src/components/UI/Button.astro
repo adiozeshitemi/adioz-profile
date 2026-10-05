@@ -1,0 +1,113 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Icon from "./Icon.astro";
+
+interface Common {
+  /** primary: cyan-to-violet gradient; ghost: outlined, with a faint ink tint. */
+  variant?: "primary" | "ghost";
+  /** Trailing icon name from src/icons/, e.g. "arrow-right". */
+  icon?: string;
+}
+
+/** Renders an <a> when href is set, otherwise a <button>. */
+type Props =
+  | (Common &
+      Omit<HTMLAttributes<"a">, "href"> & {
+        href: string;
+        /** Opens in a new tab with rel="noopener noreferrer". */
+        external?: boolean;
+      })
+  | (Common & HTMLAttributes<"button"> & { href?: undefined });
+
+const {
+  variant = "primary",
+  icon,
+  href,
+  external,
+  class: className,
+  ...attrs
+} = Astro.props as Common & {
+  href?: string;
+  external?: boolean;
+  class?: string;
+} & Record<string, unknown>;
+
+const classes = ["btn", variant, className];
+const linkAttrs = external
+  ? { ...attrs, target: "_blank", rel: "noopener noreferrer" }
+  : attrs;
+/** The <button> type defaults to "button"; pass type="submit" to submit a form. */
+const buttonAttrs = { type: "button" as const, ...attrs };
+---
+
+{href ? (
+  <a href={href} class:list={classes} {...linkAttrs}>
+    <slot />
+    {icon && <Icon name={icon} size={15} />}
+  </a>
+) : (
+  <button class:list={classes} {...buttonAttrs}>
+    <slot />
+    {icon && <Icon name={icon} size={15} />}
+  </button>
+)}
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5625rem;
+    padding: 0.8125rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    transition:
+      transform 0.25s var(--ease-soft),
+      box-shadow 0.25s,
+      background-color 0.25s,
+      border-color 0.25s;
+  }
+
+  .btn :global(svg) {
+    transition: transform 0.25s var(--ease-soft);
+  }
+
+  .btn:hover :global(svg) {
+    transform: translateX(3px);
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 3px;
+  }
+
+  .primary {
+    background: linear-gradient(
+      100deg,
+      var(--color-accent-cyan),
+      var(--color-accent-violet)
+    );
+    color: var(--color-on-accent);
+    box-shadow: 0 8px 30px -8px
+      color-mix(in srgb, var(--color-accent-cyan) 55%, transparent);
+  }
+
+  .primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px -8px
+      color-mix(in srgb, var(--color-accent-cyan) 70%, transparent);
+  }
+
+  .ghost {
+    border: 1px solid var(--color-line-strong);
+    background: color-mix(in srgb, var(--color-ink) 2%, transparent);
+    color: var(--color-ink);
+  }
+
+  .ghost:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
+    background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  }
+</style>
