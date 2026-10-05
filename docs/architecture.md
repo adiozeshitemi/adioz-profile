@@ -13,13 +13,17 @@ flowchart LR
 
     subgraph Src ["📁 src/"]
         direction TB
+        Icons["icons/ (SVG icons)"]
         Data["data/ (JSON content, typed exports)"]
         Styles["styles/ (theme, animations, global)"]
+        UI["components/UI/ (primitives)"]
         Layout["layouts/Layout.astro"]
         Hero["components/Hero.astro"]
         Page["pages/index.astro"]
     end
 
+    Icons ==>|Inlined by| UI
+    Data ==>|Imported by| UI
     Data ==>|Imported by| Layout
     Styles ==>|Imported by| Layout
     Layout ==>|Wraps| Page
@@ -37,6 +41,14 @@ flowchart LR
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Hero` inside `Layout`.
 - **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme, preloads the Montserrat font, links the SVG and ICO favicons, and imports `global.css`.
 - **`src/components/Hero.astro`**: The hero section: availability badge, headline, role, summary, and email and GitHub links, styled with the theme's color tokens.
+- **`src/components/UI/`**: Reusable primitives that render static HTML:
+  - `Button.astro`: a `primary` (cyan-to-violet gradient) or `ghost` (outlined) button with an optional trailing icon. With `href` it renders an `<a>`, and `external` opens the link in a new tab with `rel="noopener noreferrer"`; without `href` it renders a `<button>` whose `type` defaults to `button`.
+  - `Badge.astro`: a `tag` (outlined label), `chip` (tool label) or `status` (pill with a pulsing success dot).
+  - `Icon.astro`: inlines `src/icons/<name>.svg` at a given pixel size. The icon is hidden from assistive technology unless it has a `label`, and a name with no SVG file fails the build.
+  - `StatCard.astro`: one `stats.json` entry as a `<dt>` label and a `<dd>` value with its suffix, shown value first.
+  - `StatBanner.astro`: a `<dl>` of `StatCard`s, every `stats.json` entry by default. It has one column on narrow screens, two from 420px (an odd last stat spans both), and one column per stat from 760px.
+  - `SectionHeader.astro`: a section's number and name (for example `01 — Core Engineering Focus`), its `<h2>` title and an optional intro.
+- **`src/icons/`**: One SVG per icon name used in the data (`LinkItem.icon`), plus `arrow-right` and `arrow-up-right` for buttons. Each file keeps only its path data, filled with `currentColor`, so an icon takes the color of the text around it. `LICENSE.md` lists the sources: Bootstrap Icons (MIT) and Simple Icons (CC0).
 - **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only, and every link is a `LinkItem` with a title, URL and icon name. In `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis.
 - **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalLine[]`), `about.json` (`AboutContent`), `techStack.json` (`TechStack`: proficiency bars and tools grouped by category), `experience.json` (`ExperienceItem[]`), `projects.json` (`ProjectItem[]`), `contact.json` (`ContactContent`), `footer.json` (`FooterContent`) and `site.json` (`SiteMeta`: the default meta description and Open Graph image). The experience, projects, stats and tech stack categories follow the resume in `public/resume.pdf`.
 - **`src/data/index.ts`**: Exports each JSON file typed by its interface, so `astro check` (run by `npm run build` and CI) rejects a file whose structure no longer matches. JSON imports type strings as `string`, so it checks `TerminalLine.kind` when it loads and throws on an unknown kind. `Layout.astro` imports `profile` and `site` from it, so an unknown kind fails the build.
@@ -48,6 +60,7 @@ Tailwind CSS v4 runs through the `@tailwindcss/vite` plugin registered in `astro
 - **`src/styles/theme.css`**: Design tokens in an `@theme` block (colors, fonts, radius, page width, easing, breakpoints) for the dark scheme, and a `prefers-color-scheme: light` block that overrides the color tokens for the light scheme. Text colors meet WCAG AA (4.5:1) in both schemes. Each token is a CSS variable on `:root` and drives a Tailwind utility.
 - **`src/styles/animations.css`**: Keyframes exposed as `animate-*` utilities, the `[data-reveal]` scroll transition, and reduced-motion rules.
 - **`src/styles/global.css`**: Imports Tailwind and both files above, declares `@font-face` rules for the self-hosted fonts, and sets base element styles, including `color-scheme: light dark`.
+- **Component styles**: the primitives in `src/components/UI/` use scoped `<style>` blocks that read the tokens as CSS variables (for example `var(--color-ink)`), so they follow both color schemes. Their media queries use the `--breakpoint-*` widths.
 
 ## 3. Static Assets
 
