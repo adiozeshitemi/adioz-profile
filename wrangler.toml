@@ -1,5 +1,13 @@
 name = "adioz-dev"
 compatibility_date = "2026-10-04"
+# Production is served only at the adioz.dev Custom Domain; the workers.dev
+# URL and per-version preview URLs are disabled.
+workers_dev = false
+preview_urls = false
+
+[[routes]]
+pattern = "adioz.dev"
+custom_domain = true
 
 [assets]
 directory = "./dist"
