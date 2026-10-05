@@ -17,7 +17,7 @@ flowchart LR
         Styles["styles/ (theme, animations, global)"]
         Icons["icons/ (SVG icons)"]
         UI["components/UI/ (primitives)"]
-        Sections["components/ (Header, Hero, About, TechStack)"]
+        Sections["components/ (Header, Hero, About, TechStack, Experience, Projects)"]
         Layout["layouts/Layout.astro"]
         Page["pages/index.astro"]
     end
@@ -40,7 +40,7 @@ flowchart LR
 
 ## 1. Pages, Components and Data
 
-- **`src/pages/index.astro`**: The only route (`/`). It renders `Header`, then `Hero`, `AboutSection` and `TechStackSection` inside `<main>`, inside `Layout`.
+- **`src/pages/index.astro`**: The only route (`/`). It renders `Header`, then `Hero`, `AboutSection`, `TechStackSection`, `ExperienceSection` and `ProjectsSection` inside `<main>`, inside `Layout`.
 - **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme, preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, and imports `global.css`.
 - **`src/components/Header/`**: The site header, built from `navigation.json` and `profile.json`:
   - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background. It holds the brand link, the section links (from 760px) and the menu button (below 760px).
@@ -58,6 +58,12 @@ flowchart LR
   - `TechStackSection.astro`: a `Section` with the skills and the tool categories. The categories form two columns from 760px; from 1040px the skills sit beside them and stay in view below the sticky header while the categories scroll.
   - `SkillBar.astro`: a skill's label and level as a `<dt>`/`<dd>` pair, and a bar filled to its percent that is hidden from assistive technology.
   - `TagCloud.astro`: a category's name as an `<h3>` and its tools as chip badges.
+- **`src/components/Experience/`**: The experience section, built from `experience.json`:
+  - `ExperienceSection.astro`: a `Section` with an `ExperienceItem` per role, most recent first, along a vertical timeline rail.
+  - `ExperienceItem.astro`: a role's years in `<time>` elements (an ongoing role ends with `ExperienceContent.ongoing`), its role, company and location, its highlights rendered with `Emphasis`, and its technologies as tags.
+- **`src/components/Projects/`**: The featured projects section, built from `projects.json`:
+  - `ProjectsSection.astro`: a `Section` with a `ProjectCard` per project with `featured` set, in two columns from 760px.
+  - `ProjectCard.astro`: a project's title and links (`https:` links open in a new tab), description, tags and metric line. The description grows to fill the card, so the cards in a row align their tags and metric lines.
 - **`src/components/UI/`**: Reusable primitives that render static HTML:
   - `Button.astro`: a `primary` (cyan-to-violet gradient) or `ghost` (outlined) button with an optional trailing icon. With `href` it renders an `<a>`, and `external` opens the link in a new tab with `rel="noopener noreferrer"`; without `href` it renders a `<button>` whose `type` defaults to `button`.
   - `Badge.astro`: a `tag` (outlined label), `chip` (tool label) or `status` (pill with a pulsing success dot).
@@ -69,7 +75,7 @@ flowchart LR
   - `SectionHeader.astro`: a section's number and name (for example `01 — Core Engineering Focus`), its `<h2>` title and an optional intro, given as a string or as paragraphs in its default slot.
 - **`src/icons/`**: One SVG per icon name used in the data (`LinkItem.icon`). Each file keeps only its path data, filled with `currentColor`, so an icon takes the color of the text around it. `LICENSE.md` lists the sources: Bootstrap Icons (MIT) and Simple Icons (CC0).
 - **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, header navigation, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only, and every link is a `LinkItem` with a title, URL and icon name. In `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis, which `Emphasis.astro` renders.
-- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`: the name, role, hero copy, call-to-action, resume and social links), `navigation.json` (`Navigation`: the section links, the contact link and the accessible names of the navigation landmark and menu button), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalContent`: the window title and the lines), `about.json` (`AboutContent`: the section id and label, the headline, bio, pillars with their icons, and the philosophy), `techStack.json` (`TechStack`: the section id, label, headline and intro, the proficiency bars, and tools grouped by category), `experience.json` (`ExperienceItem[]`), `projects.json` (`ProjectItem[]`), `contact.json` (`ContactContent`), `footer.json` (`FooterContent`) and `site.json` (`SiteMeta`: the default meta description and Open Graph image). The experience, projects, stats and tech stack categories follow the resume in `public/resume.pdf`.
+- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`: the name, role, hero copy, call-to-action, resume and social links), `navigation.json` (`Navigation`: the section links, the contact link and the accessible names of the navigation landmark and menu button), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalContent`: the window title and the lines), `about.json` (`AboutContent`: the section id and label, the headline, bio, pillars with their icons, and the philosophy), `techStack.json` (`TechStack`: the section id, label, headline and intro, the proficiency bars, and tools grouped by category), `experience.json` (`ExperienceContent`: the section id, label and headline, the text for an ongoing role's end year, and the roles), `projects.json` (`ProjectsContent`: the section id, label and headline, and the projects), `contact.json` (`ContactContent`), `footer.json` (`FooterContent`) and `site.json` (`SiteMeta`: the default meta description and Open Graph image). The experience, projects, stats and tech stack categories follow the resume in `public/resume.pdf`.
 - **`src/data/index.ts`**: Exports each JSON file typed by its interface, so `astro check` (run by `npm run build` and CI) rejects a file whose structure no longer matches. JSON imports type strings as `string`, so it checks `TerminalLine.kind` when it loads and throws on an unknown kind; it also throws on a skill percent that is not an integer from 0 to 100. `Layout.astro` imports `profile` and `site` from it, so either error fails the build. It also exports `sectionNumber(id)`, a section's position among the `navigation.json` links from 1, which throws when no link targets the section.
 
 ## 2. Styling

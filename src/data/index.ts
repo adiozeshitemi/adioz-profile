@@ -19,11 +19,11 @@ import terminalJson from "./terminal.json";
 import type {
   AboutContent,
   ContactContent,
-  ExperienceItem,
+  ExperienceContent,
   FooterContent,
   Navigation,
   Profile,
-  ProjectItem,
+  ProjectsContent,
   SiteMeta,
   StatItem,
   SkillItem,
@@ -69,11 +69,11 @@ function toSkillItem(skill: SkillItem): SkillItem {
 
 export const about: AboutContent = aboutJson;
 export const contact: ContactContent = contactJson;
-export const experience: ExperienceItem[] = experienceJson;
+export const experience: ExperienceContent = experienceJson;
 export const footer: FooterContent = footerJson;
 export const navigation: Navigation = navigationJson;
 export const profile: Profile = profileJson;
-export const projects: ProjectItem[] = projectsJson;
+export const projects: ProjectsContent = projectsJson;
 export const site: SiteMeta = siteJson;
 export const stats: StatItem[] = statsJson;
 export const techStack: TechStack = {

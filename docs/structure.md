@@ -35,6 +35,9 @@ adioz-dev/
 │   │   ├── About/             # About section: bio, focus pillar cards, philosophy
 │   │   │   ├── AboutSection.astro
 │   │   │   └── CoreFocusCard.astro
+│   │   ├── Experience/        # Experience section: timeline of roles
+│   │   │   ├── ExperienceItem.astro
+│   │   │   └── ExperienceSection.astro
 │   │   ├── Header/            # Sticky header: brand, section links, menu drawer
 │   │   │   ├── BrandLogo.astro
 │   │   │   ├── Header.astro
@@ -44,6 +47,9 @@ adioz-dev/
 │   │   │   ├── Hero.astro
 │   │   │   ├── SocialLinks.astro
 │   │   │   └── Terminal.astro
+│   │   ├── Projects/          # Featured projects section: project cards
+│   │   │   ├── ProjectCard.astro
+│   │   │   └── ProjectsSection.astro
 │   │   ├── TechStack/         # Tech stack section: skill bars, tool categories
 │   │   │   ├── SkillBar.astro
 │   │   │   ├── TagCloud.astro
@@ -60,12 +66,12 @@ adioz-dev/
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: id, label, headline, bio, pillars with icons, philosophy
 │   │   ├── contact.json       # Contact section heading, body and button label
-│   │   ├── experience.json    # Career timeline, from public/resume.pdf
+│   │   ├── experience.json    # Experience section: id, label, headline and roles, from public/resume.pdf
 │   │   ├── footer.json        # Copyright, credit links and source link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
 │   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and social links
-│   │   ├── projects.json      # Key projects and their links, from public/resume.pdf
+│   │   ├── projects.json      # Projects section: id, label, headline and projects, from public/resume.pdf
 │   │   ├── site.json          # Default meta description and Open Graph image
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skill bars, tools by category
