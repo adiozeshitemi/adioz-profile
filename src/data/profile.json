@@ -1,0 +1,24 @@
+{
+  "name": "Adioz",
+  "role": "Full-stack AI engineer",
+  "headline": "takes AI into production.",
+  "summary": "Builds **backend systems and web applications**, and takes AI into production for enterprise clients, owning each system from design to support: tool-using agents that make real, auditable changes, and **small, quantized models** that meet tight latency budgets on CPU.",
+  "availability": "Available for Senior/Staff Engineering Roles",
+  "links": [
+    {
+      "title": "GitHub",
+      "url": "https://github.com/adiozeshitemi",
+      "icon": "github"
+    },
+    {
+      "title": "LinkedIn",
+      "url": "https://www.linkedin.com/in/adioz-eshitemi-5a594473/",
+      "icon": "linkedin"
+    },
+    {
+      "title": "Email",
+      "url": "mailto:contact@adioz.dev",
+      "icon": "email"
+    }
+  ]
+}

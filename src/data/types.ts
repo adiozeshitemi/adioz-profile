@@ -33,7 +33,7 @@ export interface Profile {
 
 /** One headline metric in the hero stats banner. */
 export interface StatItem {
-  /** Number the counter animates to, e.g. 99.99. */
+  /** Number the counter animates to. */
   value: number;
   /** Fraction digits shown for `value`; 0 when omitted. */
   decimals?: number;
