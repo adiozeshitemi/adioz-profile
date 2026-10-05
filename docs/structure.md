@@ -35,7 +35,10 @@ adioz-dev/
 │   │   └── Hero.astro         # Hero section
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: headline, bio, focus pillars, philosophy
+│   │   ├── contact.json       # Contact section heading, body and button label
 │   │   ├── experience.json    # Career timeline, from public/resume.pdf
+│   │   ├── footer.json        # Copyright, credit links and source link
+│   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── profile.json       # Name, role, hero copy, availability, GitHub/LinkedIn/email links
 │   │   ├── projects.json      # Key projects and their links, from public/resume.pdf
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
