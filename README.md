@@ -24,7 +24,8 @@ Full-stack AI engineer with a background in backend systems and web applications
 - **Self-Hosted Fonts**: Montserrat and JetBrains Mono variable fonts are served from `public/fonts/` and preloaded; JetBrains Mono sets only the hero terminal.
 - **Strict TypeScript**: `tsconfig.json` extends `astro/tsconfigs/strict` and defines path aliases (`@components/*`, `@layouts/*`, `@styles/*`, `@data/*`, `@utils/*`).
 - **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
-- **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, type-checks and builds on pull requests into `main` and before every deployment.
+- **Unit Tests**: Vitest renders the components through the Astro Container API and checks the data rules, the UI primitives, every section and the assembled page (`npm test`).
+- **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, runs the unit tests, type-checks and builds on pull requests into `main` and before every deployment.
 - **Continuous Deployment**: `.github/workflows/deploy.yml` deploys every push to `main` to Cloudflare Workers at `adioz.dev` once the quality gate passes.
 
 ## 📚 Documentation
@@ -83,6 +84,12 @@ Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24.
 
    ```bash
    npm run format:check
+   ```
+
+7. **Run the unit tests** (`npm run test:watch` re-runs them on each change)
+
+   ```bash
+   npm test
    ```
 
 ## 📝 License

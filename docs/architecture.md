@@ -112,7 +112,12 @@ The site is pre-rendered at build time (SSG). `npm run build` runs `astro check`
 ## 5. Tooling
 
 - **Formatting:** Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
-- **CI:** `.github/workflows/ci.yml` runs the format check, type check and build on pull requests into `main`; `deploy.yml` also runs it before every deployment.
+- **CI:** `.github/workflows/ci.yml` runs the format check, the unit tests, the type check and the build on pull requests into `main`; `deploy.yml` also runs it before every deployment.
+- **Tests:** `npm test` runs Vitest, configured in `vitest.config.ts` through Astro's `getViteConfig`, so `.astro` components, JSON imports and `import.meta.glob` resolve as they do in a build. `tests/render.ts` renders components with the Astro Container API and parses the HTML with happy-dom, so tests query elements and attributes:
+  - `data.test.ts`: the data rules (an SVG for every icon name, terminal line kinds, paired `**` markers, one `mailto:` link, section numbering) and the load-time errors for an unknown terminal line kind and an out-of-range skill percent.
+  - `ui.test.ts`: the UI primitives.
+  - `sections.test.ts`: the header, each section and the footer against their data.
+  - `page.test.ts`: the assembled landing page: a section for every navigation link, one `h1`, the landmarks and unique ids. `tests/fixtures/BareLayout.astro` stands in for `Layout.astro`, whose head needs `Astro.site`, which the Container API leaves unset.
 - **Deploy:** `.github/workflows/deploy.yml` runs on every push to `main` and calls `ci.yml` first. Once that passes, the deploy job builds the site and runs `wrangler deploy` through the official Wrangler action (Wrangler 4.147.0), authenticating with the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. It writes the production URL to the run summary. Deployments never overlap: a newer push waits for the running deployment to finish.
 - **Wrangler:** `wrangler.toml` configures the `adioz-dev` Cloudflare Worker to serve `dist/` as static assets at the `adioz.dev` Custom Domain, with the `workers.dev` URL and preview URLs disabled; `npx wrangler dev` serves the build locally.
 - **Domain:** the `adioz.dev` zone is on Cloudflare DNS. Deploying the Worker creates the Custom Domain's DNS record and certificate. `www.adioz.dev` has a proxied placeholder record (`AAAA 100::`) and a Redirect Rule that sends `https://www.*` to `https://${1}` with a 301. Always Use HTTPS redirects plain-HTTP requests to HTTPS before that rule runs, and the edge accepts TLS 1.2 and 1.3 only. The Email Routing MX and TXT records forward `contact@adioz.dev`.

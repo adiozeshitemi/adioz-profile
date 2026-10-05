@@ -6,8 +6,9 @@ Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24. The `package.json` sc
 - `npm run build`: runs `astro check` (strict TypeScript), then `astro build`, writing the static site to `dist/`.
 - `npm run preview`: serves the `dist/` build locally.
 - `npm run format:check`: checks formatting with Prettier; `npm run format` rewrites files to fix it.
+- `npm test`: runs the Vitest unit tests in `tests/` once; `npm run test:watch` re-runs them on each change.
 
-Run `npm run format:check` and `npm run build` before committing. CI (`.github/workflows/ci.yml`) runs the same two commands on pull requests into `main` and before every deployment.
+Run `npm run format:check`, `npm test` and `npm run build` before committing. CI (`.github/workflows/ci.yml`) runs the same three commands on pull requests into `main` and before every deployment.
 
 ## Documentation
 
