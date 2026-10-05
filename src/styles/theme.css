@@ -34,6 +34,8 @@
   --color-accent-violet: #a78bfa;
   --color-accent-pink: #f472b6;
   --color-success: #34d399;
+  /* Text on the cyan-to-violet accent gradient */
+  --color-on-accent: #05060b;
 
   /* Shape and layout */
   --radius-card: 1.125rem; /* 18px */
@@ -67,5 +69,6 @@
     --color-accent-violet: #6d28d9;
     --color-accent-pink: #be185d;
     --color-success: #047555;
+    --color-on-accent: #ffffff;
   }
 }

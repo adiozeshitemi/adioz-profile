@@ -32,6 +32,13 @@ adioz-dev/
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
+│   │   ├── UI/                # Reusable primitives: buttons, badges, icons, stats, section headers
+│   │   │   ├── Badge.astro
+│   │   │   ├── Button.astro
+│   │   │   ├── Icon.astro
+│   │   │   ├── SectionHeader.astro
+│   │   │   ├── StatBanner.astro
+│   │   │   └── StatCard.astro
 │   │   └── Hero.astro         # Hero section
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: headline, bio, focus pillars, philosophy
@@ -46,6 +53,17 @@ adioz-dev/
 │   │   ├── techStack.json     # Proficiency bars and tools grouped by category
 │   │   ├── terminal.json      # Hero terminal lines
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
+│   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
+│   │   ├── arrow-right.svg
+│   │   ├── arrow-up-right.svg
+│   │   ├── astro.svg
+│   │   ├── cloudflare.svg
+│   │   ├── email.svg
+│   │   ├── github.svg
+│   │   ├── globe.svg
+│   │   ├── LICENSE.md
+│   │   ├── linkedin.svg
+│   │   └── tailwindcss.svg
 │   ├── layouts/               # 🏗️ Page shells
 │   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload
 │   ├── pages/                 # 📄 File-based routes
