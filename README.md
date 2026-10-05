@@ -8,7 +8,7 @@
 <img src="public/images/profile_pic.svg" alt="Adioz" height="179" style="border-radius: 12px;" />
 </td>
 <td width="560" valign="top">
-Full-stack AI engineer with 8 years of experience in backend systems and web applications. Takes AI into production for enterprise clients and owns each system from design to support. Builds tool-using agents that make real and auditable changes. Trains and distils models on GPU, then serves them on CPU. Believes AI should be as efficient as it is intelligent, so designs resource-aware AI: small, quantized models that meet tight latency budgets without wasted compute. Treats agents as production software, with typed tools, fail-closed guardrails and a named operator behind every change.
+Full-stack AI engineer with a background in backend systems and web applications. Takes AI into production for enterprise clients and owns each system from design to support. Builds tool-using agents that make real and auditable changes. Trains and distils models on GPU, then serves them on CPU. Believes AI should be as efficient as it is intelligent, so designs resource-aware AI: small, quantized models that meet tight latency budgets without wasted compute. Treats agents as production software, with typed tools, fail-closed guardrails and a named operator behind every change.
 </td>
 </tr>
 </table>
