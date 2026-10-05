@@ -16,23 +16,20 @@ flowchart LR
         Data["data/ (JSON content, typed exports)"]
         Styles["styles/ (theme, animations, global)"]
         Icons["icons/ (SVG icons)"]
-        Header["components/Header/"]
-        Layout["layouts/Layout.astro"]
         UI["components/UI/ (primitives)"]
-        Hero["components/Hero/"]
+        Sections["components/ (Header, Hero, About)"]
+        Layout["layouts/Layout.astro"]
         Page["pages/index.astro"]
     end
 
-    Data ==>|Imported by| Header
+    Icons ==>|Inlined by| UI
+    Data ==>|Imported by| UI
+    Data ==>|Imported by| Sections
+    UI ==>|Used by| Sections
     Data ==>|Imported by| Layout
     Styles ==>|Imported by| Layout
-    Data ==>|Imported by| UI
-    Icons ==>|Inlined by| UI
-    Data ==>|Imported by| Hero
-    UI ==>|Used by| Hero
-    Header ==>|Rendered in| Page
+    Sections ==>|Rendered in| Page
     Layout ==>|Wraps| Page
-    Hero ==>|Rendered in| Page
     Page ==>|astro check, astro build| Dist["⚡ dist/ (static HTML/CSS)"]
     Public["🌍 public/ (fonts, images, favicons, resume)"] ==>|Copied as-is| Dist
     Dist ==>|deploy.yml on push to main| Workers["☁️ Cloudflare Workers (adioz.dev)"]
@@ -43,7 +40,7 @@ flowchart LR
 
 ## 1. Pages, Components and Data
 
-- **`src/pages/index.astro`**: The only route (`/`). It renders `Header`, then `Hero` inside `<main>`, inside `Layout`.
+- **`src/pages/index.astro`**: The only route (`/`). It renders `Header`, then `Hero` and `AboutSection` inside `<main>`, inside `Layout`.
 - **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme, preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, and imports `global.css`.
 - **`src/components/Header/`**: The site header, built from `navigation.json` and `profile.json`:
   - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background. It holds the brand link, the section links (from 760px) and the menu button (below 760px).
@@ -54,6 +51,9 @@ flowchart LR
   - `Hero.astro`: the availability badge, the name and gradient headline, the role and specialty, the summary, the call-to-action buttons (the first one primary), the resume download link and the social links, beside the terminal from 1040px, with `StatBanner` underneath.
   - `SocialLinks.astro`: `Profile.links` as icon links named by their titles; `https:` links open in a new tab.
   - `Terminal.astro`: the window title, the lines as output, and an input line with a blinking caret, in one component. CSS animation delays print the lines 400ms apart after 600ms; the text is in the HTML from the start, and with reduced motion every line shows at once. The terminal keeps the dark palette in both color schemes (`data-scheme="dark"`) and is the only text set in JetBrains Mono.
+- **`src/components/About/`**: The about section, built from `about.json`:
+  - `AboutSection.astro`: a `Section` with the bio paragraphs under the headline, a `CoreFocusCard` per pillar (one column, two from 760px, three from 1040px), and the philosophy statement after the cards.
+  - `CoreFocusCard.astro`: one pillar's icon, title, description and tags.
 - **`src/components/UI/`**: Reusable primitives that render static HTML:
   - `Button.astro`: a `primary` (cyan-to-violet gradient) or `ghost` (outlined) button with an optional trailing icon. With `href` it renders an `<a>`, and `external` opens the link in a new tab with `rel="noopener noreferrer"`; without `href` it renders a `<button>` whose `type` defaults to `button`.
   - `Badge.astro`: a `tag` (outlined label), `chip` (tool label) or `status` (pill with a pulsing success dot).
@@ -61,11 +61,12 @@ flowchart LR
   - `Icon.astro`: inlines `src/icons/<name>.svg` at a given pixel size. The icon is hidden from assistive technology unless it has a `label`, and a name with no SVG file fails the build.
   - `StatCard.astro`: one `stats.json` entry as a `<dt>` label and a `<dd>` value with its suffix, shown value first.
   - `StatBanner.astro`: a `<dl>` of `StatCard`s, every `stats.json` entry by default. It has one column on narrow screens, two from 420px (an odd last stat spans both), and one column per stat from 760px.
-  - `SectionHeader.astro`: a section's number and name (for example `01 — Core Engineering Focus`), its `<h2>` title and an optional intro.
+  - `Section.astro`: a numbered page section: the `<section>` with its id and accessible name, the page-width container, and a `SectionHeader` numbered by `sectionNumber`, with the paragraphs of its `intro` slot under the title.
+  - `SectionHeader.astro`: a section's number and name (for example `01 — Core Engineering Focus`), its `<h2>` title and an optional intro, given as a string or as paragraphs in its default slot.
 - **`src/icons/`**: One SVG per icon name used in the data (`LinkItem.icon`). Each file keeps only its path data, filled with `currentColor`, so an icon takes the color of the text around it. `LICENSE.md` lists the sources: Bootstrap Icons (MIT) and Simple Icons (CC0).
 - **`src/data/types.ts`**: TypeScript interfaces for the portfolio content: profile, header navigation, stats, terminal lines, about, tech stack, experience, projects, contact and footer. Every type holds JSON-compatible values only, and every link is a `LinkItem` with a title, URL and icon name. In `Profile.summary` and `ExperienceItem.highlights`, text inside `**` pairs marks strong emphasis, which `Emphasis.astro` renders.
-- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`: the name, role, hero copy, call-to-action, resume and social links), `navigation.json` (`Navigation`: the section links, the contact link and the accessible names of the navigation landmark and menu button), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalContent`: the window title and the lines), `about.json` (`AboutContent`), `techStack.json` (`TechStack`: proficiency bars and tools grouped by category), `experience.json` (`ExperienceItem[]`), `projects.json` (`ProjectItem[]`), `contact.json` (`ContactContent`), `footer.json` (`FooterContent`) and `site.json` (`SiteMeta`: the default meta description and Open Graph image). The experience, projects, stats and tech stack categories follow the resume in `public/resume.pdf`.
-- **`src/data/index.ts`**: Exports each JSON file typed by its interface, so `astro check` (run by `npm run build` and CI) rejects a file whose structure no longer matches. JSON imports type strings as `string`, so it checks `TerminalLine.kind` when it loads and throws on an unknown kind. `Layout.astro` imports `profile` and `site` from it, so an unknown kind fails the build.
+- **`src/data/*.json`**: The portfolio content, one file per type: `profile.json` (`Profile`: the name, role, hero copy, call-to-action, resume and social links), `navigation.json` (`Navigation`: the section links, the contact link and the accessible names of the navigation landmark and menu button), `stats.json` (`StatItem[]`, the only place the headline metric values live), `terminal.json` (`TerminalContent`: the window title and the lines), `about.json` (`AboutContent`: the section id and label, the headline, bio, pillars with their icons, and the philosophy), `techStack.json` (`TechStack`: proficiency bars and tools grouped by category), `experience.json` (`ExperienceItem[]`), `projects.json` (`ProjectItem[]`), `contact.json` (`ContactContent`), `footer.json` (`FooterContent`) and `site.json` (`SiteMeta`: the default meta description and Open Graph image). The experience, projects, stats and tech stack categories follow the resume in `public/resume.pdf`.
+- **`src/data/index.ts`**: Exports each JSON file typed by its interface, so `astro check` (run by `npm run build` and CI) rejects a file whose structure no longer matches. JSON imports type strings as `string`, so it checks `TerminalLine.kind` when it loads and throws on an unknown kind. `Layout.astro` imports `profile` and `site` from it, so an unknown kind fails the build. It also exports `sectionNumber(id)`, a section's position among the `navigation.json` links from 1, which throws when no link targets the section.
 
 ## 2. Styling
 
