@@ -1,30 +1,96 @@
 ---
-/* The featured projects section: a ProjectCard for each projects.json project with `featured` set. */
+/*
+ * The featured projects section: the gold headline over a ProjectCard for
+ * each projects.json project with `featured` set, two to a row from 860px.
+ */
 import { projects } from "../../data/index";
-import Section from "../UI/Section.astro";
+import SectionTitle from "../UI/SectionTitle.astro";
 import ProjectCard from "./ProjectCard.astro";
 
 const featured = projects.projects.filter((project) => project.featured);
+const titleId = `${projects.id}-title`;
 ---
 
-<Section id={projects.id} label={projects.label} title={projects.headline}>
-  <div class="grid">
-    {featured.map((project) => (
-      <ProjectCard project={project} />
-    ))}
+<section id={projects.id} class="work" aria-labelledby={titleId}>
+  <div class="inner">
+    <SectionTitle
+      section={projects.id}
+      label={projects.label}
+      title={projects.headline}
+      id={titleId}
+    />
+    <div class="projects">
+      {featured.map((project) => (
+        <ProjectCard project={project} />
+      ))}
+    </div>
   </div>
-</Section>
+</section>
+
+<script>
+  import { startTilt } from "../../scripts/tilt";
+
+  for (const card of document.querySelectorAll<HTMLElement>(
+    ".work [data-tilt]",
+  )) {
+    startTilt(card);
+  }
+</script>
 
 <style>
-  .grid {
-    display: grid;
-    gap: 1.125rem;
+  .work {
+    padding-block: clamp(84px, 10vw, 140px);
   }
 
-  /* --breakpoint-md */
-  @media (width >= 47.5rem) {
-    .grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  .inner {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 28px;
+  }
+
+  /*
+   * The cards sit two to a row, one below 860px. Behind them the page glows,
+   * gold low behind the first card and steel high behind the second,
+   * overhanging the grid only above and below so it never widens the page.
+   */
+  .projects {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 34px 22px;
+    margin-top: 34px;
+  }
+
+  .projects::before {
+    content: "";
+    position: absolute;
+    inset: -90px 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        36% 44% at 24% 72%,
+        rgb(var(--particle-gold) / var(--backlight-gold)),
+        transparent 70%
+      ),
+      radial-gradient(
+        34% 44% at 78% 28%,
+        rgb(var(--backlight-steel-rgb) / var(--backlight-steel)),
+        transparent 70%
+      );
+  }
+
+  @media (width <= 53.75rem) {
+    .projects {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width <= 40rem) {
+    .inner {
+      padding-inline: 16px;
     }
   }
 </style>

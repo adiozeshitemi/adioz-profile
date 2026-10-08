@@ -8,7 +8,7 @@
   "actions": [
     {
       "title": "View selected work",
-      "url": "#work",
+      "url": "#projects",
       "icon": "arrow-right"
     },
     {

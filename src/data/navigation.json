@@ -8,7 +8,7 @@
     { "title": "About", "url": "#about" },
     { "title": "Stack", "url": "#stack" },
     { "title": "Experience", "url": "#experience" },
-    { "title": "Work", "url": "#work" }
+    { "title": "Projects", "url": "#projects" }
   ],
   "cta": { "title": "Get in touch", "url": "#contact" }
 }

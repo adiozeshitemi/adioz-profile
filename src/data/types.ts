@@ -227,12 +227,14 @@ export interface YearRange {
 
 /** Content of the featured projects section. */
 export interface ProjectsContent {
-  /** Section id, the target of its navigation.json link, e.g. "work". */
+  /** Section id, the target of its navigation.json link, e.g. "projects". */
   id: string;
   /** Section name after its number, e.g. "Featured Projects". */
   label: string;
-  /** Section headline, e.g. "Systems built for scale". */
+  /** Section headline, a sentence ending in a full stop. */
   headline: string;
+  /** Read after each project link's label, which opens in a new tab. */
+  newTab: string;
   /** Projects in display order; the section shows those with `featured` set. */
   projects: ProjectItem[];
 }
@@ -247,7 +249,7 @@ export interface ProjectItem {
   links: LinkItem[];
   /** Whether the project is listed under Featured Projects. */
   featured: boolean;
-  /** One-line outcome shown under the tags, e.g. "Sub-15ms ML recommendation latency". */
+  /** One-line outcome shown under the tags beside a lamp; text inside `**` pairs renders as strong emphasis. */
   metric: string;
 }
 

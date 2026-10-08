@@ -1,7 +1,8 @@
 {
-  "id": "work",
+  "id": "projects",
   "label": "Featured Projects",
-  "headline": "Systems built for scale",
+  "headline": "Systems built for scale.",
+  "newTab": "(opens in a new tab)",
   "projects": [
     {
       "title": "BBRaiN",
@@ -30,7 +31,7 @@
         }
       ],
       "featured": true,
-      "metric": "Powers content discovery on Baze streaming platform"
+      "metric": "Powers content discovery on **Baze streaming platform**"
     },
     {
       "title": "Hisiya",
