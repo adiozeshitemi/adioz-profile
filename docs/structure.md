@@ -60,7 +60,7 @@ adioz-dev/
 │   │   │   ├── Pipeline3D.astro
 │   │   │   ├── SocialLinks.astro
 │   │   │   └── Terminal.astro
-│   │   ├── Projects/          # Featured projects section: project cards
+│   │   ├── Projects/          # Featured projects section: machined cards with nameplates and link ports
 │   │   │   ├── ProjectCard.astro
 │   │   │   └── ProjectsSection.astro
 │   │   ├── TechStack/         # Tech stack section: gauge cluster beside the tool categories
@@ -96,7 +96,7 @@ adioz-dev/
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
 │   │   ├── pipeline.json      # Agent pipeline figure label and each part's title and detail
 │   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and social links
-│   │   ├── projects.json      # Projects section: id, label, headline and projects, from public/resume.pdf
+│   │   ├── projects.json      # Projects section: id, label, headline, new-tab words and projects, from public/resume.pdf
 │   │   ├── site.json          # Default meta description and Open Graph image
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
@@ -133,6 +133,7 @@ adioz-dev/
 │   │   ├── terminal.ts        # Agent log: typing the entries and the window buttons
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
 │   │   ├── theme.ts           # Theme switching, saving and device tracking
+│   │   ├── tilt.ts            # Project cards swivelling toward the pointer
 │   │   ├── timeline.ts        # Experience rail: span and gold fill as the page scrolls
 │   │   ├── trace.ts           # Career trace: scale, tabs, span draw-in, view switch
 │   │   └── view.ts            # View turn: raised parts lean away from the pointer
@@ -163,6 +164,7 @@ adioz-dev/
 │   ├── terminal.test.ts       # Agent log typing and window buttons
 │   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
 │   ├── theme.test.ts          # Main design tokens and their contrast
+│   ├── tilt.test.ts           # Card tilt limits and motion
 │   ├── timeline.test.ts       # Experience rail fill and passed stops
 │   ├── trace.test.ts          # Career trace scale, tabs and view switch
 │   ├── typography.test.ts     # Main design type tokens, fonts and text styles

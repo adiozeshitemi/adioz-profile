@@ -168,7 +168,7 @@ describe("Hero", () => {
     const doc = await render(Hero);
     const actions = [...doc.querySelectorAll(".actions a.btn")];
     expect(links(actions)).toEqual([
-      ["View selected work", "#work"],
+      ["View selected work", "#projects"],
       ["Get in touch", "#contact"],
     ]);
     for (const action of actions) {
@@ -561,27 +561,65 @@ describe("ExperienceSection", () => {
 });
 
 describe("ProjectsSection", () => {
-  it("renders a card for each featured project with its links", async () => {
+  const featured = projects.projects.filter((project) => project.featured);
+
+  it("sits at #projects under the numbered eyebrow and gold headline", async () => {
     const doc = await render(ProjectsSection);
-    expect(doc.querySelector("section")?.id).toBe(projects.id);
-    const featured = projects.projects.filter((project) => project.featured);
-    const cards = [...doc.querySelectorAll("article.card")];
-    expect(texts(cards.map((card) => card.querySelector("h3")!))).toEqual(
-      featured.map((project) => project.title),
-    );
+    const section = doc.querySelector("section");
+    expect(section?.id).toBe("projects");
+    expect(section?.getAttribute("aria-labelledby")).toBe("projects-title");
+    expect(text(doc.querySelector(".eyebrow"))).toBe(`04 ${projects.label}`);
+    expect(text(doc.querySelector("h2 .gilt"))).toBe(projects.headline);
+    expect(
+      navigation.links.find((link) => link.url === "#projects")?.title,
+    ).toBe("Projects");
+  });
+
+  it("renders a tilting machined card per featured project with its name carved on a screwed plate", async () => {
+    const doc = await render(ProjectsSection);
+    const cards = [...doc.querySelectorAll("article.panel.project")];
+    expect(cards).toHaveLength(featured.length);
     cards.forEach((card, index) => {
       const project = featured[index]!;
-      expect(text(card.querySelector(".metric"))).toBe(project.metric);
-      expect(texts(card.querySelectorAll(".tags .badge"))).toEqual(
+      expect(card.hasAttribute("data-tilt")).toBe(true);
+      const plate = card.querySelector(".nameplate");
+      expect(plate?.querySelectorAll(".screw")).toHaveLength(2);
+      expect(text(plate?.querySelector("h3.carved") ?? null)).toBe(
+        project.title,
+      );
+      expect(text(card.querySelector(".desc"))).toBe(project.description);
+      expect(texts(card.querySelectorAll(".tags li.tag"))).toEqual(
         project.tags,
       );
-      const anchors = [...card.querySelectorAll(".links a")];
-      expect(links(anchors)).toEqual(
-        project.links.map((link) => [link.title, link.url]),
+      expect(card.querySelector(".metric .lamp.status")).not.toBeNull();
+      expect(text(card.querySelector(".metric"))).toBe(
+        project.metric.replaceAll("**", ""),
       );
-      for (const anchor of anchors) {
-        expect(anchor.getAttribute("target")).toBe("_blank");
-        expect(anchor.getAttribute("rel")).toBe("noopener noreferrer");
+    });
+    expect(text(cards[0]!.querySelector(".metric strong"))).toBe(
+      "Baze streaming platform",
+    );
+  });
+
+  it("links each port in a new tab, saying so to assistive technology", async () => {
+    const doc = await render(ProjectsSection);
+    const cards = [...doc.querySelectorAll("article.project")];
+    cards.forEach((card, index) => {
+      const ports = [...card.querySelectorAll("a.port")];
+      expect(
+        ports.map((port) => [
+          text(port.querySelector(".port-label")),
+          port.getAttribute("href"),
+        ]),
+      ).toEqual(featured[index]!.links.map((link) => [link.title, link.url]));
+      for (const port of ports) {
+        expect(port.getAttribute("target")).toBe("_blank");
+        expect(port.getAttribute("rel")).toBe("noopener noreferrer");
+        expect(text(port.querySelector(".sr-only"))).toBe(projects.newTab);
+        expect(
+          port.querySelector(".port-cap")?.getAttribute("aria-hidden"),
+        ).toBe("true");
+        expect(port.querySelector(".port-disc svg")).not.toBeNull();
       }
     });
   });
