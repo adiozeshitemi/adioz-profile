@@ -3,6 +3,7 @@ import Badge from "../src/components/UI/Badge.astro";
 import Button from "../src/components/UI/Button.astro";
 import Emphasis from "../src/components/UI/Emphasis.astro";
 import Icon from "../src/components/UI/Icon.astro";
+import Knob from "../src/components/UI/Knob.astro";
 import Section from "../src/components/UI/Section.astro";
 import SectionHeader from "../src/components/UI/SectionHeader.astro";
 import StatBanner from "../src/components/UI/StatBanner.astro";
@@ -56,6 +57,105 @@ describe("Button", () => {
     expect(link?.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
       "true",
     );
+  });
+
+  it("renders a machined accent button with an engraved label and a spun cap", async () => {
+    const doc = await render(Button, {
+      props: {
+        href: "#work",
+        variant: "accent",
+        icon: "arrow-right",
+        rest: 90,
+      },
+      slots: { default: "View selected work" },
+    });
+    const link = doc.querySelector("a.btn");
+    expect([...(link?.classList ?? [])]).toEqual(
+      expect.arrayContaining(["accent", "machined", "capped"]),
+    );
+    expect(text(link?.querySelector(".engrave") ?? null)).toBe(
+      "View selected work",
+    );
+    const cap = link?.querySelector(".cap");
+    expect(cap?.getAttribute("aria-hidden")).toBe("true");
+    const turn = cap?.querySelector(".spun.turn");
+    expect(turn?.getAttribute("data-rest")).toBe("90");
+    expect(
+      turn?.querySelector("svg")?.classList.contains("engraved-icon"),
+    ).toBe(true);
+  });
+
+  it("renders a compact steel button without a cap when it has no icon", async () => {
+    const doc = await render(Button, {
+      props: { variant: "steel", compact: true },
+      slots: { default: "Open" },
+    });
+    const button = doc.querySelector("button.btn");
+    expect(button?.getAttribute("type")).toBe("button");
+    expect([...(button?.classList ?? [])]).toEqual(
+      expect.arrayContaining(["steel", "machined", "compact"]),
+    );
+    expect(button?.classList.contains("capped")).toBe(false);
+    expect(button?.querySelector(".cap")).toBeNull();
+  });
+
+  it("ignores compact on the prototype variants", async () => {
+    const doc = await render(Button, {
+      props: { compact: true },
+      slots: { default: "Open" },
+    });
+    expect(doc.querySelector("button.btn")?.classList.contains("compact")).toBe(
+      false,
+    );
+  });
+});
+
+describe("Knob", () => {
+  it("renders a labelled link with an engraved icon on a hidden spun face", async () => {
+    const doc = await render(Knob, {
+      props: {
+        href: "/resume.pdf",
+        label: "Download resume",
+        icon: "download",
+        rest: 180,
+      },
+    });
+    const knob = doc.querySelector("a.knob");
+    expect(knob?.getAttribute("href")).toBe("/resume.pdf");
+    expect(knob?.getAttribute("aria-label")).toBe("Download resume");
+    expect(knob?.classList.contains("compact")).toBe(false);
+    const face = knob?.querySelector(".face");
+    expect(face?.getAttribute("aria-hidden")).toBe("true");
+    expect(face?.querySelector(".spun.turn")?.getAttribute("data-rest")).toBe(
+      "180",
+    );
+    expect(
+      face?.querySelector("svg")?.classList.contains("engraved-icon"),
+    ).toBe(true);
+  });
+
+  it("renders a compact button of type button without href", async () => {
+    const doc = await render(Knob, {
+      props: { label: "Copy email address", icon: "email", compact: true },
+    });
+    const knob = doc.querySelector("button.knob");
+    expect(knob?.getAttribute("type")).toBe("button");
+    expect(knob?.classList.contains("compact")).toBe(true);
+    expect(doc.querySelector("a")).toBeNull();
+  });
+
+  it("fills the face from the default slot and names the knob from the label slot", async () => {
+    const doc = await render(Knob, {
+      slots: {
+        default: '<svg class="custom"></svg>',
+        label: '<span class="name">Switch theme</span>',
+      },
+    });
+    const knob = doc.querySelector("button.knob");
+    expect(knob?.hasAttribute("aria-label")).toBe(false);
+    expect(knob?.querySelector(".face svg.custom")).not.toBeNull();
+    expect(text(knob?.querySelector(".name") ?? null)).toBe("Switch theme");
+    expect(knob?.querySelector(".face .name")).toBeNull();
   });
 });
 

@@ -59,12 +59,13 @@ adioz-dev/
 │   │   │   ├── SkillBar.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
-│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, engraving filters, icons, stats, sections
+│   │   └── UI/                # Reusable primitives: buttons, knobs, badges, emphasis, engraving filters, icons, stats, sections
 │   │       ├── Badge.astro
 │   │       ├── Button.astro
 │   │       ├── Emphasis.astro
 │   │       ├── EngravingFilters.astro
 │   │       ├── Icon.astro
+│   │       ├── Knob.astro
 │   │       ├── Section.astro
 │   │       ├── SectionHeader.astro
 │   │       ├── StatBanner.astro
@@ -110,6 +111,7 @@ adioz-dev/
 │       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
 │       ├── engraving.css      # Main design engraved, carved and inlaid text
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
+│       ├── metal.css          # Shared metal finishes: spun steel
 │       ├── theme.css          # Design tokens (@theme), light-scheme overrides, main design tokens
 │       └── typography.css     # Main design titles, section labels and section numbers
 │

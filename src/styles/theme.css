@@ -119,6 +119,14 @@
     #cf9050 82%,
     #e8b072 100%
   );
+  /* Brushed gold: the dark theme's --button-metal. */
+  --gold-brushed: linear-gradient(
+    180deg,
+    #fbe7a6 0%,
+    #e2bb57 44%,
+    #c4952f 56%,
+    #f0d27f 100%
+  );
   /* Brushed steel, the same in both themes. */
   --steel-brushed: linear-gradient(
     180deg,
@@ -225,6 +233,22 @@
   --cut-shade: #000000;
   --cut-lip: rgb(255 255 255 / 0.28);
   --cut-lip-deep: rgb(255 255 255 / 0.4);
+  /*
+   * The accent metal of buttons: --button-metal and its highlight band
+   * (--button-shine), its side wall from below the face (--button-wall-1) to
+   * the floor (--button-wall-5), and --button-tint, an rgb triple for the brown
+   * of its rims and shaded lips. --accent-line lights a control's icon on
+   * hover and focus.
+   */
+  --button-metal: var(--gold-brushed);
+  --button-shine: rgb(255 248 222 / 0.95);
+  --button-wall-1: #b98f2c;
+  --button-wall-2: #a9822a;
+  --button-wall-3: #987426;
+  --button-wall-4: #866622;
+  --button-wall-5: #73561c;
+  --button-tint: 80 60 15;
+  --accent-line: #d99e12;
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -298,6 +322,15 @@
   --cut-shade: rgb(20 26 34 / 0.55);
   --cut-lip: #ffffff;
   --cut-lip-deep: #ffffff;
+  --button-metal: var(--bronze-metal);
+  --button-shine: rgb(255 236 212 / 0.9);
+  --button-wall-1: #976234;
+  --button-wall-2: #87572e;
+  --button-wall-3: #774c28;
+  --button-wall-4: #674122;
+  --button-wall-5: #57371c;
+  --button-tint: 87 55 28;
+  --accent-line: #a8620f;
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;
