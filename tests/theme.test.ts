@@ -60,6 +60,15 @@ const THEMED_TOKENS = [
   "--button-wall-5",
   "--button-tint",
   "--accent-line",
+  "--tag-face",
+  "--tag-lip",
+  "--tag-wall-1",
+  "--tag-wall-2",
+  "--tag-outline",
+  "--tag-text",
+  "--tag-ring-lit",
+  "--lamp-lens",
+  "--lamp-glow",
   ...Array.from({ length: 10 }, (_, index) => `--slab-${index + 1}`),
   "--slab-contact",
   "--slab-ambient",
@@ -84,6 +93,16 @@ describe("main theme tokens", () => {
       expect(stops.length).toBeGreaterThan(0);
       for (const stop of stops) {
         expect(contrast(values["--plate-ink"], stop)).toBeGreaterThanOrEqual(
+          4.5,
+        );
+      }
+    });
+
+    it(`keeps --tag-text at WCAG AA on every --tag-face stop in the ${theme} theme`, () => {
+      const stops = values["--tag-face"].match(/#[0-9a-f]{6}/gi) ?? [];
+      expect(stops.length).toBeGreaterThan(0);
+      for (const stop of stops) {
+        expect(contrast(values["--tag-text"], stop)).toBeGreaterThanOrEqual(
           4.5,
         );
       }

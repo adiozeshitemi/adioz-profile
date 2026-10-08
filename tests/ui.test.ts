@@ -4,6 +4,7 @@ import Button from "../src/components/UI/Button.astro";
 import Emphasis from "../src/components/UI/Emphasis.astro";
 import Icon from "../src/components/UI/Icon.astro";
 import Knob from "../src/components/UI/Knob.astro";
+import Lamp from "../src/components/UI/Lamp.astro";
 import Nameplate from "../src/components/UI/Nameplate.astro";
 import Plate from "../src/components/UI/Plate.astro";
 import Screw from "../src/components/UI/Screw.astro";
@@ -11,6 +12,7 @@ import Section from "../src/components/UI/Section.astro";
 import SectionHeader from "../src/components/UI/SectionHeader.astro";
 import StatBanner from "../src/components/UI/StatBanner.astro";
 import StatCard from "../src/components/UI/StatCard.astro";
+import Tag from "../src/components/UI/Tag.astro";
 import { stats } from "../src/data/index";
 import { render, text } from "./render";
 
@@ -394,5 +396,35 @@ describe("Nameplate", () => {
       "contact@adioz.dev",
     );
     expect(link?.querySelector("h1, h2, h3, h4")).toBeNull();
+  });
+});
+
+describe("Tag", () => {
+  it("renders its text in a span by default", async () => {
+    const doc = await render(Tag, { slots: { default: "Typed tools" } });
+    expect(text(doc.querySelector("span.tag"))).toBe("Typed tools");
+  });
+
+  it("renders a list item inside a list of tags", async () => {
+    const doc = await render(Tag, {
+      props: { as: "li" },
+      slots: { default: "Rust" },
+    });
+    expect(text(doc.querySelector("li.tag"))).toBe("Rust");
+  });
+});
+
+describe("Lamp", () => {
+  it("renders the gold status lamp by default, hidden from assistive technology", async () => {
+    const doc = await render(Lamp);
+    const lamp = doc.querySelector(".lamp");
+    expect(lamp?.classList.contains("status")).toBe(true);
+    expect(lamp?.getAttribute("aria-hidden")).toBe("true");
+    expect(text(lamp)).toBe("");
+  });
+
+  it("renders the red live lamp", async () => {
+    const doc = await render(Lamp, { props: { variant: "live" } });
+    expect(doc.querySelector(".lamp")?.classList.contains("live")).toBe(true);
   });
 });

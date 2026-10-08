@@ -251,6 +251,27 @@
   --button-wall-5: #73561c;
   --button-tint: 80 60 15;
   --accent-line: #d99e12;
+  /*
+   * Tags: a brushed face (--tag-face) with a lit top lip (--tag-lip), a 2px
+   * wall (--tag-wall-1, --tag-wall-2), an outline, the label (--tag-text, at
+   * 4.5:1 or more on every --tag-face stop) and the gold ring of a hovered tag
+   * (--tag-ring-lit). Status lamps: a gold lens (--lamp-lens) and its glow
+   * (--lamp-glow, an rgb triple).
+   */
+  --tag-face: linear-gradient(180deg, #30363d, #22272d 55%, #1b1f24);
+  --tag-lip: rgb(255 255 255 / 0.14);
+  --tag-wall-1: #3a3f46;
+  --tag-wall-2: #2a2e33;
+  --tag-outline: rgb(0 0 0 / 0.6);
+  --tag-text: #d3d9e0;
+  --tag-ring-lit: rgb(230 192 98 / 0.75);
+  --lamp-lens: radial-gradient(
+    circle at 40% 35%,
+    #fffbe8,
+    #f2c94c 45%,
+    #a8780f
+  );
+  --lamp-glow: 242 201 76;
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -334,6 +355,20 @@
   --button-wall-5: #57371c;
   --button-tint: 87 55 28;
   --accent-line: #a8620f;
+  --tag-face: linear-gradient(180deg, #ffffff, #f0f2f5 55%, #e5e8ec);
+  --tag-lip: #ffffff;
+  --tag-wall-1: #cfd5dc;
+  --tag-wall-2: #b9c0c8;
+  --tag-outline: rgb(40 48 58 / 0.22);
+  --tag-text: #2c323a;
+  --tag-ring-lit: rgb(150 110 24 / 0.75);
+  --lamp-lens: radial-gradient(
+    circle at 40% 35%,
+    #fff1d6,
+    #d9963a 45%,
+    #84501c
+  );
+  --lamp-glow: 210 140 50;
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;

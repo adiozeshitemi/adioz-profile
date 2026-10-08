@@ -1,0 +1,81 @@
+---
+interface Props {
+  /** status: the gold lamp, breathing slowly; live: the red lamp, blinking. */
+  variant?: "status" | "live";
+  class?: string;
+}
+
+const { variant = "status", class: className } = Astro.props;
+---
+
+<span class:list={["lamp", variant, className]} aria-hidden="true"></span>
+
+<style>
+  /*
+   * A lamp is a lens in a dark socket, decorative beside the text it marks.
+   * The status lamp is gold (--lamp-lens) and its glow (--lamp-glow) breathes;
+   * the live lamp is red and blinks on and off. With reduced motion both stay
+   * lit.
+   */
+  .lamp {
+    display: inline-block;
+    flex: none;
+    border-radius: 50%;
+    background-clip: padding-box;
+  }
+
+  .status {
+    width: 10px;
+    height: 10px;
+    border: 2px solid #0d0904;
+    background-image: var(--lamp-lens);
+    box-shadow:
+      0 1px 0 rgb(255 244 214 / 0.45),
+      0 0 7px 1px rgb(var(--lamp-glow) / 0.8);
+    animation: lamp-breathe 2.6s ease-in-out infinite;
+  }
+
+  .live {
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid #0b0c0e;
+    background-image: radial-gradient(
+      circle at 40% 35%,
+      #ffd2cc,
+      #ff3b30 45%,
+      #a3120a
+    );
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.12),
+      0 0 6px 1px rgb(255 59 48 / 0.85);
+    animation: lamp-blink 1.1s steps(1) infinite;
+  }
+
+  @keyframes lamp-breathe {
+    50% {
+      box-shadow:
+        0 1px 0 rgb(255 244 214 / 0.45),
+        0 0 2px 0 rgb(var(--lamp-glow) / 0.3);
+      filter: brightness(0.82);
+    }
+  }
+
+  @keyframes lamp-blink {
+    50% {
+      background-image: radial-gradient(
+        circle at 40% 35%,
+        #4a1e1b,
+        #241010 70%
+      );
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.12),
+        inset 0 1px 2px rgb(0 0 0 / 0.9);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lamp {
+      animation: none;
+    }
+  }
+</style>
