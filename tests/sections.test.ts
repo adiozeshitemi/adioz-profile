@@ -364,20 +364,56 @@ describe("AboutSection", () => {
 });
 
 describe("TechStackSection", () => {
-  it("renders each skill's label, level and bar width", async () => {
+  it("numbers the eyebrow and renders the gold headline and intro", async () => {
     const doc = await render(TechStackSection);
-    expect(doc.querySelector("section")?.id).toBe(techStack.id);
-    const skills = [...doc.querySelectorAll(".skill")];
-    expect(skills).toHaveLength(techStack.skills.length);
-    skills.forEach((skill, index) => {
-      const item = techStack.skills[index]!;
-      expect(text(skill.querySelector("dt"))).toBe(item.label);
-      expect(text(skill.querySelector(".level"))).toBe(item.level);
-      expect(skill.querySelector(".bar")?.getAttribute("aria-hidden")).toBe(
-        "true",
+    const section = doc.querySelector("section");
+    expect(section?.id).toBe(techStack.id);
+    expect(section?.getAttribute("aria-labelledby")).toBe(
+      `${techStack.id}-title`,
+    );
+    expect(text(doc.querySelector(".eyebrow"))).toBe(`02 ${techStack.label}`);
+    expect(text(doc.querySelector("h2 .gilt"))).toBe(techStack.headline);
+    expect(text(doc.querySelector(".sub p"))).toBe(techStack.intro);
+  });
+
+  it("renders a gauge per skill with its label, value and level as text", async () => {
+    const doc = await render(TechStackSection);
+    const cluster = doc.querySelector(".plate.cluster");
+    expect(cluster?.querySelectorAll(":scope > .screw")).toHaveLength(4);
+    const gauges = [...(cluster?.querySelectorAll("dl.gauges > .gauge") ?? [])];
+    expect(
+      gauges.map((gauge) => [
+        text(gauge.querySelector("dt")),
+        gauge.getAttribute("data-value"),
+        text(gauge.querySelector("dd .sr-only")),
+        text(gauge.querySelector(".readout b")),
+        text(gauge.querySelector(".readout small")),
+      ]),
+    ).toEqual(
+      techStack.skills.map((skill) => [
+        skill.label,
+        String(skill.percent),
+        skill.level,
+        String(skill.percent),
+        skill.level,
+      ]),
+    );
+  });
+
+  it("hides each dial from assistive technology and seats its needle on the value", async () => {
+    const doc = await render(TechStackSection);
+    const gauges = [...doc.querySelectorAll(".gauge")];
+    gauges.forEach((gauge, index) => {
+      const percent = techStack.skills[index]!.percent;
+      const dial = gauge.querySelector(".dial");
+      expect(dial?.getAttribute("aria-hidden")).toBe("true");
+      expect(dial?.querySelectorAll(".dial-ticks line")).toHaveLength(21);
+      expect(dial?.querySelectorAll(".dial-ticks line.major")).toHaveLength(5);
+      expect(dial?.querySelector(".rotor")?.getAttribute("style")).toBe(
+        `transform: rotate(${-135 + 2.7 * percent}deg)`,
       );
-      expect(skill.querySelector("[data-fill]")?.getAttribute("style")).toBe(
-        `width: ${item.percent}%`,
+      expect(dial?.querySelector(".dial-fill")?.getAttribute("style")).toBe(
+        `stroke-dasharray: ${percent} 200`,
       );
     });
   });

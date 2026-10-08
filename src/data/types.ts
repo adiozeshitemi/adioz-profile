@@ -160,19 +160,19 @@ export interface TechStack {
   headline: string;
   /** Intro paragraph under the headline. */
   intro: string;
-  /** Proficiency bars in display order. */
+  /** Skills in display order, one gauge each. */
   skills: SkillItem[];
   /** Tool groups in display order. */
   categories: TechStackCategory[];
 }
 
-/** One proficiency bar in the tech stack section. */
+/** One skill in the tech stack's gauge cluster. */
 export interface SkillItem {
   /** Skill name, e.g. "Rust Systems & Tokio Async". */
   label: string;
-  /** Proficiency label shown beside the bar, e.g. "Expert". */
+  /** Proficiency level, read as text and inlaid in the dial, e.g. "Expert". */
   level: string;
-  /** Bar fill as an integer from 0 to 100. */
+  /** The value the gauge needle settles on, an integer from 0 to 100. */
   percent: number;
 }
 

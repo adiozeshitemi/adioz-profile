@@ -15,6 +15,7 @@ const GRADIENTS = [
   "mark-gold",
   "mark-steel-bright",
   "mark-gold-bright",
+  "dial-gold",
 ];
 
 /** The declarations of the rule in engraving.css whose selector list is exactly `selector`. */

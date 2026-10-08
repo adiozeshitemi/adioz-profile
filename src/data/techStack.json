@@ -1,7 +1,7 @@
 {
   "id": "stack",
   "label": "Tech Stack",
-  "headline": "Architectural toolkit",
+  "headline": "Architectural toolkit.",
   "intro": "The languages, data systems, and ML runtimes behind production AI.",
   "skills": [
     {

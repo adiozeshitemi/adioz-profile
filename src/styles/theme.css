@@ -232,6 +232,39 @@
    * upper wall to its lit floor; the shadowed top lip (--cut-shade) and the lit
    * bottom lip (--cut-lip, --cut-lip-deep for a deeper cut).
    */
+  /*
+   * Gauges: the dial face and its shading, the ticks, the groove the arc runs
+   * in (--dial-track, lit along its lower lip by --dial-lip), the stops of
+   * #dial-gold, the needle, and the glass crystal over the face: its glare,
+   * window band and counter-reflection, its lit rim, the refraction ring
+   * inside the rim (--crystal-edge), its curved highlight (--crystal-arc, set
+   * off by --crystal-arc-shade) and the glass's own tint.
+   */
+  --dial-face: radial-gradient(
+    circle at 50% 28%,
+    #20242b,
+    #0d0f13 60%,
+    #070809
+  );
+  --dial-face-shade:
+    inset 0 0 0 1px rgb(0 0 0 / 0.6),
+    inset calc(var(--lean) * var(--slant) * 4px) 4px 14px rgb(0 0 0 / 0.6);
+  --dial-tick: #8d96a1;
+  --dial-tick-major: #eef1f4;
+  --dial-track: #020304;
+  --dial-lip: rgb(255 255 255 / 0.2);
+  --dial-gold-1: #8f6718;
+  --dial-gold-2: #e3be5e;
+  --dial-gold-3: #fff1b8;
+  --needle: linear-gradient(90deg, #6f7781, #ffffff 50%, #8e96a0);
+  --crystal-glare: rgb(255 255 255 / 0.24);
+  --crystal-arc: rgb(255 255 255 / 0.55);
+  --crystal-band: rgb(255 255 255 / 0.11);
+  --crystal-counter: rgb(255 255 255 / 0.07);
+  --crystal-rim: rgb(255 255 255 / 0.34);
+  --crystal-edge: rgb(0 0 0 / 0.35);
+  --crystal-arc-shade: transparent;
+  --crystal-tint: transparent;
   --inlay-gold: linear-gradient(
     180deg,
     #241a06 0%,
@@ -440,6 +473,31 @@
   --metal-drop: rgb(25 35 50 / 0.45);
   --metal-contact: rgb(25 35 50 / 0.42);
   --metal-contact-lift: rgb(25 35 50 / 0.2);
+  --dial-face: radial-gradient(
+    circle at 50% 28%,
+    #ffffff,
+    #e7eaee 60%,
+    #cdd2d8
+  );
+  --dial-face-shade:
+    inset 0 0 0 1px rgb(20 24 30 / 0.3),
+    inset calc(var(--lean) * var(--slant) * 3px) 3px 9px rgb(20 30 45 / 0.28);
+  --dial-tick: #6b737d;
+  --dial-tick-major: #1b1e23;
+  --dial-track: #b4bbc4;
+  --dial-lip: rgb(255 255 255 / 0.95);
+  --dial-gold-1: #4c3708;
+  --dial-gold-2: #8a6514;
+  --dial-gold-3: #c0903a;
+  --needle: linear-gradient(90deg, #15181c, #59616c 50%, #15181c);
+  --crystal-glare: rgb(255 255 255 / 0.85);
+  --crystal-arc: #ffffff;
+  --crystal-band: rgb(110 130 158 / 0.16);
+  --crystal-counter: rgb(110 130 158 / 0.14);
+  --crystal-rim: rgb(255 255 255 / 0.95);
+  --crystal-edge: rgb(30 40 55 / 0.24);
+  --crystal-arc-shade: rgb(30 40 55 / 0.4);
+  --crystal-tint: rgb(120 140 168 / 0.14);
   --inlay-gold: linear-gradient(
     180deg,
     #120c02 0%,

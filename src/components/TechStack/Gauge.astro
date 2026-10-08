@@ -1,0 +1,364 @@
+---
+/*
+ * One techStack.json skill as a gauge in the cluster's <dl>: its label (dt)
+ * under a dial (dd, shown first) whose needle and gold arc rest on the
+ * skill's percent. The dial is decorative and hidden from assistive
+ * technology, which reads the level as text.
+ */
+import type { SkillItem } from "../../data/types";
+import { GAUGE_ARC, needleAngle, ticks } from "../../scripts/gauges";
+
+interface Props {
+  skill: SkillItem;
+}
+
+const { skill } = Astro.props;
+---
+
+<div class="gauge" data-value={skill.percent}>
+  <dt>{skill.label}</dt>
+  <dd>
+    <span class="sr-only">{skill.level}</span>
+    <span class="dial" aria-hidden="true">
+      <span class="dial-face">
+        <svg viewBox="0 0 200 200">
+          <g class="dial-ticks">
+            {ticks().map((tick) => (
+              <line
+                x1={tick.x1}
+                y1={tick.y1}
+                x2={tick.x2}
+                y2={tick.y2}
+                class:list={{ major: tick.major }}
+              />
+            ))}
+          </g>
+          <path class="dial-lip" d={GAUGE_ARC}></path>
+          <path class="dial-track" d={GAUGE_ARC} pathLength="100"></path>
+          <path
+            class="dial-fill"
+            d={GAUGE_ARC}
+            pathLength="100"
+            style={`stroke-dasharray: ${skill.percent} 200`}
+          ></path>
+        </svg>
+        <span
+          class="rotor"
+          style={`transform: rotate(${needleAngle(skill.percent)}deg)`}
+        >
+          <span class="needle"></span>
+          <span class="hub spun"></span>
+        </span>
+        <span class="readout">
+          <b>{skill.percent}</b>
+          <small>{skill.level}</small>
+        </span>
+      </span>
+    </span>
+  </dd>
+</div>
+
+<style>
+  /*
+   * A gauge: its dial above its label, which is cut into the plate (the
+   * plate's streaked metal in deep shadow, at 4.5:1 or more on every
+   * --plate-metal stop, over its lit lip).
+   */
+  .gauge {
+    display: flex;
+    flex: 0 1 196px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  dd {
+    order: -1;
+    margin: 0;
+  }
+
+  dt {
+    max-width: 18ch;
+    margin-top: 18px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    background-image:
+      linear-gradient(180deg, rgb(20 9 2 / 0.9), rgb(24 11 3 / 0.9)),
+      var(--brush-noise-soft), var(--plate-metal);
+    background-size:
+      100% 100%,
+      320px 140px,
+      100% 100%;
+    background-blend-mode: normal, overlay, normal;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(
+        calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--plate-lip)
+      )
+      drop-shadow(
+        calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25)
+      );
+  }
+
+  /*
+   * The dial: a chamfered steel bezel on a 6px wall seated in the plate,
+   * around .dial-face: raised ticks across a 270deg scale, the gold arc set
+   * in an engraved groove, the needle (.rotor) on its spun hub, and the
+   * readout, all under a glass crystal. --dial sets its size. The needle can
+   * be dragged: a grab hand, and .held while dragging; on touch screens
+   * vertical swipes still scroll the page.
+   */
+  .dial {
+    --dial: 164px;
+    position: relative;
+    display: block;
+    width: var(--dial);
+    height: var(--dial);
+    padding: 6px;
+    border-radius: 50%;
+    background: linear-gradient(215deg, #ffffff, #9aa1aa 45%, #2f343a);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #80878f,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #71787f,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 #626970,
+      calc(var(--lean) * var(--slant) * 5px) 5px 0 0 #545a61,
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 0 #464c52,
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 8px) 8px 4px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 13px) 13px 26px -6px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 20px) 20px 46px -18px var(--metal-drop);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  @media (pointer: coarse) {
+    .dial {
+      touch-action: pan-y;
+    }
+  }
+
+  .dial:global(.held) {
+    cursor: grabbing;
+  }
+
+  .dial-face {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--dial-face);
+    box-shadow: var(--dial-face-shade);
+  }
+
+  /*
+   * The crystal: a glare at the top left over a window band, a faint
+   * counter-reflection at the bottom right, a lit rim where the glass meets
+   * the bezel and a refraction ring just inside it.
+   */
+  .dial-face::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        52% 26% at 36% 12%,
+        var(--crystal-glare),
+        transparent 72%
+      ),
+      linear-gradient(
+        128deg,
+        transparent 22%,
+        var(--crystal-band) 27%,
+        transparent 40%
+      ),
+      radial-gradient(
+        46% 20% at 64% 92%,
+        var(--crystal-counter),
+        transparent 72%
+      ),
+      linear-gradient(160deg, var(--crystal-tint), transparent 62%);
+    box-shadow:
+      inset 0 0 0 1px var(--crystal-rim),
+      inset 0 0 0 3.5px var(--crystal-edge),
+      inset calc(var(--lean) * var(--slant) * -2px) -3px 8px -2px
+        var(--crystal-counter);
+    pointer-events: none;
+  }
+
+  /* The crystal's curved highlight along the dome's upper-left shoulder, faded at both ends. */
+  .dial-face::before {
+    content: "";
+    position: absolute;
+    inset: 16%;
+    z-index: 3;
+    border: 2.5px solid transparent;
+    border-top-color: var(--crystal-arc);
+    border-left-color: var(--crystal-arc);
+    border-radius: 50%;
+    box-shadow: -1px -1px 0 -0.5px var(--crystal-arc-shade);
+    transform: rotate(8deg);
+    -webkit-mask: conic-gradient(
+      from 225deg,
+      transparent 0deg,
+      #000 50deg,
+      #000 130deg,
+      transparent 180deg,
+      transparent 360deg
+    );
+    mask: conic-gradient(
+      from 225deg,
+      transparent 0deg,
+      #000 50deg,
+      #000 130deg,
+      transparent 180deg,
+      transparent 360deg
+    );
+    filter: blur(0.4px);
+    pointer-events: none;
+  }
+
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Raised ticks (#dial-raise); the arc is a groove (.dial-lip lights its lower edge) with the gold fill set deep inside it (#dial-groove). */
+  .dial-ticks {
+    filter: url(#dial-raise);
+  }
+
+  line {
+    stroke: var(--dial-tick);
+    stroke-width: 2;
+  }
+
+  line.major {
+    stroke: var(--dial-tick-major);
+    stroke-width: 3.2;
+  }
+
+  .dial-lip,
+  .dial-track,
+  .dial-fill {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .dial-lip {
+    stroke: var(--dial-lip);
+    stroke-width: 11;
+    transform: translate(0.4px, 1.3px);
+  }
+
+  .dial-track {
+    stroke: var(--dial-track);
+    stroke-width: 11;
+    filter: url(#dial-groove);
+  }
+
+  .dial-fill {
+    stroke: url(#dial-gold);
+    stroke-width: 6.5;
+    filter: url(#dial-groove);
+  }
+
+  .rotor {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+  }
+
+  .needle {
+    position: absolute;
+    top: 14%;
+    left: calc(50% - 3px);
+    width: 6px;
+    height: 43%;
+    background: var(--needle);
+    clip-path: polygon(50% 0, 100% 84%, 50% 100%, 0 84%);
+  }
+
+  .hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--dial) * 0.15);
+    height: calc(var(--dial) * 0.15);
+    transform: translate(-50%, -50%);
+    box-shadow:
+      0 0 0 1px rgb(18 21 26 / 0.6),
+      calc(var(--lean) * var(--slant) * 2px) 2px 5px rgb(0 0 0 / 0.5);
+  }
+
+  .hub::after {
+    content: "";
+    position: absolute;
+    inset: 38%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 60% 35%, #5a616a, #14171b);
+  }
+
+  /*
+   * The readout is engraved into the face and inlaid: the number above the
+   * hub in gold, cut deep (at 19px or more it is large text), the level
+   * below it in steel.
+   */
+  .readout {
+    position: absolute;
+    inset: 0;
+    line-height: 1;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .readout b,
+  .readout small {
+    position: absolute;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .readout b {
+    top: 22%;
+    right: 0;
+    left: 0;
+    font-size: max(19px, calc(var(--dial) * 0.12));
+    font-weight: var(--display-wght);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    background-image: var(--inlay-gold);
+    filter: drop-shadow(0 -1px 0 var(--cut-shade))
+      drop-shadow(0 -1px 1.2px var(--cut-shade))
+      drop-shadow(0 1.5px 0 var(--cut-lip-deep));
+  }
+
+  .readout small {
+    right: 25%;
+    bottom: 17%;
+    left: 25%;
+    font-size: max(7px, calc(var(--dial) * 0.048));
+    font-weight: 650;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+    text-transform: uppercase;
+    background-image: var(--inlay-steel);
+    filter: drop-shadow(0 -1px 0 var(--cut-shade))
+      drop-shadow(0 1px 0 var(--cut-lip));
+  }
+</style>
