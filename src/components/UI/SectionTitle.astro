@@ -23,15 +23,17 @@ const number = String(sectionNumber(section)).padStart(2, "0");
 <h2 {id} class="h2">
   <span class="gilt">{title}</span>
 </h2>
-<div class="sub">
-  <slot />
-</div>
+{Astro.slots.has("default") && (
+  <div class="sub">
+    <slot />
+  </div>
+)}
 
 <style>
   /*
    * A main design section's title: the .eyebrow (the section number engraved
    * into its .eyebrow-no plate, then the label), the headline in gold and the
-   * intro paragraphs from the default slot in --body.
+   * intro paragraphs from the default slot, when given, in --body.
    */
   .sub {
     max-width: 62ch;
