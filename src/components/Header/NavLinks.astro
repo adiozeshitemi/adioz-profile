@@ -1,37 +1,17 @@
 ---
 import { navigation } from "../../data/index";
-
-interface Props {
-  /** bar: the header's rail of key caps; drawer: a stacked list for the menu drawer. */
-  variant?: "bar" | "drawer";
-}
-
-const { variant = "bar" } = Astro.props;
 ---
 
-{variant === "bar" ? (
-  <ul class="rail">
-    <li class="rail-plate" aria-hidden="true" />
-    {navigation.links.map((link) => (
-      <li>
-        <a href={link.url}>
-          <span class="key-cap">{link.title}</span>
-        </a>
-      </li>
-    ))}
-  </ul>
-) : (
-  <ul class="drawer">
-    {navigation.links.map((link) => (
-      <li>
-        <a href={link.url}>{link.title}</a>
-      </li>
-    ))}
+<ul class="rail">
+  <li class="rail-plate" aria-hidden="true"></li>
+  {navigation.links.map((link) => (
     <li>
-      <a href={navigation.cta.url}>{navigation.cta.title}</a>
+      <a href={link.url}>
+        <span class="key-cap">{link.title}</span>
+      </a>
     </li>
-  </ul>
-)}
+  ))}
+</ul>
 
 <style>
   /*
@@ -318,37 +298,5 @@ const { variant = "bar" } = Astro.props;
   /* Without JavaScript the current link's key shows the plate at once. */
   .rail a[aria-current="true"]:not(.seated) .key-cap {
     color: var(--text);
-  }
-
-  .drawer {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .drawer a {
-    display: block;
-    padding: 0.8125rem 0.25rem;
-    border-bottom: 1px solid var(--color-line);
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: var(--color-ink-muted);
-  }
-
-  .drawer li:last-child a {
-    border-bottom: none;
-  }
-
-  .drawer a:hover,
-  .drawer a[aria-current="true"] {
-    color: var(--color-ink);
-  }
-
-  .drawer a:focus-visible {
-    outline: 2px solid var(--color-accent-cyan);
-    outline-offset: 2px;
   }
 </style>

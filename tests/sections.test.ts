@@ -85,17 +85,41 @@ describe("Header", () => {
     ).toBe("true");
   });
 
-  it("wires the menu button to the popover drawer with the same links", async () => {
+  it("wires the menu knob to the popover sheet, closed and labelled to open it", async () => {
     const doc = await render(Header);
-    const toggle = doc.querySelector("button.toggle");
-    expect(toggle?.getAttribute("aria-label")).toBe(navigation.menuLabel);
-    const menu = doc.getElementById(
+    const toggle = doc.querySelector("button.knob.menu-toggle");
+    expect(toggle?.getAttribute("aria-label")).toBe(navigation.menuLabel.open);
+    expect(toggle?.getAttribute("aria-expanded")).toBe("false");
+    expect(toggle?.getAttribute("data-label-close")).toBe(
+      navigation.menuLabel.close,
+    );
+    const sheet = doc.getElementById(
       toggle?.getAttribute("popovertarget") ?? "",
     );
-    expect(menu?.tagName.toLowerCase()).toBe("nav");
-    expect(menu?.hasAttribute("popover")).toBe(true);
-    expect(menu?.getAttribute("aria-label")).toBe(navigation.label);
-    expect(links(menu?.querySelectorAll("a") ?? [])).toEqual(navTargets);
+    expect(toggle?.getAttribute("aria-controls")).toBe(sheet?.id);
+    expect(sheet?.tagName.toLowerCase()).toBe("nav");
+    expect(sheet?.classList.contains("menu-sheet")).toBe(true);
+    expect(sheet?.hasAttribute("popover")).toBe(true);
+    expect(sheet?.getAttribute("aria-label")).toBe(navigation.label);
+  });
+
+  it("lists every section in the sheet with its engraved, hidden number", async () => {
+    const doc = await render(Header);
+    const items = [...doc.querySelectorAll("#site-menu ol > li > a")];
+    expect(
+      items.map((link) => [
+        text(link).replace(/^\d+ /, ""),
+        link.getAttribute("href"),
+      ]),
+    ).toEqual(navTargets);
+    expect(items.map((link) => text(link.querySelector(".menu-no")))).toEqual(
+      navTargets.map((_, index) => String(index + 1).padStart(2, "0")),
+    );
+    for (const link of items) {
+      expect(link.querySelector(".menu-no")?.getAttribute("aria-hidden")).toBe(
+        "true",
+      );
+    }
   });
 
   it("renders the theme knob as a button named by both themes' labels", async () => {
