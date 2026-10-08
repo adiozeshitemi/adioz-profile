@@ -9,7 +9,6 @@
   --animate-mesh-drift-3: mesh-drift-3 38s ease-in-out infinite alternate;
   --animate-status-ping: status-ping 2.4s infinite;
   --animate-text-shine: text-shine 7s linear infinite;
-  --animate-caret-blink: caret-blink 1.05s steps(2, start) infinite;
 
   /* Background mesh blobs drifting between two positions */
   @keyframes mesh-drift-1 {
@@ -46,13 +45,6 @@
   @keyframes text-shine {
     to {
       background-position: 200% center;
-    }
-  }
-
-  /* Terminal caret visibility toggle */
-  @keyframes caret-blink {
-    50% {
-      opacity: 0;
     }
   }
 }

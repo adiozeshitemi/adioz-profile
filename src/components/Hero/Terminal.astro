@@ -1,181 +1,424 @@
 ---
 /*
- * The hero terminal: terminal.json's title in a window bar, its lines as the
- * output, and an input line with a caret. Each output line appears 400ms after
- * the previous one, then the input line, through CSS animation delays alone;
- * the text is in the HTML from the start, and with reduced motion every line
- * shows at once.
+ * The hero's agent log: terminal.json's title engraved in a gunmetal title
+ * bar beside its window buttons and the red live lamp, and its entries on a
+ * sunken screen. The markup holds every entry, each a writer (.who) and a
+ * message toned good or bad; src/scripts/terminal.ts types them in with
+ * their clock times and runs the window buttons, which the markup renders
+ * disabled.
  */
 import { terminal } from "../../data/index";
+import Lamp from "../UI/Lamp.astro";
 ---
 
-<div class="terminal spot" data-scheme="dark" data-reveal>
-  <div class="bar" aria-hidden="true">
-    <span class="light"></span>
-    <span class="light"></span>
-    <span class="light"></span>
-    <span class="title">{terminal.title}</span>
-  </div>
-  <div class="body">
-    <div class="output">
-      {terminal.lines.map((line, index) => (
-        <p
-          class:list={["line", line.kind]}
-          style={`--line: ${index}`}
-          set:text={line.text}
-        />
-      ))}
+<div class="terminal" data-reveal>
+  <button class="log-reopen" type="button" hidden>
+    Open {terminal.name}
+  </button>
+  <figure class="log" aria-labelledby="log-title">
+    <div class="log-bar">
+      <span class="window-controls">
+        <button
+          type="button"
+          class="light close"
+          aria-label={`Close ${terminal.name}`}
+          disabled
+        ></button>
+        <button
+          type="button"
+          class="light min"
+          aria-label={`Minimise ${terminal.name}`}
+          aria-pressed="false"
+          disabled
+        ></button>
+        <button
+          type="button"
+          class="light zoom"
+          aria-label={`Zoom ${terminal.name}`}
+          aria-pressed="false"
+          disabled
+        ></button>
+      </span>
+      <span id="log-title" class="engraved">
+        {terminal.title}
+      </span>
+      <span class="live">
+        <Lamp variant="live" />
+        <span class="engraved">{terminal.live}</span>
+      </span>
     </div>
-    <p class="input" style={`--line: ${terminal.lines.length}`}>
-      <span class="caret"></span>
-    </p>
-  </div>
+    <ol class="screen" aria-live="off">
+      {terminal.lines.map((line) => (
+        <li>
+          <span class="who">{line.who}</span>
+          <span class:list={["message", line.tone]}>{line.text}</span>
+        </li>
+      ))}
+    </ol>
+  </figure>
+  <div class="log-shade" popover="manual"></div>
 </div>
 
+<script>
+  import { startLog, startWindow } from "../../scripts/terminal";
+
+  const log = document.querySelector<HTMLElement>(".terminal .log");
+  const screen = log?.querySelector<HTMLElement>(".screen");
+  const reopen = document.querySelector<HTMLButtonElement>(".log-reopen");
+  const shade = document.querySelector<HTMLElement>(".log-shade");
+  if (log && screen && reopen && shade) {
+    startLog(screen);
+    startWindow(log, reopen, shade);
+  }
+</script>
+
 <style>
+  /*
+   * The log is dark in both themes: a brushed gunmetal case on a --slab-wall,
+   * a brushed title bar, and a screen sunk into the case under faint
+   * scanlines (--scan) and a gold glow along its top. Entries glow like a lit
+   * display: writers in gold, good messages in pale gold, bad ones in ember.
+   * Each typed entry slides in and types out, and the newest ends in a
+   * blinking cursor. Below 560px entries drop their clock times.
+   */
   .terminal {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 0.875rem;
-    background: linear-gradient(
+    display: grid;
+    min-width: 0;
+  }
+
+  .log {
+    --scan: repeating-linear-gradient(
       180deg,
-      rgb(15 18 28 / 0.94),
-      rgb(9 11 18 / 0.97)
+      rgb(255 255 255 / 0.025) 0 1px,
+      transparent 1px 3px
     );
+    margin: 0;
+    overflow: hidden;
+    border-radius: 14px;
+    background-image:
+      var(--brush-noise-soft), linear-gradient(190deg, #1f2328, #121418);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
     box-shadow:
-      0 30px 80px -30px rgb(0 0 0 / 0.9),
-      inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 2%, transparent);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.1),
+      var(--slab-wall),
+      var(--slab-drop);
+    color: #c9cfd7;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    transition:
+      transform 0.45s var(--ease-soft),
+      opacity 0.35s var(--ease-soft);
+  }
+
+  .log-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background-image:
+      var(--brush-noise-soft), linear-gradient(180deg, #2b3138, #1b1f24);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      inset 0 -1px 0 rgb(0 0 0 / 0.6);
+    font-size: 11.5px;
+  }
+
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    font-weight: 700;
+    letter-spacing: 0.08em;
   }
 
   /*
-   * A softer shadow on the light canvas: the light theme, or a light device
-   * while no theme is set. The terminal's own color-scheme is dark, so the page's
-   * theme is read from <html>.
+   * The window buttons in the macOS colours (--light), each showing its
+   * symbol (×, −, +) while the controls are hovered or the button is focused.
    */
-  :global(:root[data-theme="light"]) .terminal {
-    box-shadow:
-      0 30px 80px -30px rgb(15 23 42 / 0.35),
-      inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 2%, transparent);
-  }
-
-  @media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme])) .terminal {
-      box-shadow:
-        0 30px 80px -30px rgb(15 23 42 / 0.35),
-        inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 2%, transparent);
-    }
-  }
-
-  /* Cyan glow fading down from the window bar. */
-  .terminal::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-accent-cyan) 5%, transparent),
-      transparent 40%
-    );
-  }
-
-  .bar {
+  .window-controls {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 0.875rem;
-    border-bottom: 1px solid var(--color-line);
-    background: color-mix(in srgb, var(--color-ink) 2%, transparent);
+    gap: 6px;
+    margin-right: 6px;
   }
 
   .light {
-    width: 11px;
-    height: 11px;
+    display: grid;
+    place-items: center;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: 0;
     border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 50% 30%,
+        rgb(255 255 255 / 0.45),
+        transparent 55%
+      ),
+      var(--light);
+    box-shadow:
+      inset 0 0 0 0.5px rgb(0 0 0 / 0.35),
+      0 1px 1px rgb(0 0 0 / 0.5);
+    color: rgb(60 20 10 / 0.75);
+    font:
+      700 10px/1 system-ui,
+      sans-serif;
+    cursor: pointer;
   }
 
-  .light:nth-child(1) {
-    background: #ff5f57;
+  .light:disabled {
+    cursor: default;
   }
 
-  .light:nth-child(2) {
-    background: #febc2e;
+  .light::after {
+    opacity: 0;
+    transition: opacity 0.15s;
   }
 
-  .light:nth-child(3) {
-    background: #28c840;
+  .window-controls:hover .light:enabled::after,
+  .light:focus-visible::after {
+    opacity: 1;
   }
 
-  .title {
-    margin-left: auto;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.04em;
-    color: var(--color-ink-muted);
+  .light:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: 2px;
   }
 
-  .body {
-    min-height: 17.875rem;
-    padding: 1.25rem 1.25rem 1.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    line-height: 1.85;
+  .close {
+    --light: #ff5f57;
   }
 
-  /* pre-wrap keeps runs of spaces in terminal.json text; set:text leaves no template whitespace around it. */
-  .line {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+  .close::after {
+    content: "×";
   }
 
-  .cmd {
-    color: var(--color-ink);
+  .min {
+    --light: #febc2e;
   }
 
-  .out {
-    color: var(--color-ink-muted);
+  .min::after {
+    content: "−";
   }
 
-  .ok {
-    color: var(--color-success);
+  .zoom {
+    --light: #28c840;
   }
 
-  .key {
-    color: var(--color-accent-cyan);
+  .zoom::after {
+    content: "+";
   }
 
-  /* --line is the line's position: line n appears at 600ms + n × 400ms. */
-  .line,
-  .input {
-    animation: terminal-print 1ms both;
-    animation-delay: calc(600ms + var(--line) * 400ms);
+  .screen {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-height: calc(6 * 1.75em + 24px);
+    max-height: 40em;
+    margin: 8px;
+    padding: 12px 14px;
+    overflow: hidden;
+    border-radius: 11px;
+    list-style: none;
+    line-height: 1.75;
+    background:
+      var(--scan),
+      radial-gradient(
+        120% 70% at 50% 0%,
+        rgb(230 192 98 / 0.07),
+        transparent 70%
+      ),
+      #06070a;
+    box-shadow:
+      inset 0 2px 10px rgb(0 0 0 / 0.85),
+      inset 0 0 0 1px rgb(255 255 255 / 0.05);
+    transition:
+      max-height 0.45s var(--ease-soft),
+      min-height 0.45s var(--ease-soft),
+      padding 0.45s var(--ease-soft),
+      margin 0.45s var(--ease-soft);
   }
 
-  @keyframes terminal-print {
-    from {
-      visibility: hidden;
+  .screen li {
+    display: grid;
+    grid-template-columns: 10ch 1fr;
+    gap: 10px;
+  }
+
+  .screen li:has(time) {
+    grid-template-columns: 8ch 10ch 1fr;
+  }
+
+  .screen :global(time) {
+    color: #8b94a0;
+  }
+
+  .who {
+    color: #e6c56c;
+    text-shadow: 0 0 8px rgb(230 192 98 / 0.45);
+  }
+
+  .good {
+    color: #f2d17b;
+    text-shadow: 0 0 8px rgb(242 209 123 / 0.4);
+  }
+
+  .bad {
+    color: #f08a6a;
+    text-shadow: 0 0 8px rgb(240 138 106 / 0.5);
+  }
+
+  .screen li:last-child .message::after {
+    content: "";
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    margin-left: 4px;
+    vertical-align: -0.18em;
+    background: #e6c56c;
+    box-shadow: 0 0 8px rgb(230 192 98 / 0.7);
+    animation: log-cursor 1.05s steps(1) infinite;
+  }
+
+  @media (width < 35rem) {
+    .screen {
+      font-size: 11.5px;
+    }
+
+    .screen li,
+    .screen li:has(time) {
+      grid-template-columns: 9.5ch 1fr;
+      gap: 8px;
+    }
+
+    .screen :global(time) {
+      display: none;
     }
   }
 
-  .caret {
-    display: inline-block;
-    width: 8px;
-    height: 15px;
-    vertical-align: -2px;
-    background: var(--color-accent-cyan);
-    box-shadow: 0 0 10px
-      color-mix(in srgb, var(--color-accent-cyan) 80%, transparent);
-    animation: var(--animate-caret-blink);
+  .log.minimised .screen {
+    min-height: 0;
+    max-height: 0;
+    margin-block: 0;
+    padding-block: 0;
+  }
+
+  .log.closing {
+    transform: scale(0.6) translateY(30px);
+    opacity: 0;
+  }
+
+  .log.closed {
+    display: none;
+  }
+
+  .log-reopen {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 10px;
+    background-image:
+      var(--brush-noise-soft), linear-gradient(180deg, #2b3138, #1b1f24);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      0 6px 16px -6px rgb(0 0 0 / 0.6);
+    color: #c9cfd7;
+    font: 500 12px/1 var(--font-mono);
+    cursor: pointer;
+  }
+
+  .log-reopen[hidden] {
+    display: none;
+  }
+
+  .log-reopen:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: 3px;
+  }
+
+  .log-shade {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgb(5 6 8 / 0.62);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
+  /* Zoomed, the log is a manual popover centred over the shade, up to 860px wide. */
+  .log.zoomed {
+    inset: 0;
+    width: min(860px, 92vw);
+    height: fit-content;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    font-size: 14px;
+  }
+
+  .log.zoomed .screen {
+    min-height: calc(14 * 1.75em + 24px);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .screen li {
+      animation: log-line-in 0.5s var(--ease-soft);
+    }
+
+    .screen .message {
+      animation: log-type 0.7s steps(28, end);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .line,
-    .input,
-    .caret {
+    .log,
+    .screen {
+      transition: none;
+    }
+
+    .screen li:last-child .message::after {
       animation: none;
+    }
+  }
+
+  @keyframes log-line-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  @keyframes log-type {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes log-cursor {
+    50% {
+      opacity: 0;
     }
   }
 </style>
