@@ -1,0 +1,229 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Icon from "./Icon.astro";
+
+interface Common {
+  /** Accessible name; the knob shows only an icon. Omit it only when a `label` slot names the knob. */
+  label?: string;
+  /** Icon name from src/icons/, engraved into the face; without it the default slot fills the face. */
+  icon?: string;
+  /** compact: 36px on a 3px wall, for bars; otherwise 62px on a 6px wall. */
+  compact?: boolean;
+  /**
+   * The icon's angle at rest, in degrees clockwise, read by the light script
+   * as data-rest; the icon turns toward the pointer. Omit it for an icon that
+   * stays upright.
+   */
+  rest?: number;
+}
+
+/** Renders an <a> when href is set, otherwise a <button>. */
+type Props =
+  | (Common & Omit<HTMLAttributes<"a">, "href"> & { href: string })
+  | (Common & HTMLAttributes<"button"> & { href?: undefined });
+
+const {
+  label,
+  icon,
+  compact = false,
+  rest,
+  href,
+  class: className,
+  ...attrs
+} = Astro.props as Common & {
+  href?: string;
+  class?: string;
+} & Record<string, unknown>;
+
+const classes = ["knob", { compact }, className];
+const iconSize = compact ? 16 : 22;
+/** The <button> type defaults to "button". */
+const buttonAttrs = { type: "button" as const, ...attrs };
+---
+
+{href ? (
+  <a href={href} class:list={classes} aria-label={label} {...attrs}>
+    <span class="face" aria-hidden="true">
+      <span class="spun turn" data-rest={rest}>
+        {icon ? (
+          <Icon name={icon} size={iconSize} class="engraved-icon" />
+        ) : (
+          <slot />
+        )}
+      </span>
+    </span>
+    <slot name="label" />
+  </a>
+) : (
+  <button class:list={classes} aria-label={label} {...buttonAttrs}>
+    <span class="face" aria-hidden="true">
+      <span class="spun turn" data-rest={rest}>
+        {icon ? (
+          <Icon name={icon} size={iconSize} class="engraved-icon" />
+        ) : (
+          <slot />
+        )}
+      </span>
+    </span>
+    <slot name="label" />
+  </button>
+)}
+
+<style>
+  /*
+   * .knob is a chamfered steel bezel on a cylindrical wall slanted by --lean,
+   * holding a spun face. Hover lifts it off the page; press sinks it. Hovering
+   * or focusing it lights its icon in --accent-line, changing only its colour.
+   */
+  .knob {
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    flex: none;
+    padding: 4px;
+    border: 0;
+    border-radius: 50%;
+    background: linear-gradient(215deg, #ffffff, #9aa1aa 45%, #2f343a);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #80878f,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #71787f,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 #626970,
+      calc(var(--lean) * var(--slant) * 5px) 5px 0 0 #545a61,
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 0 #464c52,
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 8px) 8px 4px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 13px) 13px 26px -6px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 20px) 20px 46px -18px var(--metal-drop);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.25s var(--ease-soft),
+      box-shadow 0.25s var(--ease-soft);
+  }
+
+  .knob:hover {
+    transform: translate(calc(var(--lean) * var(--slant) * -2px), -2px);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #80878f,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #71787f,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 #626970,
+      calc(var(--lean) * var(--slant) * 5px) 5px 0 0 #545a61,
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 0 #464c52,
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 12px) 12px 12px -2px
+        var(--metal-contact-lift),
+      calc(var(--lean) * var(--slant) * 18px) 18px 32px -8px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 27px) 27px 58px -20px var(--metal-drop);
+  }
+
+  .knob:active {
+    transform: translate(calc(var(--lean) * var(--slant) * 4px), 4px);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #80878f,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 3px) 3px 2px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 6px) 6px 10px -4px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 10px) 10px 18px -12px var(--metal-drop);
+  }
+
+  /* A compact knob: 36px on a 3px wall; hover lifts it 1px, press sinks it 2px. */
+  .compact {
+    width: 36px;
+    height: 36px;
+    padding: 3px;
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #71787f,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #545a61,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 5px) 5px 3px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 9px) 9px 16px -6px var(--metal-drop);
+  }
+
+  .compact:hover {
+    transform: translate(calc(var(--lean) * var(--slant) * -1px), -1px);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #71787f,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #545a61,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 7px) 7px 6px -1px
+        var(--metal-contact-lift),
+      calc(var(--lean) * var(--slant) * 12px) 12px 20px -6px var(--metal-drop);
+  }
+
+  .compact:active {
+    transform: translate(calc(var(--lean) * var(--slant) * 2px), 2px);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 2px) 2px 2px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 5px) 5px 10px -6px var(--metal-drop);
+  }
+
+  .knob:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: 3px;
+  }
+
+  /* The face: a spun disc whose rim is shaded on a separate layer, so it stays still while the disc turns. */
+  .face {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgb(20 24 30 / 0.55);
+  }
+
+  .face::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.45),
+      inset calc(var(--lean) * var(--slant) * 2px) 2px 2px
+        rgb(255 255 255 / 0.3),
+      inset calc(var(--lean) * var(--slant) * -2px) -2px 4px rgb(0 0 0 / 0.3);
+  }
+
+  .knob:active .face::after {
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.3),
+      inset calc(var(--lean) * var(--slant) * 3px) 3px 7px rgb(0 0 0 / 0.45);
+  }
+
+  .turn {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: #1b1e23;
+  }
+
+  .turn :global(svg) {
+    transition: color 0.3s var(--ease-soft);
+  }
+
+  .knob:is(:hover, :focus-visible) .turn :global(svg) {
+    color: var(--accent-line);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .knob {
+      transition: none;
+    }
+  }
+</style>

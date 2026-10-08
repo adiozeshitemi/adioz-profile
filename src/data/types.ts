@@ -18,6 +18,14 @@ export interface LinkItem {
   icon: string;
 }
 
+/** A file in public/ that its link downloads. */
+export interface ResumeLink extends LinkItem {
+  /** Accessible name of the link, naming the file type, e.g. "Download resume (PDF)". */
+  label: string;
+  /** File name the download is saved under, e.g. "Adioz-Eshitemi-resume.pdf". */
+  file: string;
+}
+
 /** The site owner's identity, shown in the hero. */
 export interface Profile {
   /** Display name, e.g. "Adioz". */
@@ -32,12 +40,12 @@ export interface Profile {
   summary: string;
   /** Availability badge text, e.g. "Available for Senior/Staff Engineering Roles". */
   availability: string;
-  /** Hero call-to-action links in display order; the first renders as the primary button. */
+  /** Hero call-to-action buttons in display order. */
   actions: LinkItem[];
-  /** Download link for the resume in public/, shown after the hero call-to-action buttons. */
-  resume: LinkItem;
-  /** GitHub, LinkedIn and email links in display order; the email link is the only `mailto:` URL. */
-  links: LinkItem[];
+  /** The résumé in public/, downloaded from the knob after the hero's call-to-action buttons. */
+  resume: ResumeLink;
+  /** The email address as a `mailto:` link, carved into the contact section's nameplate. */
+  email: LinkItem;
 }
 
 /** A link to a section of the page, e.g. "About" to "#about". */
@@ -48,26 +56,35 @@ export interface NavLink {
   url: string;
 }
 
-/** The header navigation: inline links on wide screens, a menu drawer on narrow ones. */
+/** The header navigation: a rail of links on wide screens, a menu sheet on narrow ones. */
 export interface Navigation {
-  /** Accessible name of the navigation landmark, e.g. "Primary". */
+  /** Accessible name of the navigation landmarks, e.g. "Primary". */
   label: string;
-  /** Accessible name of the button that opens the menu drawer, e.g. "Menu". */
-  menuLabel: string;
+  /** Accessible names of the menu knob while the sheet is closed and open. */
+  menuLabel: { open: string; close: string };
   /** Section links in display order. */
   links: NavLink[];
   /** Contact link after the section links, styled as a button in the header bar. */
   cta: NavLink;
 }
 
-/** Site-wide defaults for the page head; the default title is `Profile.name | Profile.role`. */
+/** Site-wide copy: the page head's title, description and link preview, and the new-tab note. */
 export interface SiteMeta {
-  /** Default meta and Open Graph description. */
+  /** Default page title, e.g. "Adioz D Eshitemi · Full-stack AI engineer"; also the link preview's title. */
+  title: string;
+  /** Default meta description, for search results. */
   description: string;
-  /** Open Graph image path under public/, e.g. "/images/og.png". */
+  /** The link preview's shorter description (Open Graph and Twitter card). */
+  previewDescription: string;
+  /** Link preview image path under public/, e.g. "/og.png". */
   image: string;
-  /** Alt text for the Open Graph image. */
+  /** The link preview image's width and height in pixels, e.g. 1200 by 630. */
+  imageWidth: number;
+  imageHeight: number;
+  /** Alt text for the link preview image. */
   imageAlt: string;
+  /** Read after the label of a link that opens in a new tab, e.g. "(opens in a new tab)". */
+  newTab: string;
 }
 
 /** One headline metric in the hero stats banner. */
@@ -82,24 +99,27 @@ export interface StatItem {
   label: string;
 }
 
-/**
- * Hero terminal line styles: `cmd` is a command including its "$ " prompt,
- * `out` is muted output, `ok` is success output and `key` is an
- * accent-coloured note.
- */
-export type TerminalLineKind = "cmd" | "out" | "ok" | "key";
+/** A log message's tone: good shows in gold, bad in ember; omitted, it is plain. */
+export type TerminalTone = "good" | "bad";
 
-/** One line the hero terminal prints, in array order. */
+/** One entry of the hero's agent log. */
 export interface TerminalLine {
-  kind: TerminalLineKind;
+  /** The part of the agent pipeline that wrote the entry, e.g. "guardrail". */
+  who: string;
+  /** The message, e.g. "✓ gates passed". */
   text: string;
+  tone?: TerminalTone;
 }
 
-/** Content of the hero terminal. */
+/** Content of the hero's agent log terminal. */
 export interface TerminalContent {
-  /** Window title in the terminal's title bar, e.g. "zsh — 120×32". */
+  /** Text engraved in the title bar, e.g. "adioz — agent.log". */
   title: string;
-  /** Lines printed in order. */
+  /** The window's name in its buttons' accessible names, e.g. "agent.log" in "Close agent.log". */
+  name: string;
+  /** The word engraved beside the red live lamp. */
+  live: string;
+  /** Entries in the order the log types them, cycling back to the first. */
   lines: TerminalLine[];
 }
 
@@ -109,14 +129,16 @@ export interface AboutContent {
   id: string;
   /** Section name after its number, e.g. "Core Engineering Focus". */
   label: string;
-  /** Section headline, e.g. "AI as efficient as it is intelligent". */
+  /** Section headline, a sentence ending in a full stop. */
   headline: string;
   /** Bio paragraphs in reading order. */
   bio: string[];
-  /** Core focus pillars in display order. */
+  /** The portrait engraved into pillar 00 and its text alternative. */
+  portrait: { src: string; alt: string };
+  /** Core focus pillars in display order, numbered from 01 after the portrait. */
   pillars: FocusPillar[];
-  /** Engineering philosophy statement. */
-  philosophy: string;
+  /** The service record plaque under the pillars. */
+  record: ServiceRecord;
 }
 
 /** One core focus area in the about section. */
@@ -129,6 +151,14 @@ export interface FocusPillar {
   tags: string[];
 }
 
+/** A plaque of traits, each an engraved word over a stamped line. */
+export interface ServiceRecord {
+  /** The plaque's caption, e.g. "Service record". */
+  title: string;
+  /** Traits in display order, e.g. "Robust" over "99% uptime held". */
+  traits: { name: string; detail: string }[];
+}
+
 /** Content of the tech stack section. */
 export interface TechStack {
   /** Section id, the target of its navigation.json link, e.g. "stack". */
@@ -139,19 +169,19 @@ export interface TechStack {
   headline: string;
   /** Intro paragraph under the headline. */
   intro: string;
-  /** Proficiency bars in display order. */
+  /** Skills in display order, one gauge each. */
   skills: SkillItem[];
   /** Tool groups in display order. */
   categories: TechStackCategory[];
 }
 
-/** One proficiency bar in the tech stack section. */
+/** One skill in the tech stack's gauge cluster. */
 export interface SkillItem {
   /** Skill name, e.g. "Rust Systems & Tokio Async". */
   label: string;
-  /** Proficiency label shown beside the bar, e.g. "Expert". */
+  /** Proficiency level, read as text and inlaid in the dial, e.g. "Expert". */
   level: string;
-  /** Bar fill as an integer from 0 to 100. */
+  /** The value the gauge needle settles on, an integer from 0 to 100. */
   percent: number;
 }
 
@@ -169,8 +199,14 @@ export interface ExperienceContent {
   id: string;
   /** Section name after its number, e.g. "Experience". */
   label: string;
-  /** Section headline, e.g. "Production Trace & Impact". */
+  /** Section headline, a sentence ending in a full stop. */
   headline: string;
+  /** Accessible name of the timeline's list of roles. */
+  timelineLabel: string;
+  /** The view switch: its accessible name and the Trace and Timeline button labels. */
+  views: { label: string; trace: string; timeline: string };
+  /** The career trace window: its engraved title, the accessible name of its tabs, the axis label of the present, and the word beside the live lamp. */
+  trace: { title: string; rolesLabel: string; now: string; live: string };
   /** Text in place of the end year of an ongoing role, e.g. "Present". */
   ongoing: string;
   /** Roles in display order, most recent first. */
@@ -200,11 +236,11 @@ export interface YearRange {
 
 /** Content of the featured projects section. */
 export interface ProjectsContent {
-  /** Section id, the target of its navigation.json link, e.g. "work". */
+  /** Section id, the target of its navigation.json link, e.g. "projects". */
   id: string;
   /** Section name after its number, e.g. "Featured Projects". */
   label: string;
-  /** Section headline, e.g. "Systems built for scale". */
+  /** Section headline, a sentence ending in a full stop. */
   headline: string;
   /** Projects in display order; the section shows those with `featured` set. */
   projects: ProjectItem[];
@@ -220,7 +256,7 @@ export interface ProjectItem {
   links: LinkItem[];
   /** Whether the project is listed under Featured Projects. */
   featured: boolean;
-  /** One-line outcome shown under the tags, e.g. "Sub-15ms ML recommendation latency". */
+  /** One-line outcome shown under the tags beside a lamp; text inside `**` pairs renders as strong emphasis. */
   metric: string;
 }
 
@@ -228,30 +264,43 @@ export interface ProjectItem {
 export interface ContactContent {
   /** Section id, the target of its navigation.json link, e.g. "contact". */
   id: string;
-  /** Section name after its number, e.g. "Get In Touch". */
+  /** Section name after its number, e.g. "Contact". */
   label: string;
-  heading: string;
-  body: string;
-  /** Label of the email button, e.g. "Send an email". */
-  ctaLabel: string;
-  /** Icon name after the email button's label, e.g. "arrow-right". */
-  ctaIcon: string;
-}
-
-/** Content of the site footer. */
-export interface FooterContent {
-  /** Rights holder and statement shown after "© <year> ", e.g. "Adioz. All rights reserved.". */
-  copyright: string;
-  /** Credit groups in display order, separated by " · ". */
-  credits: CreditGroup[];
-  /** Link to the site's source repository. */
-  source: LinkItem;
-}
-
-/** A footer credit, e.g. "Built with" followed by links to the Astro and Tailwind CSS docs. */
-export interface CreditGroup {
-  /** Text before the links, e.g. "Built with". */
-  label: string;
-  /** Links to each tool's documentation. */
+  /** Section headline, a sentence ending in a full stop. */
+  headline: string;
+  /** The paragraph above the email nameplate. */
+  lead: string;
+  /** The copy knob's accessible name and the status notes after a copy succeeds or fails. */
+  copy: { label: string; copied: string; failed: string };
+  /** Link ports in display order, each opening in a new tab, e.g. GitHub. */
   links: LinkItem[];
+  /** Label of the last port, which downloads `Profile.resume`, e.g. "Résumé (PDF)". */
+  resume: string;
+}
+
+/** Content of the site footer strip. */
+export interface FooterContent {
+  /** The rights holder engraved after "© <year> ", e.g. "Adioz D Eshitemi". */
+  copyright: string;
+  /** The back-to-top knob: its accessible name, its target and its icon. */
+  top: LinkItem;
+}
+
+/** The parts of the hero's agent pipeline, in the order a request reaches them. */
+export type PipelinePartName =
+  "request" | "agent" | "model" | "tool" | "guard" | "pass" | "fail";
+
+/** A part's label under it in the pipeline. */
+export interface PipelinePart {
+  /** The part's name, e.g. "Guardrail". */
+  title: string;
+  /** A short note under the name, e.g. "fail-closed gates". */
+  detail: string;
+}
+
+/** The hero's agent pipeline. */
+export interface PipelineContent {
+  /** Accessible name of the pipeline figure, describing what it shows. */
+  label: string;
+  parts: Record<PipelinePartName, PipelinePart>;
 }

@@ -1,11 +1,14 @@
 {
   "label": "Primary",
-  "menuLabel": "Menu",
+  "menuLabel": {
+    "open": "Open sections menu",
+    "close": "Close sections menu"
+  },
   "links": [
     { "title": "About", "url": "#about" },
     { "title": "Stack", "url": "#stack" },
     { "title": "Experience", "url": "#experience" },
-    { "title": "Work", "url": "#work" }
+    { "title": "Projects", "url": "#projects" }
   ],
-  "cta": { "title": "Contact", "url": "#contact" }
+  "cta": { "title": "Get in touch", "url": "#contact" }
 }

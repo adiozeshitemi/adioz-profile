@@ -1,53 +1,174 @@
 ---
 /*
- * The experience section from experience.json: an ExperienceItem per role,
- * most recent first, along a vertical timeline rail.
+ * The experience section from experience.json: the gold headline over two
+ * views of the roles, picked by the view switch: the CareerTrace, and the
+ * timeline, an ExperienceItem per role, most recent first, down a steel rail
+ * that fills with gold as the page scrolls. Without the script only the
+ * timeline shows.
  */
 import { experience } from "../../data/index";
-import Section from "../UI/Section.astro";
+import SectionTitle from "../UI/SectionTitle.astro";
+import CareerTrace from "./CareerTrace.astro";
 import ExperienceItem from "./ExperienceItem.astro";
+
+const titleId = `${experience.id}-title`;
 ---
 
-<Section
-  id={experience.id}
-  label={experience.label}
-  title={experience.headline}
->
-  <div class="timeline">
-    {experience.roles.map((item) => (
-      <ExperienceItem item={item} ongoing={experience.ongoing} />
-    ))}
+<section id={experience.id} class="experience" aria-labelledby={titleId}>
+  <div class="inner">
+    <SectionTitle
+      section={experience.id}
+      label={experience.label}
+      title={experience.headline}
+      id={titleId}
+    />
+    <div
+      class="view-switch"
+      role="group"
+      aria-label={experience.views.label}
+      hidden
+    >
+      <button type="button" data-view="trace" aria-pressed="false">
+        {experience.views.trace}
+      </button>
+      <button type="button" data-view="timeline" aria-pressed="true">
+        {experience.views.timeline}
+      </button>
+    </div>
+    <CareerTrace />
+    <ol class="timeline" aria-label={experience.timelineLabel}>
+      {experience.roles.map((item) => (
+        <ExperienceItem item={item} ongoing={experience.ongoing} />
+      ))}
+    </ol>
   </div>
-</Section>
+</section>
+
+<script>
+  import { startTimeline } from "../../scripts/timeline";
+  import { startTrace, startViewSwitch } from "../../scripts/trace";
+
+  const section = document.querySelector<HTMLElement>(".experience");
+  const timeline = section?.querySelector<HTMLElement>(".timeline");
+  const trace = section?.querySelector<HTMLElement>(".trace");
+  if (section) startViewSwitch(section);
+  if (trace) startTrace(trace);
+  if (timeline) startTimeline(timeline);
+</script>
 
 <style>
-  /* --rail is the timeline's left padding, where each ExperienceItem draws its dot. */
-  .timeline {
-    --rail: 1.625rem;
-    position: relative;
-    padding-left: var(--rail);
+  .experience {
+    padding-block: clamp(84px, 10vw, 140px);
   }
 
-  /* The rail: a line through the dots' centres, fading out down the timeline. */
-  .timeline::before {
+  .inner {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 28px;
+  }
+
+  /*
+   * The timeline is a steel rail (::before) at --rail from the left, filled
+   * with gold (::after) down to --fill (0 to 1); timeline.ts runs it
+   * --rail-length from --rail-top, the first and last rivets' centres.
+   * Without the script the rail runs from the first rivet to the end of the
+   * list, filled. Each stop's card sits --indent in from the left.
+   */
+  /*
+   * The view switch shows the trace or the timeline through data-view on the
+   * section; without it (no script) the trace and the switch stay hidden.
+   * The pressed view's button is a brushed --button-metal key.
+   */
+  .view-switch {
+    display: inline-flex;
+    gap: 2px;
+    margin: 12px 0 28px;
+    padding: 3px;
+    border-radius: 11px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-size: 12.5px;
+  }
+
+  .view-switch[hidden] {
+    display: none;
+  }
+
+  .view-switch button {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--body);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .view-switch button[aria-pressed="true"] {
+    color: #140b03;
+    background-image: var(--brush-noise-soft), var(--button-metal);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+  }
+
+  .view-switch button:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: 2px;
+  }
+
+  .experience:not([data-view]) .timeline {
+    margin-top: 34px;
+  }
+
+  .experience:not([data-view="trace"]) :global(.trace),
+  .experience[data-view="trace"] .timeline {
+    display: none;
+  }
+
+  .timeline {
+    --rail: 22px;
+    --indent: 58px;
+    position: relative;
+    display: grid;
+    gap: 26px;
+    margin: 0;
+    padding: 0 0 0 var(--indent);
+    list-style: none;
+  }
+
+  .timeline::before,
+  .timeline::after {
     content: "";
     position: absolute;
-    top: 8px;
-    bottom: 8px;
-    left: 7px;
-    width: 1px;
-    background: linear-gradient(
-      180deg,
-      var(--color-accent-cyan),
-      color-mix(in srgb, var(--color-accent-violet) 35%, transparent) 45%,
-      transparent
-    );
+    top: var(--rail-top, 38px);
+    left: calc(var(--rail) - 2px);
+    width: 4px;
+    border-radius: 2px;
   }
 
-  /* --breakpoint-md */
-  @media (width >= 47.5rem) {
+  .timeline::before {
+    height: var(--rail-length, calc(100% - 38px));
+    background: linear-gradient(90deg, #5d646d, #e9ecef 45%, #858d97);
+    box-shadow: 0 0 0 1px var(--metal-outline);
+  }
+
+  .timeline::after {
+    height: calc(var(--fill, 1) * var(--rail-length, calc(100% - 38px)));
+    background: linear-gradient(90deg, #9c7726, #fbe7a6 45%, #c4952f);
+    box-shadow: 0 0 10px rgb(var(--particle-gold) / 0.45);
+  }
+
+  @media (width <= 40rem) {
+    .inner {
+      padding-inline: 16px;
+    }
+
     .timeline {
-      --rail: 2.125rem;
+      --rail: 12px;
+      --indent: 34px;
     }
   }
 </style>

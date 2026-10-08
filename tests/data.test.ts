@@ -5,13 +5,14 @@ import {
   about,
   contact,
   experience,
+  pipeline,
   profile,
   projects,
   sectionNumber,
   techStack,
   terminal,
 } from "../src/data/index";
-import type { TechStack, TerminalLineKind } from "../src/data/types";
+import type { TechStack, TerminalTone } from "../src/data/types";
 
 /** Every string value in `value`, searched through arrays and objects. */
 function strings(value: unknown): string[] {
@@ -52,10 +53,28 @@ describe("data", () => {
     }
   });
 
-  it("gives every terminal line a known kind", () => {
-    const kinds: TerminalLineKind[] = ["cmd", "out", "ok", "key"];
+  it("gives every terminal line a writer, a message and a known tone", () => {
+    const tones: (TerminalTone | undefined)[] = ["good", "bad", undefined];
     for (const line of terminal.lines) {
-      expect(kinds).toContain(line.kind);
+      expect(line.who).not.toBe("");
+      expect(line.text).not.toBe("");
+      expect(tones).toContain(line.tone);
+    }
+  });
+
+  it("gives every pipeline part, in run order, a title and a detail", () => {
+    expect(Object.keys(pipeline.parts)).toEqual([
+      "request",
+      "agent",
+      "model",
+      "tool",
+      "guard",
+      "pass",
+      "fail",
+    ]);
+    for (const part of Object.values(pipeline.parts)) {
+      expect(part.title).not.toBe("");
+      expect(part.detail).not.toBe("");
     }
   });
 
@@ -76,9 +95,11 @@ describe("data", () => {
     );
   });
 
-  it("has exactly one mailto: link in profile.json", () => {
-    const mail = profile.links.filter((link) => link.url.startsWith("mailto:"));
-    expect(mail).toHaveLength(1);
+  it("gives profile.json's email a mailto: link and contact.json https: links", () => {
+    expect(profile.email.url.startsWith("mailto:")).toBe(true);
+    for (const link of contact.links) {
+      expect(link.url.startsWith("https:"), link.title).toBe(true);
+    }
   });
 });
 
@@ -93,12 +114,17 @@ describe("data loading", () => {
     vi.doUnmock("../src/data/techStack.json");
   });
 
-  it("rejects a terminal line with an unknown kind", async () => {
+  it("rejects a terminal line with an unknown tone", async () => {
     vi.doMock("../src/data/terminal.json", () => ({
-      default: { title: "zsh", lines: [{ kind: "shout", text: "hello" }] },
+      default: {
+        title: "agent.log",
+        name: "agent.log",
+        live: "live",
+        lines: [{ who: "agent", text: "hello", tone: "loud" }],
+      },
     }));
     await expect(import("../src/data/index")).rejects.toThrow(
-      'terminal.json: unknown kind "shout"',
+      'terminal.json: unknown tone "loud"',
     );
   });
 

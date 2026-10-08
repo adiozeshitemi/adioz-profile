@@ -1,42 +1,120 @@
 ---
 /*
- * Brand link to the top of the page: the logo mark from public/favicon.svg,
- * the same file as the site icon, and profile.json's name as a lowercase
- * wordmark.
+ * The header's link to the top of the page: the Dividers mark alone, named
+ * for assistive technology by the link's aria-label. The link keeps a 48px
+ * box in the header's row; the mark is drawn larger from its top and hangs
+ * below the header into the hero (96px, 68px below 760px) while the page is
+ * at its top; once the header is stuck (no data-at-top) it shrinks into the
+ * 48px box, so it never covers the content scrolling under the header. The
+ * mark's dividers open on load, and spread while the link is hovered or
+ * focused.
  */
-import { profile } from "../../data/index";
+import BrandMark from "../UI/BrandMark.astro";
 ---
 
-<a href="#top" class="brand">
-  <img src="/favicon.svg" alt="" width="30" height="30" class="mark" />
-  <span class="wordmark">{profile.name}</span>
+<a href="#top" class="brand" aria-label="adioz.dev, back to top">
+  <BrandMark label="" size={96} />
 </a>
 
 <style>
   .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6875rem;
-    border-radius: 0.5625rem;
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 8px;
+  }
+
+  .brand :global(.brand-mark) {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 96px;
+    height: 96px;
+    translate: -50% 0;
+    transform-origin: 50% 0;
+  }
+
+  /* motion.ts sets data-motion after the first state, so the size on load does not animate. */
+  :global(.site-header[data-motion]) .brand :global(.brand-mark) {
+    transition: scale 0.45s var(--ease-soft);
+  }
+
+  :global(.site-header:not([data-at-top])) .brand :global(.brand-mark) {
+    scale: 0.5;
+  }
+
+  @media (width < 47.5rem) {
+    .brand :global(.brand-mark) {
+      top: 0;
+      width: 68px;
+      height: 68px;
+    }
   }
 
   .brand:focus-visible {
-    outline: 2px solid var(--color-accent-cyan);
+    outline: 2px solid var(--gold-text);
     outline-offset: 4px;
   }
 
-  /* Rounds the box-shadow to the mark's corner radius (rx 19.2 of 64 at 30px). */
-  .mark {
-    border-radius: 0.5625rem;
-    box-shadow: 0 0 22px
-      color-mix(in srgb, var(--color-accent-cyan) 35%, transparent);
+  .brand:is(:hover, :focus-visible) {
+    --spread: 5;
   }
 
-  .wordmark {
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    text-transform: lowercase;
-    color: var(--color-ink);
+  .brand :global(.brand-mark) {
+    filter: drop-shadow(
+      calc(var(--lean) * var(--slant) * 4px) 6px 8px rgb(0 0 0 / 0.45)
+    );
+  }
+
+  /* On load the legs swing open from closed about the pivot and the arc stretches with them. */
+  .brand :global(.leg-left),
+  .brand :global(.leg-right) {
+    animation: mark-open 1.1s cubic-bezier(0.34, 1.4, 0.64, 1) 0.35s backwards;
+  }
+
+  .brand :global(.leg-left) {
+    --side: 1;
+  }
+
+  .brand :global(.leg-right) {
+    --side: -1;
+  }
+
+  .brand :global(.arc) {
+    animation: mark-arc-open 1.1s cubic-bezier(0.34, 1.4, 0.64, 1) 0.35s
+      backwards;
+  }
+
+  @keyframes mark-open {
+    from {
+      transform: rotate(calc(var(--side) * -9deg));
+    }
+  }
+
+  @keyframes mark-arc-open {
+    from {
+      transform: scaleX(0.35);
+    }
+  }
+
+  @media (width < 47.5rem) {
+    :global(.site-header:not([data-at-top])) .brand :global(.brand-mark) {
+      scale: 0.7;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.site-header[data-motion]) .brand :global(.brand-mark) {
+      transition: none;
+    }
+
+    .brand :global(.leg-left),
+    .brand :global(.leg-right),
+    .brand :global(.arc) {
+      animation: none;
+    }
   }
 </style>

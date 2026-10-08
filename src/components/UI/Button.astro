@@ -3,10 +3,14 @@ import type { HTMLAttributes } from "astro/types";
 import Icon from "./Icon.astro";
 
 interface Common {
-  /** primary: cyan-to-violet gradient; ghost: outlined, with a faint ink tint. */
-  variant?: "primary" | "ghost";
-  /** Trailing icon name from src/icons/, e.g. "arrow-right". */
+  /** The metal: accent (brushed gold on the dark theme, bronze on the light one; the default) or steel (brushed steel). */
+  variant?: "accent" | "steel";
+  /** Trailing icon name from src/icons/, e.g. "arrow-right", engraved into a spun steel cap. */
   icon?: string;
+  /** The nav's size, 40px tall with a 26px cap. */
+  compact?: boolean;
+  /** The cap icon's angle at rest, in degrees clockwise, read by the light script as data-rest. */
+  rest?: number;
 }
 
 /** Renders an <a> when href is set, otherwise a <button>. */
@@ -20,8 +24,10 @@ type Props =
   | (Common & HTMLAttributes<"button"> & { href?: undefined });
 
 const {
-  variant = "primary",
+  variant = "accent",
   icon,
+  compact = false,
+  rest = 0,
   href,
   external,
   class: className,
@@ -32,7 +38,13 @@ const {
   class?: string;
 } & Record<string, unknown>;
 
-const classes = ["btn", variant, className];
+const classes = [
+  "btn",
+  "machined",
+  variant,
+  { capped: icon, compact },
+  className,
+];
 const linkAttrs = external
   ? { ...attrs, target: "_blank", rel: "noopener noreferrer" }
   : attrs;
@@ -42,13 +54,29 @@ const buttonAttrs = { type: "button" as const, ...attrs };
 
 {href ? (
   <a href={href} class:list={classes} {...linkAttrs}>
-    <slot />
-    {icon && <Icon name={icon} size={15} />}
+    <span class="engrave">
+      <slot />
+    </span>
+    {icon && (
+      <span class="cap" aria-hidden="true">
+        <span class="spun turn" data-rest={rest}>
+          <Icon name={icon} size={compact ? 14 : 16} class="engraved-icon" />
+        </span>
+      </span>
+    )}
   </a>
 ) : (
   <button class:list={classes} {...buttonAttrs}>
-    <slot />
-    {icon && <Icon name={icon} size={15} />}
+    <span class="engrave">
+      <slot />
+    </span>
+    {icon && (
+      <span class="cap" aria-hidden="true">
+        <span class="spun turn" data-rest={rest}>
+          <Icon name={icon} size={compact ? 14 : 16} class="engraved-icon" />
+        </span>
+      </span>
+    )}
   </button>
 )}
 
@@ -69,45 +97,259 @@ const buttonAttrs = { type: "button" as const, ...attrs };
       border-color 0.25s;
   }
 
-  .btn :global(svg) {
-    transition: transform 0.25s var(--ease-soft);
-  }
-
-  .btn:hover :global(svg) {
-    transform: translateX(3px);
-  }
-
   .btn:focus-visible {
-    outline: 2px solid var(--color-accent-cyan);
+    outline: 2px solid var(--gold-text);
     outline-offset: 3px;
   }
 
-  .primary {
-    background: linear-gradient(
-      100deg,
-      var(--color-accent-cyan),
-      var(--color-accent-violet)
+  /*
+   * A machined button is a slab: a brushed face (streak noise over a highlight
+   * band at --lx over the metal), a side wall --wall deep (5px unless set)
+   * stepped from --wall-1 (below the face) to --wall-5 (the floor) and slanted
+   * by --lean, an engraved label, and contact, cast and ambient shadows on
+   * the page. Hover lifts it 2px; press sinks it by three fifths of --wall,
+   * hiding most of the wall.
+   */
+  .machined {
+    --wall: 5px;
+    position: relative;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-size: 14.5px;
+    font-weight: var(--display-wght);
+    letter-spacing: 0.01em;
+    background-size:
+      320px 140px,
+      100% 100%,
+      100% 100%;
+    background-blend-mode: overlay, screen, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.9),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.28),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.2))
+        calc(var(--wall) * 0.2) 0 0 var(--wall-1),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 0 var(--wall-2),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.6))
+        calc(var(--wall) * 0.6) 0 0 var(--wall-3),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.8))
+        calc(var(--wall) * 0.8) 0 0 var(--wall-4),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 0 var(--wall-5),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * (var(--wall) + 2px))
+        calc(var(--wall) + 2px) 4px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 11px) 11px 24px -6px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 18px) 18px 44px -18px var(--metal-drop);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .machined:hover {
+    transform: translate(calc(var(--lean) * var(--slant) * -2px), -2px);
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.95),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.28),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.2))
+        calc(var(--wall) * 0.2) 0 0 var(--wall-1),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 0 var(--wall-2),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.6))
+        calc(var(--wall) * 0.6) 0 0 var(--wall-3),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.8))
+        calc(var(--wall) * 0.8) 0 0 var(--wall-4),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 0 var(--wall-5),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 11px) 11px 12px -2px
+        var(--metal-contact-lift),
+      calc(var(--lean) * var(--slant) * 17px) 17px 30px -8px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 25px) 25px 56px -20px var(--metal-drop);
+  }
+
+  .machined:active {
+    transform: translate(
+      calc(var(--lean) * var(--slant) * var(--wall) * 0.6),
+      calc(var(--wall) * 0.6)
     );
-    color: var(--color-on-accent);
-    box-shadow: 0 8px 30px -8px
-      color-mix(in srgb, var(--color-accent-cyan) 55%, transparent);
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 2px) 2px 5px rgb(0 0 0 / 0.38),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0
+        rgb(255 255 255 / 0.35),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.2))
+        calc(var(--wall) * 0.2) 0 0 var(--wall-1),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 0 var(--wall-2),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * (var(--wall) * 0.4 + 1px))
+        calc(var(--wall) * 0.4 + 1px) 2px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 6px) 6px 10px -4px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 10px) 10px 18px -12px var(--metal-drop);
   }
 
-  .primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 40px -8px
-      color-mix(in srgb, var(--color-accent-cyan) 70%, transparent);
+  .steel {
+    --wall-1: #aeb4bb;
+    --wall-2: #9ea4ac;
+    --wall-3: #8d949c;
+    --wall-4: #7c838b;
+    --wall-5: #6b727a;
+    background-image:
+      var(--brush-noise),
+      radial-gradient(
+        ellipse 22% 160% at var(--lx) 50%,
+        rgb(255 255 255 / 0.9),
+        transparent 70%
+      ),
+      var(--steel-brushed);
   }
 
-  .ghost {
-    border: 1px solid var(--color-line-strong);
-    background: color-mix(in srgb, var(--color-ink) 2%, transparent);
-    color: var(--color-ink);
+  .accent {
+    --wall-1: var(--button-wall-1);
+    --wall-2: var(--button-wall-2);
+    --wall-3: var(--button-wall-3);
+    --wall-4: var(--button-wall-4);
+    --wall-5: var(--button-wall-5);
+    background-image:
+      var(--brush-noise-soft),
+      radial-gradient(
+        ellipse 22% 160% at var(--lx) 50%,
+        var(--button-shine),
+        transparent 70%
+      ),
+      var(--button-metal);
   }
 
-  .ghost:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
-    background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  /*
+   * The label is cut into the face: a dark floor deepest under the upper edge,
+   * a shadowed upper lip and a lit lower lip. On the accent metal the floor is
+   * the button's brushed metal in deep shadow, which keeps 4.5:1 against every
+   * stop of --gold-brushed and --bronze-metal.
+   */
+  .engrave {
+    background: linear-gradient(180deg, #0e1013 0%, #262a30 60%, #353a41 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(
+        calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.8)
+      )
+      drop-shadow(
+        calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.3)
+      );
+  }
+
+  .accent .engrave {
+    background-image:
+      linear-gradient(180deg, rgb(20 9 2 / 0.9), rgb(24 11 3 / 0.9)),
+      var(--brush-noise-soft), var(--button-metal);
+    background-size:
+      100% 100%,
+      320px 140px,
+      100% 100%;
+    background-blend-mode: normal, overlay, normal;
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(
+        calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 228 196 / 0.75)
+      )
+      drop-shadow(
+        calc(var(--lean) * var(--slant) * -1px) -1px 0
+          rgb(var(--button-tint) / 0.45)
+      );
+  }
+
+  .capped {
+    padding-right: 8px;
+  }
+
+  /*
+   * The cap: a spun steel disc on a 2px edge, holding the engraved icon, which
+   * slides 2px on hover. Hovering or focusing the button lights the icon in
+   * --accent-line, changing only its colour.
+   */
+  .cap {
+    position: relative;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1px rgb(var(--button-tint) / 0.55),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8a9098,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #6c727a,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 1px
+        rgb(var(--button-tint) / 0.45),
+      calc(var(--lean) * var(--slant) * 5px) 5px 6px -1px
+        rgb(var(--button-tint) / 0.6);
+    transition: transform 0.35s var(--ease-soft);
+  }
+
+  .cap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.45),
+      inset calc(var(--lean) * var(--slant) * 2px) 2px 2px
+        rgb(255 255 255 / 0.3),
+      inset calc(var(--lean) * var(--slant) * -2px) -2px 4px rgb(0 0 0 / 0.3);
+  }
+
+  .machined:hover .cap {
+    transform: translateX(2px);
+  }
+
+  .turn {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: #1b1e23;
+  }
+
+  .machined .turn :global(svg) {
+    transform: none;
+    transition: color 0.3s var(--ease-soft);
+  }
+
+  .machined:is(:hover, :focus-visible) .turn :global(svg) {
+    color: var(--accent-line);
+  }
+
+  .compact {
+    min-height: 40px;
+    gap: 10px;
+    padding: 0 18px;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+
+  .compact.capped {
+    padding-right: 7px;
+  }
+
+  .compact .cap {
+    width: 26px;
+    height: 26px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn,
+    .cap {
+      transition: none;
+    }
   }
 </style>

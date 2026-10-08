@@ -1,0 +1,47 @@
+---
+import { sectionNumber } from "../../data/index";
+
+interface Props {
+  /** The section's id; its navigation.json position sets the engraved number. */
+  section: string;
+  /** Section name after its number, e.g. "Core Engineering Focus". */
+  label: string;
+  /** The headline, a sentence ending in a full stop. */
+  title: string;
+  /** The headline's id, for the section's aria-labelledby. */
+  id: string;
+}
+
+const { section, label, title, id } = Astro.props;
+const number = String(sectionNumber(section)).padStart(2, "0");
+---
+
+<p class="eyebrow">
+  <span class="eyebrow-no">{number}</span>
+  {label}
+</p>
+<h2 {id} class="h2">
+  <span class="gilt">{title}</span>
+</h2>
+{Astro.slots.has("default") && (
+  <div class="sub">
+    <slot />
+  </div>
+)}
+
+<style>
+  /*
+   * A main design section's title: the .eyebrow (the section number engraved
+   * into its .eyebrow-no plate, then the label), the headline in gold and the
+   * intro paragraphs from the default slot, when given, in --body.
+   */
+  .sub {
+    max-width: 62ch;
+    margin: 0 0 48px;
+    color: var(--body);
+  }
+
+  .sub :global(p + p) {
+    margin-top: 1em;
+  }
+</style>

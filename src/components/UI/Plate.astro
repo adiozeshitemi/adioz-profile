@@ -1,0 +1,93 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Screw from "./Screw.astro";
+
+type Props = HTMLAttributes<"div"> & {
+  /** The element to render; div by default. */
+  as?: "div" | "section" | "article" | "figure" | "ul" | "dl";
+  /** Screws down each corner, inset 16px; true by default. */
+  screws?: boolean;
+};
+
+const {
+  as: Tag = "div",
+  screws = true,
+  class: className,
+  ...attrs
+} = Astro.props;
+
+/** Each corner's screw position and slot angle. */
+const corners = [
+  { place: "top-left", angle: 28 },
+  { place: "top-right", angle: -52 },
+  { place: "bottom-left", angle: 74 },
+  { place: "bottom-right", angle: 8 },
+];
+---
+
+<Tag class:list={["plate", className]} {...attrs}>
+  {screws &&
+    corners.map(({ place, angle }) => <Screw angle={angle} class={place} />)}
+  <slot />
+</Tag>
+
+<style>
+  /*
+   * A plate is a brushed metal slab: streak noise (overlay) over a highlight
+   * band at --lx (screen) over --plate-metal, brushed gold on the dark theme and
+   * bronze on the light one; a 6px side wall stepped from --plate-wall-1 to
+   * --plate-wall-5 and slanted by --lean; and contact, cast and ambient shadows
+   * on the page.
+   */
+  .plate {
+    position: relative;
+    border-radius: 26px;
+    background-image:
+      var(--brush-noise-soft),
+      radial-gradient(
+        ellipse 20% 150% at var(--lx) 50%,
+        var(--plate-shine),
+        transparent 70%
+      ),
+      var(--plate-metal);
+    background-size:
+      640px 140px,
+      100% 100%,
+      100% 100%;
+    background-blend-mode: overlay, screen, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.3),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--plate-wall-1),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--plate-wall-2),
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 var(--plate-wall-3),
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 var(--plate-wall-4),
+      calc(var(--lean) * var(--slant) * 5px) 5px 0 0 var(--plate-wall-5),
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 0 var(--plate-wall-5),
+      calc(var(--lean) * var(--slant) * 6px) 6px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 9px) 9px 6px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 17px) 17px 40px -10px var(--metal-drop),
+      calc(var(--lean) * var(--slant) * 28px) 28px 70px -30px var(--metal-drop);
+  }
+
+  .plate > :global(.top-left) {
+    top: 16px;
+    left: 16px;
+  }
+
+  .plate > :global(.top-right) {
+    top: 16px;
+    right: 16px;
+  }
+
+  .plate > :global(.bottom-left) {
+    bottom: 16px;
+    left: 16px;
+  }
+
+  .plate > :global(.bottom-right) {
+    right: 16px;
+    bottom: 16px;
+  }
+</style>

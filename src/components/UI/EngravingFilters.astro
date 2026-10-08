@@ -1,0 +1,222 @@
+---
+/*
+ * The shared SVG filters and gradients of the main design, in one zero-size
+ * SVG that Layout.astro renders once per page. CSS and SVG apply each by id
+ * with url(#id). Light falls from the top right.
+ */
+---
+
+<svg
+  class="engraving-filters"
+  width="0"
+  height="0"
+  aria-hidden="true"
+  focusable="false"
+>
+  <!--
+    #engrave cuts a small shape (an icon, a label) into metal: a lit lip 1px
+    below and left of it, and a shadow along its upper and right inner edges.
+  -->
+  <filter
+    id="engrave"
+    x="-30%"
+    y="-30%"
+    width="160%"
+    height="160%"
+    color-interpolation-filters="sRGB"
+  >
+    <feOffset in="SourceAlpha" dx="-0.4" dy="1" result="below"></feOffset>
+    <feFlood flood-color="#ffffff" flood-opacity="0.8"></feFlood>
+    <feComposite in2="below" operator="in" result="lip"></feComposite>
+    <feOffset in="SourceAlpha" dx="-0.48" dy="1.2" result="shifted"></feOffset>
+    <feComposite
+      in="SourceAlpha"
+      in2="shifted"
+      operator="out"
+      result="rim"
+    ></feComposite>
+    <feFlood flood-color="#000000" flood-opacity="0.7"></feFlood>
+    <feComposite in2="rim" operator="in" result="inner"></feComposite>
+    <feMerge>
+      <feMergeNode in="lip"></feMergeNode>
+      <feMergeNode in="SourceGraphic"></feMergeNode>
+      <feMergeNode in="inner"></feMergeNode>
+    </feMerge>
+  </filter>
+
+  <!--
+    #carve cuts large text into a plate: a soft shadow inside along the upper
+    and right walls, light on the inner lower-left walls, and a lit lip on the
+    surface along the lower-left edge.
+  -->
+  <filter
+    id="carve"
+    x="-10%"
+    y="-25%"
+    width="120%"
+    height="150%"
+    color-interpolation-filters="sRGB"
+  >
+    <feOffset in="SourceAlpha" dx="-0.6" dy="1.4" result="below"></feOffset>
+    <feFlood flood-color="#ffe7c9" flood-opacity="0.8"></feFlood>
+    <feComposite in2="below" operator="in" result="lip"></feComposite>
+    <feOffset in="SourceAlpha" dx="0.5" dy="-1.2" result="raised"></feOffset>
+    <feComposite
+      in="SourceAlpha"
+      in2="raised"
+      operator="out"
+      result="far-wall"
+    ></feComposite>
+    <feFlood flood-color="#f3c48c" flood-opacity="0.5"></feFlood>
+    <feComposite in2="far-wall" operator="in" result="far-light"></feComposite>
+    <feOffset in="SourceAlpha" dx="-1.2" dy="3" result="shifted"></feOffset>
+    <feGaussianBlur
+      in="shifted"
+      stdDeviation="1"
+      result="softened"
+    ></feGaussianBlur>
+    <feComposite
+      in="SourceAlpha"
+      in2="softened"
+      operator="out"
+      result="near-wall"
+    ></feComposite>
+    <feFlood flood-color="#120700" flood-opacity="0.8"></feFlood>
+    <feComposite
+      in2="near-wall"
+      operator="in"
+      result="near-shade"
+    ></feComposite>
+    <feMerge>
+      <feMergeNode in="lip"></feMergeNode>
+      <feMergeNode in="SourceGraphic"></feMergeNode>
+      <feMergeNode in="far-light"></feMergeNode>
+      <feMergeNode in="near-shade"></feMergeNode>
+    </feMerge>
+  </filter>
+
+  <!--
+    #dial-groove shades a gauge arc from inside, as the upper wall of a cut
+    would: the shape's inverse, dropped 2.4 units and blurred, kept only within
+    the shape.
+  -->
+  <filter
+    id="dial-groove"
+    x="-10%"
+    y="-10%"
+    width="120%"
+    height="120%"
+    color-interpolation-filters="sRGB"
+  >
+    <feComponentTransfer in="SourceAlpha" result="outside">
+      <feFuncA type="table" tableValues="1 0"></feFuncA>
+    </feComponentTransfer>
+    <feOffset in="outside" dx="-0.6" dy="2.4"></feOffset>
+    <feGaussianBlur stdDeviation="1.3" result="spill"></feGaussianBlur>
+    <feFlood flood-color="#000" flood-opacity="0.9"></feFlood>
+    <feComposite in2="spill" operator="in"></feComposite>
+    <feComposite in2="SourceAlpha" operator="in" result="shade"></feComposite>
+    <feMerge>
+      <feMergeNode in="SourceGraphic"></feMergeNode>
+      <feMergeNode in="shade"></feMergeNode>
+    </feMerge>
+  </filter>
+
+  <!--
+    The Dividers mark's metals for BrandMark.astro: #mark-steel and #mark-gold
+    in the theme's metals (--mark-steel-*, --mark-gold-*), #mark-steel-bright
+    and #mark-gold-bright in the dark theme's in both themes, and #mark-raise,
+    which stands the mark off the page: a lit top edge, then a cast shadow.
+  -->
+  <linearGradient id="mark-steel" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" style="stop-color: var(--mark-steel-1)"></stop>
+    <stop offset="0.38" style="stop-color: var(--mark-steel-2)"></stop>
+    <stop offset="0.55" style="stop-color: var(--mark-steel-3)"></stop>
+    <stop offset="0.78" style="stop-color: var(--mark-steel-4)"></stop>
+    <stop offset="1" style="stop-color: var(--mark-steel-5)"></stop>
+  </linearGradient>
+  <linearGradient id="mark-gold" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" style="stop-color: var(--mark-gold-1)"></stop>
+    <stop offset="0.35" style="stop-color: var(--mark-gold-2)"></stop>
+    <stop offset="0.7" style="stop-color: var(--mark-gold-3)"></stop>
+    <stop offset="1" style="stop-color: var(--mark-gold-4)"></stop>
+  </linearGradient>
+  <linearGradient id="mark-steel-bright" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"></stop>
+    <stop offset="0.38" stop-color="#c3c8ce"></stop>
+    <stop offset="0.55" stop-color="#8e959e"></stop>
+    <stop offset="0.78" stop-color="#d8dce1"></stop>
+    <stop offset="1" stop-color="#6c737c"></stop>
+  </linearGradient>
+  <linearGradient id="mark-gold-bright" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#fff1b8"></stop>
+    <stop offset="0.35" stop-color="#e9c460"></stop>
+    <stop offset="0.7" stop-color="#c4973a"></stop>
+    <stop offset="1" stop-color="#8f6718"></stop>
+  </linearGradient>
+  <filter
+    id="mark-raise"
+    x="-20%"
+    y="-20%"
+    width="140%"
+    height="140%"
+    color-interpolation-filters="sRGB"
+  >
+    <feDropShadow
+      dx="0"
+      dy="-0.6"
+      stdDeviation="0"
+      flood-color="#fff"
+      flood-opacity="0.45"
+    ></feDropShadow>
+    <feDropShadow
+      dx="0.6"
+      dy="1.4"
+      stdDeviation="0.8"
+      flood-color="#000"
+      flood-opacity="0.7"
+    ></feDropShadow>
+  </filter>
+
+  <!-- #dial-raise stands gauge ticks off the face: a lit top edge, then a cast shadow. -->
+  <filter
+    id="dial-raise"
+    x="-20%"
+    y="-20%"
+    width="140%"
+    height="140%"
+    color-interpolation-filters="sRGB"
+  >
+    <feDropShadow
+      dx="0"
+      dy="-0.7"
+      stdDeviation="0"
+      flood-color="#fff"
+      flood-opacity="0.45"
+    ></feDropShadow>
+    <feDropShadow
+      dx="1"
+      dy="2"
+      stdDeviation="0.9"
+      flood-color="#000"
+      flood-opacity="0.85"
+    ></feDropShadow>
+  </filter>
+
+  <!-- #dial-gold runs a gauge arc from deep gold at 0 to pale gold at 100, in the theme's --dial-gold-* stops. -->
+  <linearGradient id="dial-gold" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" style="stop-color: var(--dial-gold-1)"></stop>
+    <stop offset="0.55" style="stop-color: var(--dial-gold-2)"></stop>
+    <stop offset="1" style="stop-color: var(--dial-gold-3)"></stop>
+  </linearGradient>
+</svg>
+
+<style>
+  /* Takes no space; display: none would disable the filters in some browsers. */
+  .engraving-filters {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+</style>

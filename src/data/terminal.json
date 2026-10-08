@@ -1,23 +1,21 @@
 {
-  "title": "zsh — 120×32",
+  "title": "adioz — agent.log",
+  "name": "agent.log",
+  "live": "live",
   "lines": [
-    { "kind": "cmd", "text": "$ adioz whoami" },
+    { "who": "request", "text": "plain-language change" },
+    { "who": "agent", "text": "→ model on CPU · intent, slots" },
+    { "who": "agent", "text": "→ typed tool · pages.update" },
+    { "who": "guardrail", "text": "✓ gates passed", "tone": "good" },
+    { "who": "audit", "text": "applied · operator on record", "tone": "good" },
+    { "who": "request", "text": "plain-language change" },
+    { "who": "agent", "text": "→ model on CPU · intent, slots" },
+    { "who": "agent", "text": "→ typed tool · pages.update" },
     {
-      "kind": "out",
-      "text": "Full-stack AI engineer: backend systems & web applications"
+      "who": "guardrail",
+      "text": "✗ gate failed · fail-closed",
+      "tone": "bad"
     },
-    { "kind": "cmd", "text": "$ adioz principles" },
-    {
-      "kind": "ok",
-      "text": "-> agents: typed tools, fail-closed guardrails, named operator"
-    },
-    {
-      "kind": "ok",
-      "text": "-> models: train & distil on GPU, serve quantized on CPU"
-    },
-    { "kind": "cmd", "text": "$ adioz ready-for-hire" },
-    { "kind": "ok", "text": "true" },
-    { "kind": "cmd", "text": "$ adioz chat" },
-    { "kind": "key", "text": "live chat opens here soon" }
+    { "who": "rollback", "text": "change reverted", "tone": "bad" }
   ]
 }

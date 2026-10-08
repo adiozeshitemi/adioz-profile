@@ -1,0 +1,187 @@
+/*
+ * Main design text styles. Display text is Montserrat (--font-sans) at
+ * --display-wght; labels and section numbers are JetBrains Mono
+ * (--font-mono) or spaced capitals. Colours and metals come from the main
+ * tokens in theme.css.
+ */
+
+/* .display is the hero title; .h2 is a section title. */
+.display,
+.h2 {
+  font-family: var(--font-sans);
+  font-weight: var(--display-wght);
+  letter-spacing: var(--track);
+}
+
+.display {
+  margin: 0 0 26px;
+  font-size: clamp(40px, 5.5vw, 74px);
+  line-height: 1.03;
+}
+
+.h2 {
+  margin: 0 0 22px;
+  font-size: clamp(32px, 4.4vw, 54px);
+  line-height: 1.06;
+}
+
+/* .eyebrow is a section's label above its title: gold spaced capitals, led by its .eyebrow-no. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 20px;
+  color: var(--gold-text);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/*
+ * .eyebrow-no is the section number engraved into a small brushed plate of
+ * --plate-metal on a 3px wall slanted by --lean, in --plate-ink over a lit
+ * --plate-lip.
+ */
+.eyebrow-no {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 7px;
+  background-image: var(--brush-noise-soft), var(--plate-metal);
+  background-size:
+    320px 140px,
+    100% 100%;
+  background-blend-mode: overlay, normal;
+  box-shadow:
+    inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+    inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25),
+    0 0 0 1px var(--metal-outline),
+    calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--plate-wall-1),
+    calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--plate-wall-3),
+    calc(var(--lean) * var(--slant) * 3px) 3px 0 0 var(--plate-wall-5),
+    calc(var(--lean) * var(--slant) * 3px) 3px 0 1px var(--metal-outline),
+    calc(var(--lean) * var(--slant) * 7px) 7px 8px -2px var(--metal-drop);
+  color: var(--plate-ink);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-shadow: calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--plate-lip);
+}
+
+/*
+ * .gilt paints text in polished --gold under a white sheen that sweeps across
+ * it every 9s, casting --text-shadow. In a title (.display, .h2) the gold is
+ * brushed --plate-metal under a --title-sheen sweep; on the light theme the
+ * letters stand on a wall stepped down through --plate-wall-1 to -5, --step
+ * per step (1px; 0.6px up to 640px), under a lit --title-bevel edge and a
+ * --title-cast shadow. With reduced motion the sheen rests off the text.
+ */
+.gilt {
+  background-image:
+    linear-gradient(
+      100deg,
+      transparent 0 42%,
+      rgb(255 255 255 / 0.95) 50%,
+      transparent 58% 100%
+    ),
+    var(--gold);
+  background-size:
+    260% 100%,
+    100% 100%;
+  background-position:
+    100% 0,
+    0 0;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  filter: var(--text-shadow);
+  animation: gilt-sheen 9s var(--ease-soft) 0.35s infinite;
+}
+
+:is(.display, .h2) .gilt {
+  background-image:
+    linear-gradient(
+      100deg,
+      transparent 0 42%,
+      var(--title-sheen) 50%,
+      transparent 58% 100%
+    ),
+    var(--brush-noise-soft), var(--plate-metal);
+  background-size:
+    260% 100%,
+    320px 140px,
+    100% 100%;
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-blend-mode: normal, overlay, normal;
+}
+
+[data-theme="light"] :is(.display, .h2) .gilt {
+  filter: drop-shadow(
+      calc(var(--lean) * var(--slant) * -1px) -1px 0 var(--title-bevel)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-1)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-2)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-3)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-4)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-5)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * 4px) 5px 3px var(--title-cast)
+    );
+}
+
+.display,
+.h2 {
+  --step: 1px;
+}
+
+@media (width <= 40rem) {
+  .display,
+  .h2 {
+    --step: 0.6px;
+  }
+}
+
+@keyframes gilt-sheen {
+  0%,
+  58% {
+    background-position:
+      100% 0,
+      0 0;
+  }
+
+  84%,
+  100% {
+    background-position:
+      0% 0,
+      0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gilt {
+    animation: none;
+  }
+}

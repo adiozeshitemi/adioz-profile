@@ -1,0 +1,52 @@
+---
+interface Props {
+  /** The element to render: span by default, li inside a list of tags. */
+  as?: "span" | "li";
+  class?: string;
+}
+
+const { as: Tag = "span", class: className } = Astro.props;
+---
+
+<Tag class:list={["tag", className]}>
+  <slot />
+</Tag>
+
+<style>
+  /*
+   * A tag is a small machined label: a brushed face (--tag-face under
+   * --brush-noise-soft), a lit top lip, a 2px wall slanted by --lean and a
+   * contact shadow; gunmetal on the dark theme, satin aluminium on the light
+   * one. Hover rings it in gold (--tag-ring-lit).
+   */
+  .tag {
+    --tag-ring: transparent;
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background-image: var(--brush-noise-soft), var(--tag-face);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--tag-lip),
+      0 0 0 1px var(--tag-outline),
+      0 0 0 1px var(--tag-ring),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--tag-wall-1),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--tag-wall-2),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 1px var(--tag-outline),
+      calc(var(--lean) * var(--slant) * 4px) 4px 4px -1px var(--metal-contact);
+    color: var(--tag-text);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.4;
+    transition:
+      color 0.3s,
+      box-shadow 0.3s;
+  }
+
+  .tag:hover {
+    --tag-ring: var(--tag-ring-lit);
+  }
+</style>

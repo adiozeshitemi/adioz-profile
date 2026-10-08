@@ -1,8 +1,29 @@
 {
   "id": "contact",
-  "label": "Get In Touch",
-  "heading": "Let's take AI into production",
-  "body": "Open to Senior/Staff engineering roles across production AI, agents, and backend systems. Have an AI system that needs to ship?",
-  "ctaLabel": "Send an email",
-  "ctaIcon": "arrow-right"
+  "label": "Contact",
+  "headline": "Let’s take it to production.",
+  "lead": "Open to senior and staff engineering roles, and to teams that need AI running in production, on their own hardware and in their own cloud.",
+  "copy": {
+    "label": "Copy email address",
+    "copied": "Copied",
+    "failed": "Copy failed"
+  },
+  "links": [
+    {
+      "title": "GitHub",
+      "url": "https://github.com/adiozeshitemi",
+      "icon": "github"
+    },
+    {
+      "title": "LinkedIn",
+      "url": "https://www.linkedin.com/in/adioz-eshitemi-5a594473/",
+      "icon": "linkedin"
+    },
+    {
+      "title": "Tech articles",
+      "url": "https://dev.to/adioz",
+      "icon": "file-text"
+    }
+  ],
+  "resume": "Résumé (PDF)"
 }

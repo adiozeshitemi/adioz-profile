@@ -1,0 +1,83 @@
+/*
+ * Main design text cut into metal. Each style paints the text with a fill
+ * clipped to the glyphs (the cut's floor) under drop-shadows or an SVG filter
+ * from EngravingFilters.astro (its walls and lips). Light falls from the top
+ * right, so a cut shows a shadowed top lip and a lit bottom lip.
+ */
+
+/*
+ * .engraved is text cut into dark gunmetal (a log bar, the footer strip): the
+ * fill shades from the cut's dark upper wall to its lit floor, under a
+ * shadowed top lip and a lit bottom lip.
+ */
+.engraved {
+  background-image: linear-gradient(
+    180deg,
+    #2a2f35 0%,
+    #4a515a 38%,
+    #a9b1bb 72%,
+    #d6dce3 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 -1px 0 #000) drop-shadow(0 -1px 0.5px rgb(0 0 0 / 0.85))
+    drop-shadow(0 1px 0 rgb(255 255 255 / 0.3));
+}
+
+/*
+ * .carved is large text cut into a --plate-metal plate (a nameplate): its
+ * floor is the plate's own brushed metal in shadow, deepest under the upper
+ * wall, and #carve shades and lights the walls. The floor keeps 3:1 against
+ * every --plate-metal stop.
+ */
+.carved {
+  background-image:
+    linear-gradient(180deg, rgb(26 11 2 / 0.85), rgb(44 20 6 / 0.7)),
+    var(--brush-noise-soft), var(--plate-metal);
+  background-size:
+    100% 100%,
+    320px 140px,
+    100% 100%;
+  background-blend-mode: normal, overlay, normal;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: url(#carve);
+}
+
+/*
+ * .inlaid is text cut into a face and filled with gold (--inlay-gold), cut
+ * deep: a long dark upper wall, a doubled top lip (--cut-shade) and a bright
+ * bottom lip (--cut-lip-deep). .inlaid-steel fills a shallower cut with steel
+ * (--inlay-steel) under a single top lip and --cut-lip. At 19px bold or more
+ * the gold keeps 3:1 against the face over the lower half of each glyph.
+ */
+.inlaid,
+.inlaid-steel {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.inlaid {
+  background-image: var(--inlay-gold);
+  filter: drop-shadow(0 -1px 0 var(--cut-shade))
+    drop-shadow(0 -1px 1.2px var(--cut-shade))
+    drop-shadow(0 1.5px 0 var(--cut-lip-deep));
+}
+
+.inlaid-steel {
+  background-image: var(--inlay-steel);
+  filter: drop-shadow(0 -1px 0 var(--cut-shade))
+    drop-shadow(0 1px 0 var(--cut-lip));
+}
+
+/* .engraved-icon cuts an icon or small mark into the metal it sits on with #engrave. */
+.engraved-icon {
+  filter: url(#engrave);
+}

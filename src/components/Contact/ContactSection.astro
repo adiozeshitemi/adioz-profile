@@ -1,105 +1,172 @@
 ---
 /*
- * The contact section from contact.json: a centred panel with the numbered
- * heading and body, a button that opens the mailto: link in profile.json, and
- * the address it writes to. A profile.json with no mailto: link fails the
- * build. The section spacing and page container match UI/Section.astro.
+ * The contact section from contact.json: the gold headline over one
+ * machined Panel holding the lead, the email address carved into a screwed
+ * Nameplate that opens profile.json's mailto: link, the copy knob with its
+ * status note, and the link ports (the contact.json links, then the
+ * résumé download), beside the lead from 860px and under it below.
  */
-import { contact, profile, sectionNumber } from "../../data/index";
-import Button from "../UI/Button.astro";
-import SectionHeader from "../UI/SectionHeader.astro";
+import { contact, profile } from "../../data/index";
+import Knob from "../UI/Knob.astro";
+import Nameplate from "../UI/Nameplate.astro";
+import Panel from "../UI/Panel.astro";
+import Port from "../UI/Port.astro";
+import SectionTitle from "../UI/SectionTitle.astro";
 
-const email = profile.links.find((link) => link.url.startsWith("mailto:"));
-if (!email) {
-  throw new Error("profile.json: no mailto: link for the contact section");
-}
-const address = new URL(email.url).pathname;
+const address = new URL(profile.email.url).pathname;
 const titleId = `${contact.id}-title`;
 ---
 
 <section id={contact.id} class="contact" aria-labelledby={titleId}>
   <div class="inner">
-    <div class="panel spot" data-reveal>
-      <SectionHeader
-        index={sectionNumber(contact.id)}
-        label={contact.label}
-        title={contact.heading}
-        intro={contact.body}
-        id={titleId}
-        align="center"
-      />
-      <div class="cta">
-        <Button href={email.url} icon={contact.ctaIcon}>
-          {contact.ctaLabel}
-        </Button>
+    <SectionTitle
+      section={contact.id}
+      label={contact.label}
+      title={contact.headline}
+      id={titleId}
+    />
+    <Panel class="contact-panel">
+      <div class="contact-main">
+        <p class="lead">{contact.lead}</p>
+        <div class="mail-row">
+          <Nameplate name={address} href={profile.email.url} class="mail" />
+          <Knob
+            compact
+            icon="copy"
+            label={contact.copy.label}
+            class="copy-mail"
+            data-copy={address}
+            data-copied={contact.copy.copied}
+            data-failed={contact.copy.failed}
+            hidden
+          />
+          <span class="copy-note" role="status"></span>
+        </div>
       </div>
-      <p class="address">
-        <a href={email.url}>{address}</a>
-      </p>
-    </div>
+      <ul class="ports">
+        {contact.links.map((link) => (
+          <li>
+            <Port link={link} />
+          </li>
+        ))}
+        <li>
+          <Port
+            link={{
+              title: contact.resume,
+              url: profile.resume.url,
+              icon: profile.resume.icon,
+            }}
+            download={profile.resume.file}
+          />
+        </li>
+      </ul>
+    </Panel>
   </div>
 </section>
 
+<script>
+  import { startCopy } from "../../scripts/copy";
+
+  const button = document.querySelector<HTMLButtonElement>(
+    ".contact .copy-mail",
+  );
+  const note = document.querySelector<HTMLElement>(".contact .copy-note");
+  if (button && note) startCopy(button, note);
+</script>
+
 <style>
   .contact {
-    padding-block: 4.5rem;
+    padding-block: clamp(84px, 10vw, 140px);
   }
 
   .inner {
+    width: 100%;
     max-width: var(--container-page);
     margin-inline: auto;
-    padding-inline: 1.25rem;
+    padding-inline: 28px;
   }
 
-  /* Cyan and violet glows in opposite corners over the card surface. */
-  .panel {
-    overflow: hidden;
-    padding: clamp(2.5rem, 6vw, 4.5rem);
-    border: 1px solid var(--color-line);
-    border-radius: 1.625rem;
-    background:
-      radial-gradient(
-        120% 140% at 12% 0%,
-        color-mix(in srgb, var(--color-accent-cyan) 10%, transparent),
-        transparent 55%
-      ),
-      radial-gradient(
-        120% 140% at 88% 100%,
-        color-mix(in srgb, var(--color-accent-violet) 12%, transparent),
-        transparent 55%
-      ),
-      var(--color-card);
-    text-align: center;
+  /*
+   * The panel sets the lead and the mail row beside the ports, split by a
+   * hairline, from 860px; below, the ports run under them in a row.
+   */
+  .inner :global(.panel.contact-panel) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    gap: 30px 48px;
+    align-items: center;
+    margin-top: 34px;
+    padding: 42px 40px 40px;
+    border-radius: 28px;
   }
 
-  .address {
-    margin-top: 1.625rem;
-    font-size: 0.8125rem;
+  .lead {
+    max-width: 44ch;
+    margin: 0 0 28px;
+    color: var(--body);
+    font-size: 17px;
+    line-height: 1.65;
   }
 
-  .address a {
-    color: var(--color-ink-muted);
-    transition: color 0.3s;
+  .mail-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 16px;
   }
 
-  .address a:hover {
-    color: var(--color-accent-cyan);
+  .mail-row :global(.nameplate.mail .carved) {
+    font-size: clamp(17px, 4.2vw, 25px);
+    letter-spacing: -0.005em;
   }
 
-  .address a:focus-visible {
-    border-radius: 0.25rem;
-    outline: 2px solid var(--color-accent-cyan);
-    outline-offset: 3px;
+  .mail-row :global(.knob.copy-mail[hidden]) {
+    display: none;
   }
 
-  /* --breakpoint-md */
-  @media (width >= 47.5rem) {
-    .contact {
-      padding-block: clamp(5rem, 11vw, 8.75rem);
+  .copy-note {
+    min-width: 7ch;
+    color: var(--gold-text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .ports {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 0;
+    padding: 6px 0 6px 34px;
+    border-left: 1px solid var(--line);
+    list-style: none;
+  }
+
+  @media (width <= 53.75rem) {
+    .inner :global(.panel.contact-panel) {
+      grid-template-columns: minmax(0, 1fr);
     }
 
+    .ports {
+      flex-direction: row;
+      gap: 16px 24px;
+      padding: 24px 0 0;
+      border-top: 1px solid var(--line);
+      border-left: 0;
+    }
+  }
+
+  @media (width <= 40rem) {
     .inner {
-      padding-inline: 1.75rem;
+      padding-inline: 16px;
+    }
+
+    .inner :global(.panel.contact-panel) {
+      padding: 28px 20px 26px;
+    }
+
+    .lead {
+      font-size: 16px;
     }
   }
 </style>

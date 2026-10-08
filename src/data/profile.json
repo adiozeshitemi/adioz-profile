@@ -7,36 +7,26 @@
   "availability": "Available for Senior/Staff Engineering Roles",
   "actions": [
     {
-      "title": "Get in touch",
-      "url": "#contact",
+      "title": "View selected work",
+      "url": "#projects",
       "icon": "arrow-right"
     },
     {
-      "title": "View work",
-      "url": "#work",
-      "icon": "arrow-up-right"
+      "title": "Get in touch",
+      "url": "#contact",
+      "icon": "send"
     }
   ],
   "resume": {
     "title": "Download resume",
+    "label": "Download resume (PDF)",
     "url": "/resume.pdf",
+    "file": "Adioz-Eshitemi-resume.pdf",
     "icon": "download"
   },
-  "links": [
-    {
-      "title": "GitHub",
-      "url": "https://github.com/adiozeshitemi",
-      "icon": "github"
-    },
-    {
-      "title": "LinkedIn",
-      "url": "https://www.linkedin.com/in/adioz-eshitemi-5a594473/",
-      "icon": "linkedin"
-    },
-    {
-      "title": "Email",
-      "url": "mailto:contact@adioz.dev",
-      "icon": "email"
-    }
-  ]
+  "email": {
+    "title": "Email",
+    "url": "mailto:contact@adioz.dev",
+    "icon": "email"
+  }
 }

@@ -1,12 +1,18 @@
 ---
 /*
- * One projects.json project: its title and links, description, tags and
- * metric line; https: links open in a new tab. The description grows to fill
- * the card, so the tags and metric lines of cards in a row line up.
+ * One projects.json project on a machined Panel that tilts toward the
+ * pointer (data-tilt): its name carved into a screwed Nameplate, its links
+ * as Ports, its description, its tags and its result line beside a lamp.
+ * The description grows, so the tags and result lines of cards in a row
+ * line up.
  */
 import type { ProjectItem } from "../../data/types";
-import Badge from "../UI/Badge.astro";
-import Icon from "../UI/Icon.astro";
+import Emphasis from "../UI/Emphasis.astro";
+import Lamp from "../UI/Lamp.astro";
+import Nameplate from "../UI/Nameplate.astro";
+import Panel from "../UI/Panel.astro";
+import Port from "../UI/Port.astro";
+import Tag from "../UI/Tag.astro";
 
 interface Props {
   project: ProjectItem;
@@ -15,135 +21,102 @@ interface Props {
 const { project } = Astro.props;
 ---
 
-<article class="card spot" data-reveal>
-  <h3>{project.title}</h3>
-  <ul class="links">
+<Panel as="article" class="project" data-tilt>
+  <Nameplate name={project.title} class="project-plate" />
+  <ul class="ports">
     {project.links.map((link) => (
       <li>
-        <a
-          href={link.url}
-          {...(link.url.startsWith("https:")
-            ? { target: "_blank", rel: "noopener noreferrer" }
-            : {})}
-        >
-          <Icon name={link.icon} size={14} />
-          {link.title}
-        </a>
+        <Port link={link} />
       </li>
     ))}
   </ul>
-  <p class="description">{project.description}</p>
+  <p class="desc">{project.description}</p>
   <ul class="tags">
     {project.tags.map((tag) => (
-      <li>
-        <Badge>{tag}</Badge>
-      </li>
+      <Tag as="li">{tag}</Tag>
     ))}
   </ul>
-  <p class="metric">{project.metric}</p>
-</article>
+  <p class="metric">
+    <Lamp />
+    <span>
+      <Emphasis text={project.metric} />
+    </span>
+  </p>
+</Panel>
 
 <style>
-  .card {
-    position: relative;
+  .project {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    padding: 1.875rem 1.75rem 1.625rem;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-card);
-    background: var(--color-card);
-    transition:
-      transform 0.4s var(--ease-soft),
-      border-color 0.35s,
-      background-color 0.35s;
+    will-change: transform;
   }
 
-  .card:hover {
-    transform: translateY(-5px);
-    border-color: var(--color-line-strong);
-    background: var(--color-card-hover);
+  :global(.panel).project {
+    padding: 32px 32px 26px;
+    border-radius: 28px;
   }
 
-  h3 {
-    margin-bottom: 0.625rem;
-    font-size: 1.12rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--color-ink);
+  .project :global(.project-plate) {
+    align-self: flex-start;
   }
 
-  .description {
+  .ports {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .desc {
     flex: 1;
-    font-size: 0.925rem;
-    line-height: 1.72;
-    color: var(--color-ink-muted);
+    max-width: 60ch;
+    margin: 24px 0 0;
+    color: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
   }
 
   .tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4375rem;
-    margin-top: 1.375rem;
+    gap: 7px;
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
   }
 
-  /* Card hover raises the tags to ink-muted text and line-strong borders. */
-  .card:hover :global(.tag) {
-    border-color: var(--color-line-strong);
-    color: var(--color-ink-muted);
+  .tags :global(.tag) {
+    font-size: 12px;
+    letter-spacing: 0.02em;
   }
 
+  /* The result line under a hairline, led by the gold status lamp centred on its first line. */
   .metric {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-line);
-    font-size: 0.75rem;
-    font-weight: 500;
+    gap: 12px;
+    margin: 22px 0 0;
+    padding: 18px 0 0;
+    border-top: 1px solid var(--line);
+    color: var(--body);
+    font-size: 14px;
     line-height: 1.5;
-    color: var(--color-success);
   }
 
-  /* The dot centres on the first line: half the 1.5 line height, less its 2.5px radius. */
-  .metric::before {
-    content: "";
-    flex-shrink: 0;
-    margin-top: calc(0.75em - 2.5px);
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--color-success);
-    box-shadow: 0 0 8px var(--color-success);
+  .metric :global(.lamp) {
+    margin-top: calc(0.75em - 5px);
   }
 
-  .links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    margin-bottom: 1rem;
-  }
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4375rem;
-    font-size: 0.8125rem;
+  .metric :global(strong) {
+    color: var(--text);
     font-weight: 600;
-    color: var(--color-ink-muted);
-    text-underline-offset: 0.25em;
-    transition: color 0.25s;
   }
 
-  a:hover {
-    color: var(--color-accent-cyan);
-    text-decoration: underline;
-  }
-
-  a:focus-visible {
-    border-radius: 0.25rem;
-    outline: 2px solid var(--color-accent-cyan);
-    outline-offset: 3px;
+  @media (width <= 40rem) {
+    :global(.panel).project {
+      padding: 26px 20px 22px;
+    }
   }
 </style>

@@ -1,0 +1,251 @@
+---
+/*
+ * The hero's agent pipeline, one island. The markup is a flat diagram of
+ * pipeline.json's parts on machined panels joined by wires, the image shown
+ * without JavaScript or WebGL. After first paint, where WebGL is available,
+ * the script loads src/scripts/pipeline3d.ts (with Three.js) and renders the
+ * 3D pipeline on the canvas with each part's label under it; once its first
+ * frame is drawn (data-ready) the flat diagram gives way to it.
+ */
+import { pipeline } from "../../data/index";
+import type { PipelinePartName } from "../../data/types";
+import Panel from "../UI/Panel.astro";
+
+/** Each part's centre in the flat diagram, in percent of its width and height. */
+const FLAT: Record<PipelinePartName, [number, number]> = {
+  request: [34, 10.48],
+  agent: [34, 31.43],
+  model: [78, 31.43],
+  tool: [34, 52.38],
+  guard: [34, 73.33],
+  pass: [18, 93.81],
+  fail: [60, 93.81],
+};
+const parts = Object.entries(pipeline.parts) as [
+  PipelinePartName,
+  (typeof pipeline.parts)[PipelinePartName],
+][];
+---
+
+<figure class="pipeline" aria-label={pipeline.label}>
+  <div class="stage">
+    <div class="flat" aria-hidden="true">
+      <svg viewBox="0 0 500 420">
+        <path d="M170 66 V110"></path>
+        <path d="M234 125 H315"></path>
+        <path class="loop" d="M315 139 H234"></path>
+        <path d="M170 154 V198"></path>
+        <path d="M170 242 V286"></path>
+        <path d="M150 330 C150 354 90 350 90 372"></path>
+        <path d="M190 330 C190 354 300 350 300 372"></path>
+      </svg>
+      {parts.map(([name, part]) => (
+        <Panel
+          gold={name === "guard"}
+          class="node"
+          style={`left: ${FLAT[name][0]}%; top: ${FLAT[name][1]}%`}
+        >
+          <b>{part.title}</b>
+          <small>{part.detail}</small>
+        </Panel>
+      ))}
+    </div>
+    <canvas aria-hidden="true"></canvas>
+    <div class="labels3d" aria-hidden="true">
+      {parts.map(([name, part]) => (
+        <div class="label3d" data-part={name}>
+          <b>{part.title}</b>
+          <small>{part.detail}</small>
+        </div>
+      ))}
+    </div>
+  </div>
+</figure>
+
+<script>
+  /*
+   * Loads the 3D pipeline when the browser is idle after the page's first
+   * paint, only where a WebGL context can be created.
+   */
+  const stage = document.querySelector<HTMLElement>(".pipeline .stage");
+  const webgl = () => {
+    try {
+      return !!document.createElement("canvas").getContext("webgl2");
+    } catch {
+      return false;
+    }
+  };
+  const load = () => {
+    if (!stage || !webgl()) return;
+    void import("../../scripts/pipeline3d").then(({ startPipeline }) =>
+      startPipeline(stage),
+    );
+  };
+  requestAnimationFrame(() => {
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(load, { timeout: 2000 });
+    } else {
+      setTimeout(load, 200);
+    }
+  });
+</script>
+
+<style>
+  .pipeline {
+    min-width: 0;
+    margin: 0;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1.2;
+  }
+
+  /* On the light theme a faint white spotlight sits behind the parts, like a studio backdrop. */
+  :global([data-theme="light"]) .stage::before {
+    content: "";
+    position: absolute;
+    inset: -4% -8%;
+    pointer-events: none;
+    background: radial-gradient(
+      58% 50% at 50% 46%,
+      rgb(255 255 255 / 0.4),
+      rgb(255 255 255 / 0) 72%
+    );
+  }
+
+  /* The flat diagram: 500 by 420, centred in the stage, its parts on small machined panels. */
+  .flat {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 100%;
+    height: fit-content;
+    aspect-ratio: 500 / 420;
+  }
+
+  .flat svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .flat path {
+    fill: none;
+    stroke: rgb(var(--particle) / 0.32);
+    stroke-width: 1.2;
+  }
+
+  .flat .loop {
+    stroke-dasharray: 3 5;
+  }
+
+  .flat :global(.panel.node) {
+    --depth: 4px;
+    position: absolute;
+    min-width: 128px;
+    padding: 8px 14px 9px;
+    border-radius: 12px;
+    text-align: center;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+  }
+
+  .node b,
+  .label3d b {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .node small,
+  .label3d small {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--label);
+  }
+
+  canvas,
+  .labels3d {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  canvas {
+    display: block;
+  }
+
+  /* The pipeline script places each label and sets its opacity by the part's depth. */
+  .label3d {
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: var(--label-halo);
+    will-change: transform, opacity;
+  }
+
+  .label3d b {
+    font-size: 12.5px;
+    letter-spacing: 0.01em;
+    transition: color 0.3s;
+  }
+
+  .label3d small {
+    font-size: 10px;
+  }
+
+  .label3d:global(.hit) b {
+    color: var(--gold-text);
+  }
+
+  .label3d:global(.block) b {
+    color: var(--ember);
+  }
+
+  .stage[data-ready] .flat {
+    visibility: hidden;
+  }
+
+  .stage[data-ready] :is(canvas, .labels3d) {
+    opacity: 1;
+    transition: opacity 0.6s var(--ease-soft);
+  }
+
+  @media (width <= 32.5rem) {
+    .flat :global(.panel.node) {
+      min-width: 0;
+      padding: 6px 9px 7px;
+    }
+
+    .node b {
+      font-size: 12px;
+    }
+
+    .label3d b {
+      font-size: 11px;
+    }
+
+    .node small,
+    .label3d small {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage[data-ready] :is(canvas, .labels3d) {
+      transition: none;
+    }
+  }
+</style>

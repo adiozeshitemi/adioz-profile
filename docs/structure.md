@@ -24,97 +24,150 @@ adioz-dev/
 │   │   ├── montserrat-OFL.txt
 │   │   └── montserrat-variable.woff2
 │   ├── images/
-│   │   ├── og.png             # Social share preview image (1200×630)
 │   │   └── profile_pic.svg    # Profile avatar
-│   ├── favicon.ico            # Favicon fallback (16, 32, 48 px)
-│   ├── favicon.svg            # AD logo mark (site icon and header brand)
-│   └── resume.pdf             # Downloadable resume; source of the experience and projects data
+│   ├── apple-touch-icon.png   # Dividers mark home-screen icon (180 px)
+│   ├── favicon.ico            # Dividers mark favicon fallback (16, 32, 48 px, transparent)
+│   ├── favicon.svg            # Dividers mark site icon, metals follow the browser's colour scheme
+│   ├── icon-192.png           # Web manifest icon
+│   ├── icon-512.png           # Web manifest icon
+│   ├── og.png                 # Main design link preview (1200×630)
+│   ├── resume.pdf             # Downloadable resume; source of the experience and projects data
+│   └── site.webmanifest       # Web app manifest: name and icons
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
-│   │   ├── About/             # About section: bio, focus pillar cards, philosophy
+│   │   ├── About/             # Core Engineering Focus: portrait and pillars on a plate, service record
+│   │   │   ├── AboutPortrait.astro
 │   │   │   ├── AboutSection.astro
 │   │   │   └── CoreFocusCard.astro
-│   │   ├── Contact/           # Contact section: email call to action
+│   │   ├── Contact/           # Contact section: email nameplate, copy knob, link ports
 │   │   │   └── ContactSection.astro
-│   │   ├── Experience/        # Experience section: timeline of roles
+│   │   ├── Experience/        # Experience section: career trace and timeline, with the view switch
+│   │   │   ├── CareerTrace.astro
 │   │   │   ├── ExperienceItem.astro
 │   │   │   └── ExperienceSection.astro
-│   │   ├── Footer/            # Site footer: copyright, credits, source link
+│   │   ├── Footer/            # Site footer: gunmetal strip with mark, copyright and back-to-top knob
 │   │   │   └── Footer.astro
-│   │   ├── Header/            # Sticky header: brand, section links, menu drawer
+│   │   ├── Header/            # Fixed header: brand mark, rail of section links, theme knob, contact button, phone menu
 │   │   │   ├── BrandLogo.astro
 │   │   │   ├── Header.astro
 │   │   │   ├── MobileMenu.astro
-│   │   │   └── NavLinks.astro
-│   │   ├── Hero/              # First screen: copy, call-to-action links, terminal, stats
+│   │   │   ├── NavLinks.astro
+│   │   │   └── ThemeToggle.astro
+│   │   ├── Hero/              # First screen: copy, actions, stats, 3D agent pipeline, agent log
 │   │   │   ├── Hero.astro
-│   │   │   ├── SocialLinks.astro
+│   │   │   ├── Pipeline3D.astro
 │   │   │   └── Terminal.astro
-│   │   ├── Projects/          # Featured projects section: project cards
+│   │   ├── Projects/          # Featured projects section: machined cards with nameplates and link ports
 │   │   │   ├── ProjectCard.astro
 │   │   │   └── ProjectsSection.astro
-│   │   ├── TechStack/         # Tech stack section: skill bars, tool categories
-│   │   │   ├── SkillBar.astro
+│   │   ├── TechStack/         # Tech stack section: gauge cluster beside the tool categories
+│   │   │   ├── Gauge.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
-│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, icons, stats, sections
-│   │       ├── Badge.astro
+│   │   └── UI/                # Reusable primitives: brand mark, buttons, knobs, panels, plates, ports, tags, lamps, emphasis, engraving filters, icons, stats, section titles
+│   │       ├── BrandMark.astro
 │   │       ├── Button.astro
 │   │       ├── Emphasis.astro
+│   │       ├── EngravingFilters.astro
 │   │       ├── Icon.astro
-│   │       ├── Section.astro
-│   │       ├── SectionHeader.astro
+│   │       ├── Knob.astro
+│   │       ├── Lamp.astro
+│   │       ├── Nameplate.astro
+│   │       ├── Panel.astro
+│   │       ├── ParticleField.astro
+│   │       ├── Plate.astro
+│   │       ├── Port.astro
+│   │       ├── Screw.astro
+│   │       ├── SectionTitle.astro
 │   │       ├── StatBanner.astro
-│   │       └── StatCard.astro
+│   │       ├── StatCard.astro
+│   │       └── Tag.astro
 │   ├── data/                  # 🗄️ Data layer
-│   │   ├── about.json         # About section: id, label, headline, bio, pillars with icons, philosophy
-│   │   ├── contact.json       # Contact section: id, label, heading, body, button label and icon
-│   │   ├── experience.json    # Experience section: id, label, headline and roles, from public/resume.pdf
-│   │   ├── footer.json        # Copyright, credit links and source link
+│   │   ├── about.json         # About section: id, label, headline, bio, portrait, pillars with icons, service record
+│   │   ├── contact.json       # Contact section: id, label, headline, lead, copy notes, link ports, résumé label
+│   │   ├── experience.json    # Experience section: id, label, headline, view and trace labels, roles, from public/resume.pdf
+│   │   ├── footer.json        # Copyright holder and back-to-top link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
-│   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and social links
-│   │   ├── projects.json      # Projects section: id, label, headline and projects, from public/resume.pdf
-│   │   ├── site.json          # Default meta description and Open Graph image
+│   │   ├── pipeline.json      # Agent pipeline figure label and each part's title and detail
+│   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and email
+│   │   ├── projects.json      # Projects section: id, label, headline, new-tab words and projects, from public/resume.pdf
+│   │   ├── site.json          # Page title, descriptions, link preview image and alt, new-tab words
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
-│   │   ├── techStack.json     # Stack section: id, label, headline, intro, skill bars, tools by category
-│   │   ├── terminal.json      # Hero terminal window title and lines
+│   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
+│   │   ├── terminal.json      # Agent log title, window name, live word and entries
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
 │   │   ├── activity.svg
 │   │   ├── arrow-right.svg
-│   │   ├── arrow-up-right.svg
-│   │   ├── astro.svg
+│   │   ├── arrow-up.svg
 │   │   ├── box.svg
-│   │   ├── cloudflare.svg
 │   │   ├── code-slash.svg
+│   │   ├── copy.svg
 │   │   ├── download.svg
 │   │   ├── email.svg
+│   │   ├── file-text.svg
 │   │   ├── github.svg
 │   │   ├── globe.svg
 │   │   ├── LICENSE.md
 │   │   ├── linkedin.svg
-│   │   └── tailwindcss.svg
+│   │   └── send.svg
 │   ├── layouts/               # 🏗️ Page shells
-│   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload
+│   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload, theme script
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
 │   ├── scripts/               # 📜 Client scripts
-│   │   └── motion.ts          # Header scroll state, stat counters, card spotlight
+│   │   ├── copy.ts            # Contact copy knob: Clipboard API with a textarea fallback
+│   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
+│   │   ├── gauges.ts          # Tech stack gauges: scale geometry, needle sweep and drag
+│   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
+│   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
+│   │   ├── motion.ts          # Header scroll state, stat counters
+│   │   ├── pillars.ts         # About pillars: the .lit fallback and the swinging drawstrings
+│   │   ├── pipeline3d.ts      # 3D agent pipeline: Three.js parts, conduits, pulse and labels
+│   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
+│   │   ├── terminal.ts        # Agent log: typing the entries and the window buttons
+│   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
+│   │   ├── theme.ts           # Theme switching, saving and device tracking
+│   │   ├── tilt.ts            # Project cards swivelling toward the pointer
+│   │   ├── timeline.ts        # Experience rail: span and gold fill as the page scrolls
+│   │   ├── trace.ts           # Career trace: scale, tabs, span draw-in, view switch
+│   │   └── view.ts            # View turn: raised parts lean away from the pointer
 │   └── styles/                # 🎨 Global styling
-│       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
+│       ├── animations.css     # Reduced-motion override
+│       ├── engraving.css      # Main design engraved, carved and inlaid text
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
-│       └── theme.css          # Design tokens (@theme) and light-scheme overrides
+│       ├── metal.css          # Shared metal finishes: spun steel
+│       ├── theme.css          # Design tokens (@theme), light-scheme overrides, main design tokens
+│       └── typography.css     # Main design titles, section labels and section numbers
 │
 ├── tests/                     # 🧪 Vitest unit tests (npm test)
 │   ├── fixtures/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
+│   ├── brand.test.ts          # Brand files: sizes, favicon scheme switch, manifest
+│   ├── copy.test.ts           # Copy action, its fallback and the knob's notes
 │   ├── data.test.ts           # Data rules and load-time errors
+│   ├── engraving.test.ts      # Engraving filters and engraved text styles
+│   ├── field.test.ts          # Particle field helpers and drawing
+│   ├── gauges.test.ts         # Gauge scale, needle springs, sweep and drag
+│   ├── light.test.ts          # Pointer light helpers and frames
+│   ├── menu.test.ts           # Phone menu sheet states
 │   ├── page.test.ts           # Assembled landing page
+│   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
+│   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
+│   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer
-│   └── ui.test.ts             # UI primitives
+│   ├── terminal.test.ts       # Agent log typing and window buttons
+│   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
+│   ├── theme.test.ts          # Main design tokens and their contrast
+│   ├── tilt.test.ts           # Card tilt limits and motion
+│   ├── timeline.test.ts       # Experience rail fill and passed stops
+│   ├── trace.test.ts          # Career trace scale, tabs and view switch
+│   ├── typography.test.ts     # Main design type tokens, fonts and text styles
+│   ├── ui.test.ts             # UI primitives
+│   └── view.test.ts           # View turn helpers and frames
 │
 ├── .editorconfig              # Editor encoding, line endings and indentation
 ├── .gitignore

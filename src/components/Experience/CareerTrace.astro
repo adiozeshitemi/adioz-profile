@@ -1,0 +1,593 @@
+---
+/*
+ * The career trace: experience.json's roles on one time scale in a gunmetal
+ * window, dark in both themes. Its title bar carries three steel studs, the
+ * engraved title, the span count and the red live lamp. Under a year axis
+ * sits one tab per role, earliest first, its company and title beside a
+ * track holding its span; under them, one tab panel per role with its
+ * years, title, company, highlights and technologies, the ongoing role's
+ * selected. The scale is laid out at build time; src/scripts/trace.ts runs
+ * the tabs and draws the spans in.
+ */
+import { experience } from "../../data/index";
+import { traceLayout, traceOrder, yearOf } from "../../scripts/trace";
+import Emphasis from "../UI/Emphasis.astro";
+import Lamp from "../UI/Lamp.astro";
+import Tag from "../UI/Tag.astro";
+
+const { roles, ongoing, trace } = experience;
+const now = yearOf(new Date());
+const layout = traceLayout(
+  roles.map((role) => role.period),
+  now,
+);
+const order = traceOrder(
+  roles.map((role) => role.period),
+  now,
+);
+const liveIndex = order.findIndex((index) => roles[index]!.period.end === null);
+const selected = Math.max(0, liveIndex);
+const when = (index: number) => {
+  const { start, end } = roles[index]!.period;
+  return `${start} — ${end ?? ongoing}`;
+};
+/** Milliseconds between one span drawing in and the next. */
+const STAGGER = 160;
+---
+
+<div
+  class="trace slab slab-dark"
+  style={`--years: ${layout.years}; --now: ${layout.nowAt.toFixed(4)}`}
+>
+  <div class="trace-bar">
+    <span class="studs" aria-hidden="true">
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <span class="engraved">{trace.title}</span>
+    <span class="trace-meta engraved">
+      {roles.length} spans · {layout.first} → {trace.now}
+    </span>
+    <span class="live">
+      <Lamp variant="live" />
+      <span class="engraved">{trace.live}</span>
+    </span>
+  </div>
+  <div class="trace-grid">
+    <div class="trace-axis" aria-hidden="true">
+      <span></span>
+      <div class="trace-ticks">
+        {layout.ticks.map((tick) => (
+          <span
+            class:list={{ odd: tick.odd, "near-now": tick.nearNow }}
+            style={`--at: ${tick.at.toFixed(4)}`}
+          >
+            {tick.year}
+          </span>
+        ))}
+        <span class="now" style={`--at: ${layout.nowAt.toFixed(4)}`}>
+          {trace.now}
+        </span>
+      </div>
+    </div>
+    <div
+      class="trace-rows"
+      role="tablist"
+      aria-label={trace.rolesLabel}
+      aria-orientation="vertical"
+    >
+      {order.map((index, position) => {
+        const role = roles[index]!;
+        const span = layout.spans[index]!;
+        const isSelected = position === selected;
+        return (
+          <button
+            type="button"
+            class="trace-row"
+            id={`trace-tab-${position}`}
+            role="tab"
+            aria-selected={isSelected ? "true" : "false"}
+            aria-controls={`trace-panel-${position}`}
+            tabindex={isSelected ? 0 : -1}
+          >
+            <span class="trace-name">
+              <b>{role.company}</b>
+              <small>
+                {role.role} · {when(index)}
+              </small>
+            </span>
+            <span class="trace-track" aria-hidden="true">
+              <span
+                class:list={["trace-span", { live: span.live }]}
+                style={`--from: ${span.from.toFixed(4)}; --to: ${span.to.toFixed(4)}; --d: ${position * STAGGER}ms`}
+              >
+                {span.live && <span class="pulse" />}
+              </span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+  {order.map((index, position) => {
+    const role = roles[index]!;
+    return (
+      <div
+        class="trace-detail"
+        id={`trace-panel-${position}`}
+        role="tabpanel"
+        aria-labelledby={`trace-tab-${position}`}
+        tabindex="0"
+        hidden={position !== selected}
+      >
+        <div class="detail-head">
+          <p class="detail-when">{when(index)}</p>
+          <h3>{role.role}</h3>
+          <p class="detail-company">
+            {role.company}
+            {role.location && ` · ${role.location}`}
+          </p>
+        </div>
+        <div class="detail-body">
+          <ul class="highlights">
+            {role.highlights.map((highlight) => (
+              <li>
+                <Emphasis text={highlight} />
+              </li>
+            ))}
+          </ul>
+          <ul class="tags">
+            {role.technologies.map((technology) => (
+              <Tag as="li">{technology}</Tag>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+<style>
+  /*
+   * The trace is smoked gunmetal in both themes, on the dark theme's slab
+   * wall (.slab-dark) and with its gunmetal tags. Its rows share one time
+   * scale: --label is the name column, and each .trace-track places its span
+   * from --from to --to (0 to 1 across the track) over one line per year
+   * (--years) and a dashed now marker at --now. Below 760px the name sits
+   * above the track.
+   */
+  .trace {
+    --label: 330px;
+    --tag-face: linear-gradient(180deg, #30363d, #22272d 55%, #1b1f24);
+    --tag-lip: rgb(255 255 255 / 0.14);
+    --tag-wall-1: #3a3f46;
+    --tag-wall-2: #2a2e33;
+    --tag-outline: rgb(0 0 0 / 0.6);
+    --tag-text: #d3d9e0;
+    --tag-ring-lit: rgb(230 192 98 / 0.75);
+    overflow: hidden;
+    border-radius: 18px;
+    background: linear-gradient(
+      190deg,
+      rgb(14 16 20 / 0.92),
+      rgb(8 9 11 / 0.96)
+    );
+    box-shadow:
+      0 0 0 1px rgb(214 222 232 / 0.08),
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.08),
+      var(--slab-wall),
+      var(--slab-drop);
+    color: #c9cfd7;
+  }
+
+  /* The title bar: brushed gunmetal with three steel studs set with ember, gold and steel jewels. */
+  .trace-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background-image:
+      var(--brush-noise-soft), linear-gradient(180deg, #2b3138, #1b1f24);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      inset 0 -1px 0 rgb(0 0 0 / 0.6);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+
+  .studs {
+    display: flex;
+    gap: 6px;
+    margin-right: 6px;
+  }
+
+  .studs i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        var(--jewel) 0 2.2px,
+        transparent 2.6px
+      ),
+      conic-gradient(
+        from 40deg,
+        #f4f6f8,
+        #8c939d,
+        #e9ecef,
+        #5f6670,
+        #d9dde2,
+        #f4f6f8
+      );
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.6),
+      0 0 6px var(--jewel-glow);
+  }
+
+  .studs i:nth-child(1) {
+    --jewel: #f08a6a;
+    --jewel-glow: rgb(240 138 106 / 0.35);
+  }
+
+  .studs i:nth-child(2) {
+    --jewel: #f2c94c;
+    --jewel-glow: rgb(242 201 76 / 0.35);
+  }
+
+  .studs i:nth-child(3) {
+    --jewel: #9fb4cc;
+    --jewel-glow: rgb(159 180 204 / 0.3);
+  }
+
+  .trace-meta {
+    margin-left: auto;
+  }
+
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: 18px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .trace-grid {
+    padding: 4px 18px 12px;
+  }
+
+  .trace-axis {
+    display: grid;
+    grid-template-columns: var(--label) minmax(0, 1fr);
+    height: 34px;
+    color: #8b94a0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .trace-ticks {
+    position: relative;
+  }
+
+  .trace-ticks span {
+    position: absolute;
+    bottom: 7px;
+    left: calc(var(--at) * 100%);
+    transform: translateX(-50%);
+  }
+
+  .trace-ticks .now {
+    color: #e6c56c;
+  }
+
+  .trace-rows {
+    display: grid;
+    gap: 4px;
+  }
+
+  /* A row is one role's tab: its name column and its track; the selected row is lit gold from the left. */
+  .trace-row {
+    display: grid;
+    grid-template-columns: var(--label) minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    min-height: 58px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color 0.3s var(--ease-soft),
+      box-shadow 0.3s var(--ease-soft);
+  }
+
+  .trace-row:hover {
+    background-color: rgb(255 255 255 / 0.035);
+  }
+
+  .trace-row[aria-selected="true"] {
+    background: linear-gradient(
+      90deg,
+      rgb(230 192 98 / 0.11),
+      rgb(230 192 98 / 0.02) 60%,
+      transparent
+    );
+    box-shadow: inset 2px 0 0 #e6c56c;
+  }
+
+  .trace-row:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: -2px;
+  }
+
+  .trace-name {
+    display: grid;
+    gap: 3px;
+    padding: 9px 16px;
+  }
+
+  .trace-name b {
+    color: #eef1f4;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .trace-name small {
+    color: #8b94a0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .trace-track {
+    position: relative;
+    align-self: stretch;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgb(214 222 232 / 0.07) 0 1px,
+      transparent 1px calc(100% / var(--years))
+    );
+  }
+
+  .trace-track::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--now) * 100%);
+    border-left: 1px dashed rgb(230 192 98 / 0.45);
+  }
+
+  /*
+   * A span is a brushed steel bar; the ongoing role's (.live) is brushed
+   * gold with a pulse at its open end. With the script, spans draw in from
+   * their start, each --d after the one before, once the trace is .drawn.
+   */
+  .trace-span {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--from) * 100%);
+    width: calc((var(--to) - var(--from)) * 100%);
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 7px;
+    background-image: var(--brush-noise), var(--steel-brushed);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.75),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.35),
+      0 0 0 1px rgb(0 0 0 / 0.55),
+      calc(var(--lean) * var(--slant) * 6px) 6px 12px -6px rgb(0 0 0 / 0.9);
+    transform-origin: left center;
+    transition:
+      transform 1.1s var(--ease-soft),
+      box-shadow 0.3s var(--ease-soft);
+    transition-delay: var(--d, 0ms), 0ms;
+  }
+
+  :global([data-view]) .trace:not(.drawn) .trace-span {
+    transform: scaleX(0);
+  }
+
+  .trace-span.live {
+    background-image: var(--brush-noise-soft), var(--gold-brushed);
+  }
+
+  .trace-row[aria-selected="true"] .trace-span {
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.75),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.35),
+      0 0 0 1px rgb(230 192 98 / 0.7),
+      0 0 18px -2px rgb(230 192 98 / 0.5);
+  }
+
+  .pulse {
+    position: absolute;
+    top: 50%;
+    right: -3px;
+    width: 7px;
+    height: 7px;
+    margin-top: -3.5px;
+    border-radius: 50%;
+    background: #f2d17b;
+    animation: trace-pulse 2.4s ease-out infinite;
+  }
+
+  @keyframes trace-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgb(230 192 98 / 0.6);
+    }
+
+    70%,
+    100% {
+      box-shadow: 0 0 0 9px rgb(230 192 98 / 0);
+    }
+  }
+
+  /* A tab panel: the role's years, title and company beside its highlights and technologies. */
+  .trace-detail {
+    display: grid;
+    grid-template-columns: var(--label) minmax(0, 1fr);
+    gap: 18px 0;
+    padding: 26px 18px 30px;
+    border-top: 1px solid rgb(214 222 232 / 0.09);
+    animation: detail-in 0.45s var(--ease-soft);
+  }
+
+  .trace-detail[hidden] {
+    display: none;
+  }
+
+  .trace-detail:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: -4px;
+  }
+
+  @keyframes detail-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  .detail-head {
+    padding: 0 16px;
+  }
+
+  .detail-when {
+    margin: 0;
+    color: #e6c56c;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin: 10px 0 6px;
+    color: #eef1f4;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+
+  .detail-company {
+    margin: 0;
+    color: #8b94a0;
+    font-size: 14px;
+  }
+
+  .highlights {
+    display: grid;
+    gap: 12px;
+    max-width: 76ch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .highlights li {
+    position: relative;
+    padding-left: 22px;
+    color: #aab3be;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .highlights li::before {
+    content: "";
+    position: absolute;
+    top: 0.8em;
+    left: 0;
+    width: 10px;
+    height: 1px;
+    background: #e6c56c;
+  }
+
+  .highlights :global(strong) {
+    color: #eef1f4;
+    font-weight: 600;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tags :global(.tag) {
+    font-size: 12px;
+  }
+
+  @media (width < 47.5rem) {
+    .trace {
+      --label: 0px;
+    }
+
+    .trace-grid {
+      padding: 4px 10px 10px;
+    }
+
+    .trace-meta,
+    .trace-ticks .odd,
+    .trace-ticks .near-now {
+      display: none;
+    }
+
+    .trace-ticks span:first-child {
+      transform: none;
+    }
+
+    .trace-ticks .now {
+      transform: translateX(-100%);
+    }
+
+    .trace-row {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 30px;
+    }
+
+    .trace-name {
+      padding: 10px 12px 2px;
+    }
+
+    .trace-detail {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 22px 16px 26px;
+    }
+
+    .detail-head {
+      padding: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .trace-span,
+    .trace-row {
+      transition: none;
+    }
+
+    .pulse,
+    .trace-detail {
+      animation: none;
+    }
+  }
+</style>

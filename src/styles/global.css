@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "./theme.css";
+@import "./typography.css";
+@import "./engraving.css";
+@import "./metal.css";
 @import "./animations.css";
 
 /*
@@ -26,14 +29,14 @@
 @layer base {
   /* scroll-padding-top keeps fragment-link targets below the sticky header. */
   html {
-    color-scheme: light dark;
+    color-scheme: dark;
     scroll-behavior: smooth;
     scroll-padding-top: var(--spacing-header);
   }
 
   body {
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
+    background-color: var(--bg);
+    color: var(--text);
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -41,12 +44,8 @@
   }
 
   ::selection {
-    background-color: color-mix(
-      in srgb,
-      var(--color-accent-cyan) 28%,
-      transparent
-    );
-    color: var(--color-ink);
+    background-color: rgb(var(--particle-gold) / 0.32);
+    color: var(--text);
   }
 
   button:not(:disabled),
@@ -60,16 +59,16 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: var(--color-canvas);
+    background: var(--bg);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--color-ink) 10%, var(--color-canvas));
-    border: 2px solid var(--color-canvas);
+    background: color-mix(in srgb, var(--text) 12%, var(--bg));
+    border: 2px solid var(--bg);
     border-radius: 99px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--color-ink) 18%, var(--color-canvas));
+    background: color-mix(in srgb, var(--text) 22%, var(--bg));
   }
 }

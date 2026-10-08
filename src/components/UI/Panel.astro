@@ -1,0 +1,105 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+type Props = HTMLAttributes<"div"> & {
+  /** The element to render; div by default. */
+  as?: "div" | "section" | "article" | "aside" | "li" | "figure" | "p" | "dl";
+  /** A gold rim instead of steel, for featured cards. */
+  gold?: boolean;
+};
+
+const {
+  as: Tag = "div",
+  gold = false,
+  class: className,
+  ...attrs
+} = Astro.props;
+---
+
+<Tag class:list={["panel", "slab", { gold }, className]} {...attrs}>
+  <slot />
+</Tag>
+
+<style>
+  /*
+   * A panel is the brushed metal slab every card sits on: --panel-face under
+   * brushing streaks and a soft highlight band at --lx, gunmetal on the dark
+   * theme and satin aluminium on the light one; a lit top lip; a chamfered 1px
+   * rim in --steel-edge (--gold-edge with gold); a --depth side wall in the
+   * --slab tones (6px, 5px up to 640px); and the slab's shadows, lifted on
+   * hover. A white glow of strength --glow * --near sits at --glow-x, --glow-y,
+   * where the pointer light script places it; with --near unset it is off.
+   */
+  .panel {
+    position: relative;
+    isolation: isolate;
+    border-radius: 26px;
+    background-image:
+      radial-gradient(
+        420px circle at var(--glow-x, 50%) var(--glow-y, 0%),
+        rgb(255 255 255 / calc(var(--glow) * var(--near, 0))),
+        transparent 55%
+      ),
+      var(--brush-noise-soft),
+      radial-gradient(
+        ellipse 34% 170% at var(--lx) 50%,
+        var(--panel-shine),
+        transparent 70%
+      ),
+      var(--panel-face);
+    background-size:
+      100% 100%,
+      640px 140px,
+      100% 100%,
+      100% 100%;
+    background-blend-mode: normal, overlay, screen, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--panel-lip),
+      var(--slab-wall),
+      var(--slab-drop);
+    transition: box-shadow 0.35s var(--ease-soft);
+  }
+
+  .panel:hover {
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--panel-lip),
+      var(--slab-wall),
+      var(--slab-drop-lift);
+  }
+
+  /* The rim: a 1px ring of --steel-edge or --gold-edge, masked to the border. */
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--steel-edge);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .gold::before {
+    background: var(--gold-edge);
+  }
+
+  @media (width <= 40rem) {
+    .panel {
+      --depth: 5px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel {
+      transition: none;
+    }
+  }
+</style>
