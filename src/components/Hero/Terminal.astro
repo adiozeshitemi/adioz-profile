@@ -50,9 +50,19 @@ import { terminal } from "../../data/index";
     backdrop-filter: blur(6px);
   }
 
-  /* A softer shadow on the light canvas. */
+  /*
+   * A softer shadow on the light canvas: the light theme, or a light device
+   * while no theme is set. The terminal's own color-scheme is dark, so the page's
+   * theme is read from <html>.
+   */
+  :global(:root[data-theme="light"]) .terminal {
+    box-shadow:
+      0 30px 80px -30px rgb(15 23 42 / 0.35),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 2%, transparent);
+  }
+
   @media (prefers-color-scheme: light) {
-    .terminal {
+    :global(:root:not([data-theme])) .terminal {
       box-shadow:
         0 30px 80px -30px rgb(15 23 42 / 0.35),
         inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 2%, transparent);

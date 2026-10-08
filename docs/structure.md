@@ -42,11 +42,12 @@ adioz-dev/
 │   │   │   └── ExperienceSection.astro
 │   │   ├── Footer/            # Site footer: copyright, credits, source link
 │   │   │   └── Footer.astro
-│   │   ├── Header/            # Sticky header: brand, section links, menu drawer
+│   │   ├── Header/            # Sticky header: brand, section links, theme knob, menu drawer
 │   │   │   ├── BrandLogo.astro
 │   │   │   ├── Header.astro
 │   │   │   ├── MobileMenu.astro
-│   │   │   └── NavLinks.astro
+│   │   │   ├── NavLinks.astro
+│   │   │   └── ThemeToggle.astro
 │   │   ├── Hero/              # First screen: copy, call-to-action links, terminal, stats
 │   │   │   ├── Hero.astro
 │   │   │   ├── SocialLinks.astro
@@ -97,11 +98,13 @@ adioz-dev/
 │   │   ├── linkedin.svg
 │   │   └── tailwindcss.svg
 │   ├── layouts/               # 🏗️ Page shells
-│   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload
+│   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload, theme script
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
 │   ├── scripts/               # 📜 Client scripts
-│   │   └── motion.ts          # Header scroll state, stat counters, card spotlight
+│   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
+│   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
+│   │   └── theme.ts           # Theme switching, saving and device tracking
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
@@ -115,6 +118,7 @@ adioz-dev/
 │   ├── page.test.ts           # Assembled landing page
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer
+│   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
 │   ├── theme.test.ts          # Main design tokens and their contrast
 │   ├── typography.test.ts     # Main design type tokens, fonts and text styles
 │   └── ui.test.ts             # UI primitives

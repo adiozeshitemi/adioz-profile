@@ -4,9 +4,10 @@
  * --color-* (bg-*, text-*, border-*), --font-* (font-*), --radius-* (rounded-*),
  * --container-* (max-w-*), --spacing-* (h-*, top-*, scroll-pt-*, ...),
  * --ease-* (ease-*) and --breakpoint-* (md:, max-md:, ...).
- * The @theme values are the dark scheme; the prefers-color-scheme: light block
- * below overrides the color tokens. Text colors meet WCAG AA (4.5:1) on the
- * canvas, raised canvas and card surfaces in both schemes.
+ * Each color token is light-dark(light, dark), resolved by the color-scheme of
+ * the element that uses it: the theme on <html> (see the theme rules below), or
+ * the device's scheme while no theme is set. Text colors meet WCAG AA (4.5:1)
+ * on the canvas, raised canvas and card surfaces in both schemes.
  */
 @theme static {
   /* Typography: Montserrat for all text; JetBrains Mono for the hero terminal only */
@@ -16,27 +17,30 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Surfaces */
-  --color-canvas: #05060b;
-  --color-canvas-raised: #0a0c15;
-  --color-card: rgb(255 255 255 / 0.024);
-  --color-card-hover: rgb(255 255 255 / 0.05);
+  --color-canvas: light-dark(#f6f7fb, #05060b);
+  --color-canvas-raised: light-dark(#eceff6, #0a0c15);
+  --color-card: light-dark(rgb(255 255 255 / 0.72), rgb(255 255 255 / 0.024));
+  --color-card-hover: light-dark(#ffffff, rgb(255 255 255 / 0.05));
 
   /* Text */
-  --color-ink: #e9ecf6;
-  --color-ink-muted: #8b94ac;
-  --color-ink-faint: #727b94;
+  --color-ink: light-dark(#0b1020, #e9ecf6);
+  --color-ink-muted: light-dark(#4b5470, #8b94ac);
+  --color-ink-faint: light-dark(#5f6883, #727b94);
 
   /* Borders and dividers */
-  --color-line: rgb(255 255 255 / 0.075);
-  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-line: light-dark(rgb(11 16 32 / 0.09), rgb(255 255 255 / 0.075));
+  --color-line-strong: light-dark(
+    rgb(11 16 32 / 0.16),
+    rgb(255 255 255 / 0.14)
+  );
 
   /* Accents: cyan is the primary accent; cyan, violet and pink form the brand gradient */
-  --color-accent-cyan: #22d3ee;
-  --color-accent-violet: #a78bfa;
-  --color-accent-pink: #f472b6;
-  --color-success: #34d399;
+  --color-accent-cyan: light-dark(#0e7490, #22d3ee);
+  --color-accent-violet: light-dark(#6d28d9, #a78bfa);
+  --color-accent-pink: light-dark(#be185d, #f472b6);
+  --color-success: light-dark(#047555, #34d399);
   /* Text on the cyan-to-violet accent gradient */
-  --color-on-accent: #05060b;
+  --color-on-accent: light-dark(#ffffff, #05060b);
 
   /* Shape and layout */
   --radius-card: 1.125rem; /* 18px */
@@ -52,49 +56,24 @@
   --breakpoint-lg: 65rem; /* 1040px */
 }
 
-/* Light scheme: the color tokens for devices that prefer light. */
-@media (prefers-color-scheme: light) {
-  :root {
-    --color-canvas: #f6f7fb;
-    --color-canvas-raised: #eceff6;
-    --color-card: rgb(255 255 255 / 0.72);
-    --color-card-hover: #ffffff;
-
-    --color-ink: #0b1020;
-    --color-ink-muted: #4b5470;
-    --color-ink-faint: #5f6883;
-
-    --color-line: rgb(11 16 32 / 0.09);
-    --color-line-strong: rgb(11 16 32 / 0.16);
-
-    --color-accent-cyan: #0e7490;
-    --color-accent-violet: #6d28d9;
-    --color-accent-pink: #be185d;
-    --color-success: #047555;
-    --color-on-accent: #ffffff;
-  }
+/*
+ * The theme. Before first paint the head script in Layout.astro sets
+ * data-theme on <html> to the visitor's saved choice, or to the device's
+ * scheme when none is saved; color-scheme then picks every light-dark() token
+ * and the browser's own controls. Without JavaScript no data-theme is set and
+ * global.css's color-scheme: light dark follows the device.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
-/*
- * Elements with data-scheme="dark" keep the dark color tokens in both color
- * schemes (the hero terminal). The values repeat the @theme colors above.
- */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Elements with data-scheme="dark" (the hero terminal) take the dark colors in both themes. */
 [data-scheme="dark"] {
   color-scheme: dark;
-  --color-canvas: #05060b;
-  --color-canvas-raised: #0a0c15;
-  --color-card: rgb(255 255 255 / 0.024);
-  --color-card-hover: rgb(255 255 255 / 0.05);
-  --color-ink: #e9ecf6;
-  --color-ink-muted: #8b94ac;
-  --color-ink-faint: #727b94;
-  --color-line: rgb(255 255 255 / 0.075);
-  --color-line-strong: rgb(255 255 255 / 0.14);
-  --color-accent-cyan: #22d3ee;
-  --color-accent-violet: #a78bfa;
-  --color-accent-pink: #f472b6;
-  --color-success: #34d399;
-  --color-on-accent: #05060b;
 }
 
 /*
@@ -215,9 +194,14 @@
   --plate-wall-5: #644b18;
   --plate-lip: rgb(255 240 200 / 0.6);
   --plate-ink: #1a1102;
-  /* A metal part's 1px outline and the soft shadow it casts on the page. */
+  /*
+   * A metal part's 1px outline, the soft shadow it casts on the page, and the
+   * tight shadow where it meets the page (--metal-contact-lift while lifted).
+   */
   --metal-outline: rgb(0 0 0 / 0.6);
   --metal-drop: rgb(0 0 0 / 0.9);
+  --metal-contact: rgb(0 0 0 / 0.65);
+  --metal-contact-lift: rgb(0 0 0 / 0.32);
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -278,6 +262,8 @@
   --plate-ink: #1c1006;
   --metal-outline: rgb(40 48 58 / 0.4);
   --metal-drop: rgb(25 35 50 / 0.45);
+  --metal-contact: rgb(25 35 50 / 0.42);
+  --metal-contact-lift: rgb(25 35 50 / 0.2);
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;

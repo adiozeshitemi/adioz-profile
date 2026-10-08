@@ -3,6 +3,7 @@ import { navigation } from "../../data/index";
 import BrandLogo from "./BrandLogo.astro";
 import MobileMenu from "./MobileMenu.astro";
 import NavLinks from "./NavLinks.astro";
+import ThemeToggle from "./ThemeToggle.astro";
 ---
 
 <header class="site-header">
@@ -12,7 +13,10 @@ import NavLinks from "./NavLinks.astro";
     <nav class="links" aria-label={navigation.label}>
       <NavLinks />
     </nav>
-    <MobileMenu />
+    <div class="controls">
+      <ThemeToggle />
+      <MobileMenu />
+    </div>
   </div>
 </header>
 
@@ -91,6 +95,12 @@ import NavLinks from "./NavLinks.astro";
 
   .links {
     display: none;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 
   /* --breakpoint-md: inline links replace the menu button. */

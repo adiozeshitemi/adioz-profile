@@ -46,6 +46,8 @@ const THEMED_TOKENS = [
   "--plate-ink",
   "--metal-outline",
   "--metal-drop",
+  "--metal-contact",
+  "--metal-contact-lift",
   ...Array.from({ length: 10 }, (_, index) => `--slab-${index + 1}`),
   "--slab-contact",
   "--slab-ambient",
@@ -83,6 +85,24 @@ describe("main theme tokens", () => {
       });
     }
   }
+
+  it("gives every prototype color token a light and a dark value", () => {
+    const theme = css.match(/@theme static\s*\{([^}]*)\}/)?.[1] ?? "";
+    const colors = [...theme.matchAll(/(--color-[\w-]+)\s*:\s*([^;]+);/g)];
+    expect(colors.length).toBeGreaterThan(0);
+    for (const [, name, value] of colors) {
+      expect(value, name).toMatch(/^light-dark\(/);
+    }
+  });
+
+  it("sets the color scheme from data-theme on <html>", () => {
+    expect(css).toMatch(
+      /:root\[data-theme="dark"\]\s*\{\s*color-scheme: dark;/,
+    );
+    expect(css).toMatch(
+      /:root\[data-theme="light"\]\s*\{\s*color-scheme: light;/,
+    );
+  });
 
   it("gives the dark values to :root", () => {
     const root = tokens(":root");

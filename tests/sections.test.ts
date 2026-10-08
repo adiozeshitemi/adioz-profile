@@ -68,6 +68,19 @@ describe("Header", () => {
     expect(links(menu?.querySelectorAll("a") ?? [])).toEqual(navTargets);
   });
 
+  it("renders the theme knob as a button named by both themes' labels", async () => {
+    const doc = await render(Header);
+    const toggle = doc.querySelector("button.theme-toggle");
+    expect(toggle?.getAttribute("type")).toBe("button");
+    expect(texts(toggle?.querySelectorAll(".label") ?? [])).toEqual([
+      "Switch to light theme",
+      "Switch to dark theme",
+    ]);
+    expect(toggle?.querySelector(".face")?.getAttribute("aria-hidden")).toBe(
+      "true",
+    );
+  });
+
   it("hides the scroll progress bar from assistive technology", async () => {
     const doc = await render(Header);
     expect(doc.querySelector(".progress")?.getAttribute("aria-hidden")).toBe(

@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { profile, site } from "../data/index";
+import themeInit from "../scripts/theme-init.js?raw";
 
 interface Props {
   /** Page title; defaults to "<name> | <role>" from profile.json. */
@@ -31,16 +32,21 @@ const imageUrl = new URL(image, Astro.site);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
-    <!-- theme-color values match --color-canvas for each scheme in theme.css. -->
+    <!--
+      theme-color values match --color-canvas for each scheme in theme.css;
+      data-theme-color names the theme each belongs to, for the theme scripts.
+    -->
     <meta
       name="theme-color"
       content="#f6f7fb"
       media="(prefers-color-scheme: light)"
+      data-theme-color="light"
     />
     <meta
       name="theme-color"
       content="#05060b"
       media="(prefers-color-scheme: dark)"
+      data-theme-color="dark"
     />
     <link
       rel="preload"
@@ -71,6 +77,7 @@ const imageUrl = new URL(image, Astro.site);
     <meta property="og:image" content={imageUrl} />
     <meta property="og:image:alt" content={imageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline set:html={themeInit} />
   </head>
   <body class="min-h-screen flex flex-col">
     <slot />
