@@ -157,6 +157,8 @@
   --label: #8f98a4;
   --gold-text: #e6c56c;
   --ember: #f08a6a;
+  /* Hairline rules between parts of a panel. */
+  --line: rgb(214 222 232 / 0.11);
 
   /* Polished steel and gold for title words and controls. */
   --steel: linear-gradient(
@@ -204,6 +206,15 @@
   --plate-wall-5: #644b18;
   --plate-lip: rgb(255 240 200 / 0.6);
   --plate-ink: #1a1102;
+  /*
+   * Text in polished metal (.gilt): the shadow it casts on the page
+   * (--text-shadow) and the tint of the sheen that sweeps a title's gold
+   * words (--title-sheen).
+   */
+  --text-shadow: drop-shadow(
+    calc(var(--lean) * var(--slant) * 2px) 2px 10px rgb(0 0 0 / 0.55)
+  );
+  --title-sheen: rgb(255 238 190 / 0.5);
   /*
    * A metal part's 1px outline, the soft shadow it casts on the page, and the
    * tight shadow where it meets the page (--metal-contact-lift while lifted).
@@ -378,6 +389,7 @@
   --label: #545d69;
   --gold-text: #75560d;
   --ember: #a8401f;
+  --line: rgb(22 30 42 / 0.12);
 
   --steel: linear-gradient(
     180deg,
@@ -410,6 +422,13 @@
   --plate-wall-5: #57371c;
   --plate-lip: rgb(255 228 196 / 0.55);
   --plate-ink: #1c1006;
+  --text-shadow: drop-shadow(
+    calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.75)
+  );
+  --title-sheen: rgb(255 255 255 / 0.95);
+  /* A title's metal letters: the lit top edge and the shadow they cast. */
+  --title-bevel: rgb(255 255 255 / 0.95);
+  --title-cast: rgb(25 35 50 / 0.3);
   --metal-outline: rgb(40 48 58 / 0.4);
   --metal-drop: rgb(25 35 50 / 0.45);
   --metal-contact: rgb(25 35 50 / 0.42);

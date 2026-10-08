@@ -71,3 +71,117 @@
   letter-spacing: 0.08em;
   text-shadow: calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--plate-lip);
 }
+
+/*
+ * .gilt paints text in polished --gold under a white sheen that sweeps across
+ * it every 9s, casting --text-shadow. In a title (.display, .h2) the gold is
+ * brushed --plate-metal under a --title-sheen sweep; on the light theme the
+ * letters stand on a wall stepped down through --plate-wall-1 to -5, --step
+ * per step (1px; 0.6px up to 640px), under a lit --title-bevel edge and a
+ * --title-cast shadow. With reduced motion the sheen rests off the text.
+ */
+.gilt {
+  background-image:
+    linear-gradient(
+      100deg,
+      transparent 0 42%,
+      rgb(255 255 255 / 0.95) 50%,
+      transparent 58% 100%
+    ),
+    var(--gold);
+  background-size:
+    260% 100%,
+    100% 100%;
+  background-position:
+    100% 0,
+    0 0;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  filter: var(--text-shadow);
+  animation: gilt-sheen 9s var(--ease-soft) 0.35s infinite;
+}
+
+:is(.display, .h2) .gilt {
+  background-image:
+    linear-gradient(
+      100deg,
+      transparent 0 42%,
+      var(--title-sheen) 50%,
+      transparent 58% 100%
+    ),
+    var(--brush-noise-soft), var(--plate-metal);
+  background-size:
+    260% 100%,
+    320px 140px,
+    100% 100%;
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-blend-mode: normal, overlay, normal;
+}
+
+[data-theme="light"] :is(.display, .h2) .gilt {
+  filter: drop-shadow(
+      calc(var(--lean) * var(--slant) * -1px) -1px 0 var(--title-bevel)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-1)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-2)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-3)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-4)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * var(--step)) var(--step) 0
+        var(--plate-wall-5)
+    )
+    drop-shadow(
+      calc(var(--lean) * var(--slant) * 4px) 5px 3px var(--title-cast)
+    );
+}
+
+.display,
+.h2 {
+  --step: 1px;
+}
+
+@media (width <= 40rem) {
+  .display,
+  .h2 {
+    --step: 0.6px;
+  }
+}
+
+@keyframes gilt-sheen {
+  0%,
+  58% {
+    background-position:
+      100% 0,
+      0 0;
+  }
+
+  84%,
+  100% {
+    background-position:
+      0% 0,
+      0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gilt {
+    animation: none;
+  }
+}

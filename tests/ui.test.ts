@@ -271,7 +271,7 @@ describe("StatCard", () => {
 describe("StatBanner", () => {
   it("renders every stats.json entry in order", async () => {
     const doc = await render(StatBanner);
-    const list = doc.querySelector("dl.stats");
+    const list = doc.querySelector("dl.stats.panel");
     expect(list?.getAttribute("style")).toContain(
       `--stat-count: ${stats.length}`,
     );

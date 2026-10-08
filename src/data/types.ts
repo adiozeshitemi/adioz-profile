@@ -18,6 +18,14 @@ export interface LinkItem {
   icon: string;
 }
 
+/** A file in public/ that its link downloads. */
+export interface ResumeLink extends LinkItem {
+  /** Accessible name of the link, naming the file type, e.g. "Download resume (PDF)". */
+  label: string;
+  /** File name the download is saved under, e.g. "Adioz-Eshitemi-resume.pdf". */
+  file: string;
+}
+
 /** The site owner's identity, shown in the hero. */
 export interface Profile {
   /** Display name, e.g. "Adioz". */
@@ -32,10 +40,10 @@ export interface Profile {
   summary: string;
   /** Availability badge text, e.g. "Available for Senior/Staff Engineering Roles". */
   availability: string;
-  /** Hero call-to-action links in display order; the first renders as the primary button. */
+  /** Hero call-to-action buttons in display order. */
   actions: LinkItem[];
-  /** Download link for the resume in public/, shown after the hero call-to-action buttons. */
-  resume: LinkItem;
+  /** The résumé in public/, downloaded from the knob after the hero's call-to-action buttons. */
+  resume: ResumeLink;
   /** GitHub, LinkedIn and email links in display order; the email link is the only `mailto:` URL. */
   links: LinkItem[];
 }

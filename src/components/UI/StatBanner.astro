@@ -1,6 +1,7 @@
 ---
 import { stats as allStats } from "../../data/index";
 import type { StatItem } from "../../data/types";
+import Panel from "./Panel.astro";
 import StatCard from "./StatCard.astro";
 
 interface Props {
@@ -12,42 +13,26 @@ interface Props {
 const { stats = allStats, class: className } = Astro.props;
 ---
 
-<dl class:list={["stats", className]} style={`--stat-count: ${stats.length}`}>
+<Panel
+  as="dl"
+  class:list={["stats", className]}
+  style={`--stat-count: ${stats.length}`}
+>
   {stats.map((stat) => (
     <StatCard stat={stat} />
   ))}
-</dl>
+</Panel>
 
 <style>
-  .stats {
+  /* The stats sit in one row on a machined panel, one column per stat, split by --line rules. */
+  .panel.stats {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1px;
-    overflow: hidden;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-card);
-    background: var(--color-line);
+    grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
+    margin: 0;
+    border-radius: 20px;
   }
 
-  /* --breakpoint-xs: two columns; an odd last stat spans both. */
-  @media (width >= 26.25rem) {
-    .stats {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .stats > :global(:last-child:nth-child(odd)) {
-      grid-column: span 2;
-    }
-  }
-
-  /* --breakpoint-md: one column per stat */
-  @media (width >= 47.5rem) {
-    .stats {
-      grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
-    }
-
-    .stats > :global(:last-child:nth-child(odd)) {
-      grid-column: auto;
-    }
+  .stats > :global(.stat + .stat) {
+    border-left: 1px solid var(--line);
   }
 </style>
