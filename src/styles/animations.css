@@ -1,33 +1,8 @@
 /*
- * Motion rules shared by the page: the scroll-driven reveal and the
- * reduced-motion override.
+ * The page-wide reduced-motion override: under prefers-reduced-motion every
+ * animation and transition ends at once and scrolling jumps.
  */
 
-/*
- * Scroll-driven motion, applied only where the browser supports view
- * timelines and the visitor has no reduced-motion preference; everywhere else
- * these elements show in their final state.
- * - [data-reveal]: fades in and rises into place over the first 10rem of
- *   entering the viewport.
- */
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(26px);
-  }
-}
-
-@supports (animation-timeline: view()) {
-  @media screen and (prefers-reduced-motion: no-preference) {
-    [data-reveal] {
-      animation: reveal linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 10rem;
-    }
-  }
-}
-
-/* Reduced motion: animations and transitions end immediately. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

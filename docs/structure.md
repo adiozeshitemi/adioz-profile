@@ -27,7 +27,7 @@ adioz-dev/
 │   │   ├── og.png             # Prototype social share preview image (1200×630)
 │   │   └── profile_pic.svg    # Profile avatar
 │   ├── apple-touch-icon.png   # Dividers mark home-screen icon (180 px)
-│   ├── favicon.ico            # Dividers mark favicon fallback (16, 32 px)
+│   ├── favicon.ico            # Dividers mark favicon fallback (16, 32, 48 px, transparent)
 │   ├── favicon.svg            # Dividers mark site icon, metals follow the browser's colour scheme
 │   ├── icon-192.png           # Web manifest icon
 │   ├── icon-512.png           # Web manifest icon
@@ -136,7 +136,7 @@ adioz-dev/
 │   │   ├── trace.ts           # Career trace: scale, tabs, span draw-in, view switch
 │   │   └── view.ts            # View turn: raised parts lean away from the pointer
 │   └── styles/                # 🎨 Global styling
-│       ├── animations.css     # Scroll-driven reveal, reduced motion
+│       ├── animations.css     # Reduced-motion override
 │       ├── engraving.css      # Main design engraved, carved and inlaid text
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
 │       ├── metal.css          # Shared metal finishes: spun steel
