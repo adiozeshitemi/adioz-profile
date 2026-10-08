@@ -144,39 +144,46 @@ describe("Header", () => {
 });
 
 describe("Hero", () => {
-  it("renders the name, headline, role and availability from profile.json", async () => {
+  it("renders the availability pill, gold headline and lede from profile.json", async () => {
     const doc = await render(Hero);
-    expect(text(doc.querySelector("h1"))).toBe(
+    const pill = doc.querySelector("p.pill.panel.gold");
+    expect(text(pill)).toBe(profile.availability);
+    expect(pill?.querySelector(".lamp.status")).not.toBeNull();
+    const title = doc.querySelector("h1.display");
+    expect(title?.id).toBe("hero-title");
+    expect(text(title?.querySelector(".gilt") ?? null)).toBe(
       `${profile.name} ${profile.headline}`,
     );
-    expect(text(doc.querySelector(".role"))).toBe(
-      `${profile.role} / ${profile.specialty}`,
+    const lede = text(doc.querySelector(".lede"));
+    expect(lede.startsWith(`${profile.role} / ${profile.specialty}. `)).toBe(
+      true,
     );
-    expect(text(doc.querySelector(".status .badge"))).toBe(
-      profile.availability,
-    );
-    expect(texts(doc.querySelectorAll(".summary strong")).length).toBe(
+    expect(doc.querySelectorAll(".lede strong")).toHaveLength(
       (profile.summary.split("**").length - 1) / 2,
     );
   });
 
-  it("renders the calls to action with the first as the primary button", async () => {
+  it("renders the actions as machined accent buttons with turning caps", async () => {
     const doc = await render(Hero);
     const actions = [...doc.querySelectorAll(".actions a.btn")];
-    expect(links(actions)).toEqual(
-      profile.actions.map((action) => [action.title, action.url]),
-    );
-    expect(
-      actions.map((action) => action.classList.contains("primary")),
-    ).toEqual(profile.actions.map((_, index) => index === 0));
+    expect(links(actions)).toEqual([
+      ["View selected work", "#work"],
+      ["Get in touch", "#contact"],
+    ]);
+    for (const action of actions) {
+      expect(action.classList.contains("accent")).toBe(true);
+      expect(action.querySelector("[data-rest]")).not.toBeNull();
+    }
   });
 
-  it("links the resume as a download", async () => {
+  it("downloads the résumé from the knob under a named file", async () => {
     const doc = await render(Hero);
-    const resume = doc.querySelector("a.resume");
-    expect(resume?.getAttribute("href")).toBe(profile.resume.url);
-    expect(resume?.hasAttribute("download")).toBe(true);
-    expect(text(resume)).toBe(profile.resume.title);
+    const knob = doc.querySelector(".resume a.knob");
+    expect(knob?.getAttribute("href")).toBe("/resume.pdf");
+    expect(knob?.getAttribute("download")).toBe(profile.resume.file);
+    expect(knob?.getAttribute("aria-label")).toBe(profile.resume.label);
+    expect(profile.resume.label).toContain(profile.resume.title);
+    expect(text(doc.querySelector(".resume-title"))).toBe(profile.resume.title);
   });
 
   it("names each social link and opens only https: links in a new tab", async () => {
@@ -206,9 +213,16 @@ describe("Hero", () => {
     expect(doc.querySelector(".terminal .input .caret")).not.toBeNull();
   });
 
-  it("renders the stats banner under the hero", async () => {
+  it("renders the stats panel from stats.json under the actions", async () => {
     const doc = await render(Hero);
-    expect(doc.querySelectorAll(".stats dt")).toHaveLength(stats.length);
+    const panel = doc.querySelector(".actions + dl.stats.panel");
+    expect(texts(panel?.querySelectorAll("dt") ?? [])).toEqual(
+      stats.map((stat) => stat.label),
+    );
+    const values = [...(panel?.querySelectorAll("dd.gilt") ?? [])];
+    expect(values.map((dd) => text(dd).replace(/\s/g, ""))).toEqual(
+      stats.map((stat) => `${stat.value}${stat.suffix}`),
+    );
   });
 });
 

@@ -1,206 +1,169 @@
 ---
 /*
- * The first screen: profile.json's availability badge, name and headline,
- * role and specialty, summary, call-to-action links and social links beside
- * the terminal, with the stats banner underneath.
+ * The first screen: profile.json's availability pill, gold headline, lede and
+ * actions, the stats panel and the social links beside the terminal.
  */
 import { profile } from "../../data/index";
-import Badge from "../UI/Badge.astro";
 import Button from "../UI/Button.astro";
 import Emphasis from "../UI/Emphasis.astro";
-import Icon from "../UI/Icon.astro";
+import Knob from "../UI/Knob.astro";
+import Lamp from "../UI/Lamp.astro";
+import Panel from "../UI/Panel.astro";
 import StatBanner from "../UI/StatBanner.astro";
 import SocialLinks from "./SocialLinks.astro";
 import Terminal from "./Terminal.astro";
+
+/** The direction each action icon points, in degrees clockwise, read by the light script. */
+const ICON_REST: Record<string, number> = {
+  "arrow-right": 90,
+  send: 45,
+  download: 180,
+};
 ---
 
 <section class="hero" aria-labelledby="hero-title">
   <div class="inner">
     <div class="grid">
       <div class="copy">
-        <div class="status">
-          <Badge variant="status">{profile.availability}</Badge>
-        </div>
-        <h1 id="hero-title">
-          {profile.name}
-          <br />
-          <span class="headline">{profile.headline}</span>
+        <Panel as="p" gold class="pill">
+          <Lamp />
+          {profile.availability}
+        </Panel>
+        <h1 id="hero-title" class="display">
+          <span class="gilt">
+            {profile.name} {profile.headline}
+          </span>
         </h1>
-        <p class="role">
-          {profile.role}
-          <span class="separator">/</span>
-          {profile.specialty}
-        </p>
-        <p class="summary">
+        <p class="lede">
+          {profile.role} / {profile.specialty}.{" "}
           <Emphasis text={profile.summary} />
         </p>
         <div class="actions">
-          {profile.actions.map((action, index) => (
+          {profile.actions.map((action) => (
             <Button
+              variant="accent"
               href={action.url}
-              variant={index === 0 ? "primary" : "ghost"}
               icon={action.icon}
+              rest={ICON_REST[action.icon]}
             >
               {action.title}
             </Button>
           ))}
-          <a class="resume" href={profile.resume.url} download>
-            <Icon name={profile.resume.icon} size={15} />
-            {profile.resume.title}
-          </a>
+          <span class="resume">
+            <Knob
+              href={profile.resume.url}
+              download={profile.resume.file}
+              label={profile.resume.label}
+              icon={profile.resume.icon}
+              rest={ICON_REST[profile.resume.icon]}
+            />
+            <span class="resume-title" aria-hidden="true">
+              {profile.resume.title}
+            </span>
+          </span>
         </div>
+        <StatBanner class="hero-stats" />
         <SocialLinks />
       </div>
       <Terminal />
-    </div>
-    <div class="stats">
-      <StatBanner />
     </div>
   </div>
 </section>
 
 <style>
+  /*
+   * Below 1020px the copy stacks above the terminal; from 1020px they sit
+   * side by side and the hero fills the first screen under the header.
+   */
   .hero {
-    padding-block: 3.875rem 4.375rem;
+    display: flex;
+    align-items: center;
+    padding-block: 72px 80px;
   }
 
   .inner {
+    width: 100%;
     max-width: var(--container-page);
     margin-inline: auto;
-    padding-inline: 1.25rem;
+    padding-inline: 28px;
   }
 
   .grid {
     display: grid;
-    gap: 3rem;
+    gap: 56px;
     align-items: center;
   }
 
-  .status {
-    margin-bottom: 1.625rem;
+  .copy {
+    min-width: 0;
   }
 
-  h1 {
-    margin-bottom: 1.125rem;
-    font-size: clamp(2.8rem, 6.6vw, 4.6rem);
-    font-weight: 800;
-    line-height: 1.02;
-    letter-spacing: -0.04em;
-    color: var(--color-ink);
+  /* The availability pill: a gold-rimmed machined slab on a 3px wall, led by the status lamp. */
+  .copy :global(.panel.pill) {
+    --depth: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 28px;
+    padding: 7px 15px 7px 11px;
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
   }
 
-  /* The gradient ends on the color it starts with, so the repeating tiles that text-shine slides across the text join without a seam. */
-  .headline {
-    background: linear-gradient(
-      100deg,
-      var(--color-accent-cyan) 0%,
-      var(--color-accent-violet) 33%,
-      var(--color-accent-pink) 66%,
-      var(--color-accent-cyan) 100%
-    );
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: var(--animate-text-shine);
+  .lede {
+    max-width: 54ch;
+    margin: 0 0 34px;
+    color: var(--body);
+    font-size: clamp(16px, 1.4vw, 18px);
+    line-height: 1.72;
   }
 
-  .role {
-    margin-bottom: 1.375rem;
-    font-size: clamp(0.85rem, 1.6vw, 1rem);
-    letter-spacing: 0.01em;
-    color: var(--color-ink-muted);
-  }
-
-  .separator {
-    margin-inline: 0.5rem;
-    color: var(--color-accent-cyan);
-  }
-
-  .summary {
-    max-width: 56ch;
-    margin-bottom: 2.125rem;
-    font-size: clamp(1rem, 1.5vw, 1.115rem);
-    color: var(--color-ink-muted);
-  }
-
-  .summary :global(strong) {
-    font-weight: 600;
-    color: var(--color-ink);
+  .lede :global(strong) {
+    color: var(--text);
+    font-weight: 500;
   }
 
   .actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 2.125rem;
+    gap: 16px 18px;
   }
 
   .resume {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.8125rem 0.5rem;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-ink-muted);
-    text-underline-offset: 0.25em;
-    transition: color 0.25s;
+    gap: 14px;
+    color: var(--text);
+    font-size: 14.5px;
+    font-weight: 500;
   }
 
-  .resume:hover {
-    color: var(--color-ink);
-    text-decoration: underline;
+  .copy :global(.hero-stats) {
+    margin-top: 48px;
   }
 
-  .resume:focus-visible {
-    outline: 2px solid var(--color-accent-cyan);
-    outline-offset: 3px;
+  .copy :global(.socials) {
+    margin-top: 28px;
   }
 
-  .stats {
-    margin-top: 3.5rem;
-  }
-
-  /* Below --breakpoint-xs: the call-to-action links stack at full width. */
-  @media (width < 26.25rem) {
-    .actions {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .actions :global(.btn),
-    .resume {
-      justify-content: center;
-    }
-  }
-
-  /* --breakpoint-md */
-  @media (width >= 47.5rem) {
+  @media (width <= 40rem) {
     .inner {
-      padding-inline: 1.75rem;
+      padding-inline: 16px;
     }
   }
 
-  /* --breakpoint-lg: copy and terminal side by side, filling the first screen. */
-  @media (width >= 65rem) {
+  @media (width >= 63.75rem) {
     .hero {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
       min-height: calc(100svh - var(--spacing-header));
-      padding-top: 5.125rem;
+      padding-block: 88px 80px;
     }
 
     .grid {
       grid-template-columns: 1.05fr 0.95fr;
-      gap: 4rem;
-    }
-
-    .stats {
-      margin-top: 4.625rem;
+      gap: clamp(28px, 4vw, 64px);
     }
   }
 </style>
