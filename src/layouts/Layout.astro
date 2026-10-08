@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import EngravingFilters from "../components/UI/EngravingFilters.astro";
+import ParticleField from "../components/UI/ParticleField.astro";
 import { profile, site } from "../data/index";
 import themeInit from "../scripts/theme-init.js?raw";
 
@@ -13,6 +14,8 @@ interface Props {
   image?: string;
   /** Alt text for the Open Graph image; defaults to site.json. */
   imageAlt?: string;
+  /** Draws the particle field behind the page; off by default. */
+  field?: boolean;
 }
 
 const {
@@ -20,6 +23,7 @@ const {
   description = site.description,
   image = site.image,
   imageAlt = site.imageAlt,
+  field = false,
 } = Astro.props;
 
 // Absolute URLs from `site` in astro.config.mjs.
@@ -82,6 +86,7 @@ const imageUrl = new URL(image, Astro.site);
   </head>
   <body class="min-h-screen flex flex-col">
     <EngravingFilters />
+    {field && <ParticleField />}
     <slot />
     <script>
       import "../scripts/motion";

@@ -298,6 +298,9 @@
     #e9c76b
   );
   --glow: 0.07;
+  /* The particle field's steel and gold beads, as rgb triples. */
+  --particle: 205 214 228;
+  --particle-gold: 230 192 98;
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -415,6 +418,8 @@
     #d6af57
   );
   --glow: 0.15;
+  --particle: 38 46 58;
+  --particle-gold: 150 110 24;
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;

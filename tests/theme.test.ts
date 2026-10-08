@@ -75,6 +75,8 @@ const THEMED_TOKENS = [
   "--steel-edge",
   "--gold-edge",
   "--glow",
+  "--particle",
+  "--particle-gold",
   ...Array.from({ length: 10 }, (_, index) => `--slab-${index + 1}`),
   "--slab-contact",
   "--slab-ambient",

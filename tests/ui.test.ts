@@ -7,6 +7,7 @@ import Knob from "../src/components/UI/Knob.astro";
 import Lamp from "../src/components/UI/Lamp.astro";
 import Nameplate from "../src/components/UI/Nameplate.astro";
 import Panel from "../src/components/UI/Panel.astro";
+import ParticleField from "../src/components/UI/ParticleField.astro";
 import Plate from "../src/components/UI/Plate.astro";
 import Screw from "../src/components/UI/Screw.astro";
 import Section from "../src/components/UI/Section.astro";
@@ -447,5 +448,14 @@ describe("Panel", () => {
     const panel = doc.querySelector("article.panel");
     expect(panel?.classList.contains("gold")).toBe(true);
     expect(panel?.id).toBe("featured");
+  });
+});
+
+describe("ParticleField", () => {
+  it("renders one canvas hidden from assistive technology", async () => {
+    const doc = await render(ParticleField);
+    const canvas = doc.querySelector("canvas#field");
+    expect(canvas?.getAttribute("aria-hidden")).toBe("true");
+    expect(doc.querySelectorAll("canvas")).toHaveLength(1);
   });
 });

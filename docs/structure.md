@@ -69,6 +69,7 @@ adioz-dev/
 │   │       ├── Lamp.astro
 │   │       ├── Nameplate.astro
 │   │       ├── Panel.astro
+│   │       ├── ParticleField.astro
 │   │       ├── Plate.astro
 │   │       ├── Screw.astro
 │   │       ├── Section.astro
@@ -110,6 +111,7 @@ adioz-dev/
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
 │   ├── scripts/               # 📜 Client scripts
+│   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
@@ -128,6 +130,7 @@ adioz-dev/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
 │   ├── data.test.ts           # Data rules and load-time errors
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
+│   ├── field.test.ts          # Particle field helpers and drawing
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── page.test.ts           # Assembled landing page
 │   ├── render.ts              # Container API rendering and happy-dom parsing

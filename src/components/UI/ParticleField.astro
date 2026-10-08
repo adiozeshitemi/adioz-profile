@@ -1,0 +1,27 @@
+---
+/*
+ * The particle field: one fixed canvas behind the whole page, drawn by
+ * src/scripts/field.ts. Decorative, hidden from assistive technology, and
+ * transparent to the pointer.
+ */
+---
+
+<canvas id="field" class="field" aria-hidden="true"></canvas>
+
+<script>
+  import { startField } from "../../scripts/field";
+
+  const canvas = document.getElementById("field");
+  if (canvas instanceof HTMLCanvasElement) startField(canvas);
+</script>
+
+<style>
+  .field {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
