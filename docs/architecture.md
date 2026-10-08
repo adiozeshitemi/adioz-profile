@@ -2,7 +2,7 @@
 
 ## Overview
 
-This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS; the only client-side JavaScript is two short inline scripts, one for the mobile menu and one for motion effects, and every section is complete without them. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`. The colors follow the device's light or dark color scheme.
+This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS; the only client-side JavaScript is a pre-paint theme script in `<head>` and short scripts for the theme knob, the mobile menu and motion effects, and every section is complete without them. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`. The colors follow the device's light or dark color scheme until the visitor picks a theme with the header's theme knob.
 
 ## Architecture Flow
 
@@ -15,7 +15,7 @@ flowchart LR
         direction TB
         Data["data/ (JSON content, typed exports)"]
         Styles["styles/ (theme, animations, global)"]
-        Scripts["scripts/motion.ts"]
+        Scripts["scripts/ (motion, theme)"]
         Icons["icons/ (SVG icons)"]
         UI["components/UI/ (primitives)"]
         Sections["components/ (header, page sections, footer)"]
@@ -43,11 +43,12 @@ flowchart LR
 ## 1. Pages, Components and Data
 
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Header`; `Hero`, `AboutSection`, `TechStackSection`, `ExperienceSection`, `ProjectsSection` and `ContactSection` inside `<main>`; and `Footer`, all inside `Layout`.
-- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme, preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, imports `global.css`, and loads `src/scripts/motion.ts`.
+- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme (marked with `data-theme-color`), preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, imports `global.css`, inlines `src/scripts/theme-init.js` at the end of `<head>`, and loads `src/scripts/motion.ts`.
 - **`src/components/Header/`**: The site header, built from `navigation.json` and `profile.json`:
-  - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background, transparent while the page is within 40px of the top (`data-at-top`, set by `motion.ts`). It holds the brand link, the section links (from 760px), the menu button (below 760px), and a scroll progress bar along its top edge.
+  - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background, transparent while the page is within 40px of the top (`data-at-top`, set by `motion.ts`). It holds the brand link, the section links (from 760px), the theme knob, the menu button (below 760px), and a scroll progress bar along its top edge.
   - `BrandLogo.astro`: a link to the top of the page with the logo mark, `public/favicon.svg` (the same file as the site icon), and `Profile.name` as a lowercase wordmark.
   - `NavLinks.astro`: the section links followed by the contact link, as an inline `bar` (the contact link styled as a button) or a stacked `drawer` list.
+  - `ThemeToggle.astro`: the theme knob, a compact steel knob whose face shows the theme a press switches to (the sun on the dark theme, the moon on the light one). Its accessible name is whichever of its two visually hidden labels ("Switch to light theme", "Switch to dark theme") matches `data-theme`, so it needs no script; a press calls `toggleTheme` from `src/scripts/theme.ts`. Without JavaScript the knob is hidden.
   - `MobileMenu.astro`: the menu button and the menu drawer, an HTML popover. While closed, the drawer is not rendered, so keyboard and screen-reader users cannot reach its links; `Escape` or a click outside closes it, and the browser exposes the button's expanded state. A short inline script closes the drawer when one of its links is followed or the viewport widens to 760px.
 - **`src/components/Hero/`**: The first screen, built from `profile.json`, `terminal.json` and `stats.json`:
   - `Hero.astro`: the availability badge, the name and gradient headline, the role and specialty, the summary, the call-to-action buttons (the first one primary), the resume download link and the social links, beside the terminal from 1040px, with `StatBanner` underneath.
@@ -86,9 +87,9 @@ flowchart LR
 
 Tailwind CSS v4 runs through the `@tailwindcss/vite` plugin registered in `astro.config.mjs`; there is no `tailwind.config.*` file.
 
-- **`src/styles/theme.css`**: Design tokens in an `@theme` block (colors, fonts, radius, page width, header height, easing, breakpoints) for the dark scheme, a `prefers-color-scheme: light` block that overrides the color tokens for the light scheme, and a `[data-scheme="dark"]` scope that keeps the dark color tokens in both schemes. Text colors meet WCAG AA (4.5:1) in both schemes. Each token is a CSS variable on `:root` and drives a Tailwind utility.
+- **`src/styles/theme.css`**: Design tokens in an `@theme` block (colors, fonts, radius, page width, header height, easing, breakpoints). Each color token is `light-dark(light, dark)`, resolved by the `color-scheme` of the element using it: `:root[data-theme="dark"]` and `:root[data-theme="light"]` set it from the theme, and `[data-scheme="dark"]` keeps an element dark in both themes. With no `data-theme` (JavaScript off) `global.css`'s `color-scheme: light dark` follows the device. Text colors meet WCAG AA (4.5:1) in both schemes. Each token is a CSS variable on `:root` and drives a Tailwind utility.
   Beside them, as plain CSS variables read with `var()`, are the main design's tokens:
-  - colours (`--bg`, `--text`, `--body`, `--label`, `--gold-text`, `--ember`), metal gradients (`--steel`, `--gold`, `--plate-metal`), the plate's wall, lip and ink (`--plate-wall-1` to `--plate-wall-5`, `--plate-lip`, `--plate-ink`, at 4.5:1 on every `--plate-metal` stop), metal outlines and drops (`--metal-outline`, `--metal-drop`) and slab tones (`--slab-1` to `--slab-10`, `--slab-contact`, `--slab-ambient`), dark on `:root` and `[data-theme="dark"]`, light on `[data-theme="light"]`;
+  - colours (`--bg`, `--text`, `--body`, `--label`, `--gold-text`, `--ember`), metal gradients (`--steel`, `--gold`, `--plate-metal`), the plate's wall, lip and ink (`--plate-wall-1` to `--plate-wall-5`, `--plate-lip`, `--plate-ink`, at 4.5:1 on every `--plate-metal` stop), metal outlines, drops and contact shadows (`--metal-outline`, `--metal-drop`, `--metal-contact`, `--metal-contact-lift`) and slab tones (`--slab-1` to `--slab-10`, `--slab-contact`, `--slab-ambient`), dark on `:root` and `[data-theme="dark"]`, light on `[data-theme="light"]`;
   - theme-independent metals and brushing noise (`--bronze-metal`, `--steel-brushed`, `--brush-noise`, `--brush-noise-soft`), the display weight and tracking (`--display-wght: 650`, `--track`) and the view tokens: `--lean` (registered, inherited, -1 at rest), `--slant` and `--lx` (registered, 70% at rest);
   - `.slab`, which builds `--slab-wall` (ten stepped box-shadows) and `--slab-drop` from the element's own `--depth` (6px unless set) and `--lean`.
 - **`src/styles/typography.css`**: The main design's text styles: `.display` (hero title) and `.h2` (section title) in Montserrat at `--display-wght` with `--track`; `.eyebrow`, a section label in gold spaced capitals; and `.eyebrow-no`, the section number in JetBrains Mono engraved into a small brushed `--plate-metal` plate on a 3px wall.
@@ -106,6 +107,11 @@ Motion adds to markup that is complete without it. Where a browser lacks the fea
   - stat counters, which count up to each `data-count` value over one second the first time it enters the viewport, and are skipped for reduced motion;
   - the card spotlight, which writes the pointer position into `--mx` and `--my` on each `.spot` element.
 
+### Theme
+
+- **`src/scripts/theme-init.js`**: inlined at the end of `<head>`, so it runs before first paint. It sets `data-theme` on `<html>` to the theme saved in `localStorage` under `theme`, or to the device's color scheme when none is saved or storage is unavailable. A saved theme also sets `data-theme-saved` and gives both `theme-color` metas that theme's color.
+- **`src/scripts/theme.ts`**: `currentTheme`, `setTheme` (shows a theme; with `save`, stores it, sets `data-theme-saved` and recolors the `theme-color` metas), `toggleTheme` (saves and shows the opposite theme) and `followDevice` (tracks the device's scheme while no theme is saved). Storage errors leave the choice applied to the page.
+
 ## 3. Static Assets
 
 `public/` is served as-is: the self-hosted Montserrat and JetBrains Mono variable fonts with their licenses, the avatar and Open Graph image, the SVG and ICO favicons, and the resume PDF.
@@ -121,7 +127,8 @@ The site is pre-rendered at build time (SSG). `npm run build` runs `astro check`
 - **Tests:** `npm test` runs Vitest, configured in `vitest.config.ts` through Astro's `getViteConfig`, so `.astro` components, JSON imports and `import.meta.glob` resolve as they do in a build. `tests/render.ts` renders components with the Astro Container API and parses the HTML with happy-dom, so tests query elements and attributes:
   - `data.test.ts`: the data rules (an SVG for every icon name, terminal line kinds, paired `**` markers, one `mailto:` link, section numbering) and the load-time errors for an unknown terminal line kind and an out-of-range skill percent.
   - `ui.test.ts`: the UI primitives.
-  - `theme.test.ts`: the main design tokens in `theme.css`: every themed token in both themes, WCAG AA contrast of each text colour on `--bg` and of `--plate-ink` on every `--plate-metal` stop, the shared metals, type and view tokens, and `.slab`'s wall and drop.
+  - `theme.test.ts`: the main design tokens in `theme.css`: every themed token in both themes, WCAG AA contrast of each text colour on `--bg` and of `--plate-ink` on every `--plate-metal` stop, the shared metals, type and view tokens, `.slab`'s wall and drop, a `light-dark()` value for every prototype color token, and the `color-scheme` set from `data-theme`.
+  - `theme-toggle.test.ts` (happy-dom environment): `theme-init.js` with no saved theme, a saved theme, an unknown value and blocked storage, and `theme.ts`'s toggling, saving, `theme-color` recoloring and device tracking.
   - `typography.test.ts`: the 650 display weight, the self-hosted weight ranges, the import order, and the title, label and section-number styles.
   - `sections.test.ts`: the header, each section and the footer against their data.
   - `page.test.ts`: the assembled landing page: a section for every navigation link, one `h1`, the landmarks and unique ids. `tests/fixtures/BareLayout.astro` stands in for `Layout.astro`, whose head needs `Astro.site`, which the Container API leaves unset.
