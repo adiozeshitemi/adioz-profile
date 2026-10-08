@@ -272,6 +272,32 @@
     #a8780f
   );
   --lamp-glow: 242 201 76;
+  /*
+   * Panels: a brushed face (--panel-face) with its highlight band
+   * (--panel-shine) and lit top lip (--panel-lip); the chamfered 1px rim in
+   * steel (--steel-edge) or, on featured cards, gold (--gold-edge); and the
+   * strength of the pointer's glow (--glow).
+   */
+  --panel-face: linear-gradient(190deg, #272c33 0%, #1d2126 48%, #16191d 100%);
+  --panel-shine: rgb(200 215 235 / 0.08);
+  --panel-lip: rgb(255 255 255 / 0.16);
+  --steel-edge: linear-gradient(
+    225deg,
+    rgb(255 255 255 / 0.72),
+    rgb(150 160 172 / 0.26) 30%,
+    rgb(255 255 255 / 0.5) 52%,
+    rgb(95 104 116 / 0.24) 74%,
+    rgb(220 226 233 / 0.55)
+  );
+  --gold-edge: linear-gradient(
+    225deg,
+    #fff1c2,
+    #b8892b 30%,
+    #ffe9a3 52%,
+    #7e5b13 74%,
+    #e9c76b
+  );
+  --glow: 0.07;
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -369,6 +395,26 @@
     #84501c
   );
   --lamp-glow: 210 140 50;
+  --panel-face: linear-gradient(190deg, #fdfdfe 0%, #f0f2f5 48%, #e4e8ed 100%);
+  --panel-shine: rgb(255 255 255 / 0.75);
+  --panel-lip: #ffffff;
+  --steel-edge: linear-gradient(
+    225deg,
+    #ffffff,
+    rgb(130 140 152 / 0.55) 30%,
+    rgb(255 255 255 / 0.95) 52%,
+    rgb(100 110 122 / 0.5) 74%,
+    rgb(225 230 236 / 0.95)
+  );
+  --gold-edge: linear-gradient(
+    225deg,
+    #f6e09c,
+    #9a7218 30%,
+    #f2d68c 52%,
+    #6b4d0c 74%,
+    #d6af57
+  );
+  --glow: 0.15;
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;
@@ -388,8 +434,9 @@
  * A .slab is a surface --depth thick (6px unless set) lying on the page.
  * --slab-wall is ten opaque box-shadows stepping from its face to its base in
  * the --slab-* tones, slanted by --lean; --slab-drop is a contact shadow under
- * the base and a soft shadow beyond it. Both are declared on the .slab itself
- * so they read that element's --depth and --lean.
+ * the base and a soft shadow beyond it, and --slab-drop-lift the same for a
+ * lifted slab. All are declared on the .slab itself so they read that
+ * element's --depth and --lean.
  */
 .slab {
   --depth: 6px;
@@ -419,4 +466,9 @@
       calc(var(--depth) + 1px) 3px var(--slab-contact),
     calc(var(--lean) * var(--slant) * (var(--depth) + 16px))
       calc(var(--depth) + 16px) 70px -36px var(--slab-ambient);
+  --slab-drop-lift:
+    calc(var(--lean) * var(--slant) * (var(--depth) + 2px))
+      calc(var(--depth) + 2px) 5px var(--slab-contact),
+    calc(var(--lean) * var(--slant) * (var(--depth) + 26px))
+      calc(var(--depth) + 26px) 90px -40px var(--slab-ambient);
 }
