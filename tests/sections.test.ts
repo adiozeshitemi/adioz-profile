@@ -269,22 +269,97 @@ describe("Hero", () => {
 });
 
 describe("AboutSection", () => {
-  it("renders the bio, a card per pillar with its tags, and the philosophy", async () => {
+  it("numbers the eyebrow and renders the gold headline and the bio", async () => {
     const doc = await render(AboutSection);
-    expect(doc.querySelector("section")?.id).toBe(about.id);
-    expect(text(doc.querySelector("h2"))).toBe(about.headline);
-    expect(texts(doc.querySelectorAll(".intro p"))).toEqual(about.bio);
-    const cards = [...doc.querySelectorAll("article.card")];
-    expect(texts(cards.map((card) => card.querySelector("h3")!))).toEqual(
-      about.pillars.map((pillar) => pillar.title),
+    const section = doc.querySelector("section");
+    expect(section?.id).toBe(about.id);
+    expect(section?.getAttribute("aria-labelledby")).toBe(`${about.id}-title`);
+    expect(text(doc.querySelector(".eyebrow .eyebrow-no"))).toBe("01");
+    expect(text(doc.querySelector(".eyebrow"))).toBe(`01 ${about.label}`);
+    const title = doc.querySelector(`h2#${about.id}-title.h2`);
+    expect(text(title?.querySelector(".gilt") ?? null)).toBe(about.headline);
+    expect(about.headline.endsWith(".")).toBe(true);
+    expect(texts(doc.querySelectorAll(".sub p"))).toEqual(about.bio);
+  });
+
+  it("sets the portrait and a numbered pillar per about.json pillar on one screwed plate", async () => {
+    const doc = await render(AboutSection);
+    const board = doc.querySelector(".plate.board");
+    expect(board?.querySelectorAll(":scope > .screw")).toHaveLength(4);
+    const pillars = [...(board?.querySelectorAll(".pillars > .pillar") ?? [])];
+    expect(pillars[0]?.classList.contains("pillar-portrait")).toBe(true);
+    const cards = pillars.slice(1);
+    expect(
+      cards.map((card) => [
+        text(card.querySelector(".pillar-no")),
+        text(card.querySelector("h3")),
+        text(card.querySelector("p")),
+      ]),
+    ).toEqual(
+      about.pillars.map((pillar, index) => [
+        String(index + 1).padStart(2, "0"),
+        pillar.title,
+        pillar.description,
+      ]),
     );
     cards.forEach((card, index) => {
-      expect(card.querySelector(".icon svg")).not.toBeNull();
-      expect(texts(card.querySelectorAll(".tags .badge"))).toEqual(
+      expect(card.querySelector(".instrument .coin svg")).not.toBeNull();
+      expect(
+        card.querySelector(".pillar-media")?.getAttribute("aria-hidden"),
+      ).toBe("true");
+      expect(texts(card.querySelectorAll(".tags li.tag"))).toEqual(
         about.pillars[index]!.tags,
       );
     });
-    expect(text(doc.querySelector(".philosophy"))).toBe(about.philosophy);
+    expect(
+      cards.map((card) =>
+        card.querySelector(".coin")!.classList.contains("gold"),
+      ),
+    ).toEqual([false, true, false]);
+  });
+
+  it("gives the portrait one text alternative and hides its engraved copy", async () => {
+    const doc = await render(AboutSection);
+    const portrait = doc.querySelector("figure.pillar-portrait");
+    const named = [...(portrait?.querySelectorAll("[role=img]") ?? [])];
+    expect(named).toHaveLength(1);
+    expect(named[0]?.getAttribute("aria-label")).toBe(about.portrait.alt);
+    const cut = portrait?.querySelector(".portrait-cut");
+    expect(cut?.getAttribute("aria-hidden")).toBe("true");
+    expect(cut?.querySelector("image")?.getAttribute("href")).toBe(
+      about.portrait.src,
+    );
+    expect(portrait?.querySelector("filter#portrait-cut")).not.toBeNull();
+    expect(portrait?.querySelectorAll(".hood-cord")).toHaveLength(2);
+    expect(
+      portrait
+        ?.querySelector(".hood-mark .brand-mark")
+        ?.getAttribute("aria-hidden"),
+    ).toBe("true");
+    expect(texts(portrait?.querySelectorAll(".hood-print text") ?? [])).toEqual(
+      ["CODE", "TRAIN", "SHIP", "EST 2018"],
+    );
+  });
+
+  it("lists the service record's traits on the steel plaque", async () => {
+    const doc = await render(AboutSection);
+    const plaque = doc.querySelector("figure.plaque");
+    expect(plaque?.querySelectorAll(":scope > .screw")).toHaveLength(4);
+    expect(text(plaque?.querySelector("figcaption") ?? null)).toBe(
+      about.record.title,
+    );
+    expect(
+      [...(plaque?.querySelectorAll(".record > div") ?? [])].map((trait) => [
+        text(trait.querySelector("dt")),
+        text(trait.querySelector("dd")),
+      ]),
+    ).toEqual(about.record.traits.map((trait) => [trait.name, trait.detail]));
+    expect(about.record.traits.map((trait) => trait.name)).toEqual([
+      "Robust",
+      "Fluent",
+      "Equipped",
+      "Seasoned",
+    ]);
   });
 });
 

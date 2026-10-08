@@ -37,7 +37,8 @@ adioz-dev/
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
-│   │   ├── About/             # About section: bio, focus pillar cards, philosophy
+│   │   ├── About/             # Core Engineering Focus: portrait and pillars on a plate, service record
+│   │   │   ├── AboutPortrait.astro
 │   │   │   ├── AboutSection.astro
 │   │   │   └── CoreFocusCard.astro
 │   │   ├── Contact/           # Contact section: email call to action
@@ -81,11 +82,12 @@ adioz-dev/
 │   │       ├── Screw.astro
 │   │       ├── Section.astro
 │   │       ├── SectionHeader.astro
+│   │       ├── SectionTitle.astro
 │   │       ├── StatBanner.astro
 │   │       ├── StatCard.astro
 │   │       └── Tag.astro
 │   ├── data/                  # 🗄️ Data layer
-│   │   ├── about.json         # About section: id, label, headline, bio, pillars with icons, philosophy
+│   │   ├── about.json         # About section: id, label, headline, bio, portrait, pillars with icons, service record
 │   │   ├── contact.json       # Contact section: id, label, heading, body, button label and icon
 │   │   ├── experience.json    # Experience section: id, label, headline and roles, from public/resume.pdf
 │   │   ├── footer.json        # Copyright, credit links and source link
@@ -123,6 +125,7 @@ adioz-dev/
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
+│   │   ├── pillars.ts         # About pillars: the .lit fallback and the swinging drawstrings
 │   │   ├── pipeline3d.ts      # 3D agent pipeline: Three.js parts, conduits, pulse and labels
 │   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
 │   │   ├── terminal.ts        # Agent log: typing the entries and the window buttons
@@ -147,6 +150,7 @@ adioz-dev/
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── menu.test.ts           # Phone menu sheet states
 │   ├── page.test.ts           # Assembled landing page
+│   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
 │   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing

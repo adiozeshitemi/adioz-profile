@@ -1,91 +1,245 @@
 ---
 import type { FocusPillar } from "../../data/types";
-import Badge from "../UI/Badge.astro";
 import Icon from "../UI/Icon.astro";
+import Tag from "../UI/Tag.astro";
 
 interface Props {
   /** One about.json pillar: its icon, title, description and tags. */
   pillar: FocusPillar;
+  /** The pillar's number on the plate, from 1. */
+  number: number;
+  /** A gold coin instead of gunmetal, for the middle pillar. */
+  gold?: boolean;
 }
 
-const { pillar } = Astro.props;
+const { pillar, number, gold = false } = Astro.props;
 ---
 
-<article class="card spot" data-reveal>
-  <div class="icon">
-    <Icon name={pillar.icon} size={20} />
-  </div>
+<article class="pillar">
+  <span class="pillar-media" aria-hidden="true">
+    <span class="instrument">
+      <span class:list={["coin", { gold }]}>
+        <Icon name={pillar.icon} size={26} />
+      </span>
+    </span>
+  </span>
+  <span class="pillar-no">{String(number).padStart(2, "0")}</span>
   <h3>{pillar.title}</h3>
   <p>{pillar.description}</p>
   <ul class="tags">
     {pillar.tags.map((tag) => (
-      <li>
-        <Badge>{tag}</Badge>
-      </li>
+      <Tag as="li">{tag}</Tag>
     ))}
   </ul>
 </article>
 
 <style>
-  .card {
-    position: relative;
-    overflow: hidden;
-    padding: 1.875rem 1.75rem;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-card);
-    background: var(--color-card);
-    transition:
-      transform 0.4s var(--ease-soft),
-      border-color 0.35s,
-      background-color 0.35s;
+  /*
+   * One pillar on the about plate: its .pillar-media, a 150px slot centring a
+   * steel .instrument bezel on a 4px wall that holds its .coin; then its
+   * number and title carved into the plate, its description in --board-ink
+   * and its tags. The coin is a smoked lens over a bulb, gunmetal or gold:
+   * while the pillar is hovered, holds focus or is .lit (pillars.ts), the
+   * bulb flickers on (bulb-on), lighting the lens from inside, backlighting
+   * the icon and spilling a warm halo over the bezel; under reduced motion it
+   * fades on without the flicker.
+   */
+  .pillar {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
-  .card:hover {
-    transform: translateY(-5px);
-    border-color: var(--color-line-strong);
-    background: var(--color-card-hover);
+  .pillar-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    margin-bottom: 22px;
   }
 
-  .icon {
+  .instrument {
     display: grid;
     place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-bottom: 1.25rem;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 0.75rem;
-    background: linear-gradient(
-      140deg,
-      color-mix(in srgb, var(--color-accent-cyan) 14%, transparent),
-      color-mix(in srgb, var(--color-accent-violet) 10%, transparent)
+    width: 78px;
+    height: 78px;
+    padding: 5px;
+    border-radius: 50%;
+    background: linear-gradient(215deg, #ffffff, #9aa1aa 45%, #2f343a);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8f969e,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #80878f,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #6a7179,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 #545a61,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 7px) 8px 6px -1px var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 14px) 16px 28px -8px var(--metal-drop);
+  }
+
+  .coin {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 68% 26%,
+      #cdd2d8,
+      #939aa4 28%,
+      #535a63 64%,
+      #8a919a 100%
     );
-    color: var(--color-accent-cyan);
+    color: #0b0d10;
+  }
+
+  .coin.gold {
+    background: radial-gradient(
+      circle at 68% 26%,
+      #ecd598,
+      #c39a42 30%,
+      #7a5514 66%,
+      #ad8330 100%
+    );
+    color: #241802;
+  }
+
+  .coin::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 50% 48%,
+      #fffdf2,
+      #ffeeb8 26%,
+      rgb(247 196 92 / 0.85) 58%,
+      rgb(168 102 15 / 0.55) 100%
+    );
+    box-shadow:
+      inset 0 0 12px 2px rgb(255 250 230 / 0.9),
+      inset 0 -3px 6px rgb(120 70 0 / 0.45),
+      0 0 16px 5px rgb(255 238 190 / 0.85),
+      0 0 60px 22px rgb(255 210 110 / 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .coin :global(svg) {
+    position: relative;
+    z-index: 1;
+    transition: filter 0.35s ease;
+  }
+
+  .pillar:is(:hover, :focus-within, .lit) .coin::after {
+    opacity: 1;
+    animation: bulb-on 0.5s linear;
+  }
+
+  .pillar:is(:hover, :focus-within, .lit) .coin :global(svg) {
+    filter: drop-shadow(0 0 2px rgb(255 244 210 / 0.95))
+      drop-shadow(0 0 6px rgb(255 214 120 / 0.8));
+  }
+
+  @keyframes bulb-on {
+    0% {
+      opacity: 0;
+    }
+
+    12% {
+      opacity: 0.85;
+    }
+
+    22% {
+      opacity: 0.2;
+    }
+
+    36% {
+      opacity: 1;
+    }
+
+    46% {
+      opacity: 0.55;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /*
+   * The number and title are cut into the plate: a floor of the plate's
+   * streaked metal in deep shadow, at 4.5:1 or more against every
+   * --plate-metal stop, under a lit lower lip.
+   */
+  .pillar-no,
+  h3 {
+    width: fit-content;
+    background-image:
+      linear-gradient(180deg, rgb(20 9 2 / 0.9), rgb(24 11 3 / 0.9)),
+      var(--brush-noise-soft), var(--plate-metal);
+    background-size:
+      100% 100%,
+      320px 140px,
+      100% 100%;
+    background-blend-mode: normal, overlay, normal;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(
+        calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--plate-lip)
+      )
+      drop-shadow(
+        calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25)
+      );
+  }
+
+  .pillar-no {
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
   }
 
   h3 {
-    margin-bottom: 0.625rem;
-    font-size: 1.06rem;
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    color: var(--color-ink);
+    margin: 0 0 12px;
+    font-size: 21px;
+    font-weight: var(--display-wght);
+    letter-spacing: -0.01em;
   }
 
+  /* The description in --board-ink, at 4.5:1 or more on every --plate-metal stop, over the plate's lit lip. */
   p {
-    font-size: 0.925rem;
-    line-height: 1.72;
-    color: var(--color-ink-muted);
+    flex: 1;
+    margin: 0;
+    color: var(--board-ink);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.65;
+    text-shadow: 0 1px 0 var(--plate-lip);
   }
 
   .tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4375rem;
-    margin-top: 1.125rem;
+    gap: 7px;
+    margin: 22px 0 0;
+    padding: 0;
+    list-style: none;
   }
 
-  /* Card hover raises the tags to ink-muted text and line-strong borders. */
-  .card:hover :global(.tag) {
-    border-color: var(--color-line-strong);
-    color: var(--color-ink-muted);
+  .tags :global(.tag) {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pillar:is(:hover, :focus-within, .lit) .coin::after {
+      animation: none;
+    }
   }
 </style>
