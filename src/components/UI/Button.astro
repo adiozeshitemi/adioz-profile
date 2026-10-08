@@ -3,20 +3,13 @@ import type { HTMLAttributes } from "astro/types";
 import Icon from "./Icon.astro";
 
 interface Common {
-  /**
-   * The prototype's primary (cyan-to-violet gradient) and ghost (outlined)
-   * buttons, or the main design's machined slabs: accent (brushed gold on the
-   * dark theme, bronze on the light one) and steel (brushed steel).
-   */
-  variant?: "primary" | "ghost" | "accent" | "steel";
-  /**
-   * Trailing icon name from src/icons/, e.g. "arrow-right". On a machined
-   * button it is engraved into a spun steel cap.
-   */
+  /** The metal: accent (brushed gold on the dark theme, bronze on the light one; the default) or steel (brushed steel). */
+  variant?: "accent" | "steel";
+  /** Trailing icon name from src/icons/, e.g. "arrow-right", engraved into a spun steel cap. */
   icon?: string;
-  /** Machined buttons only: the nav's size, 40px tall with a 26px cap. */
+  /** The nav's size, 40px tall with a 26px cap. */
   compact?: boolean;
-  /** Machined buttons only: the cap icon's angle at rest, in degrees clockwise, read by the light script as data-rest. */
+  /** The cap icon's angle at rest, in degrees clockwise, read by the light script as data-rest. */
   rest?: number;
 }
 
@@ -31,7 +24,7 @@ type Props =
   | (Common & HTMLAttributes<"button"> & { href?: undefined });
 
 const {
-  variant = "primary",
+  variant = "accent",
   icon,
   compact = false,
   rest = 0,
@@ -45,11 +38,11 @@ const {
   class?: string;
 } & Record<string, unknown>;
 
-const machined = variant === "accent" || variant === "steel";
 const classes = [
   "btn",
+  "machined",
   variant,
-  { machined, capped: machined && icon, compact: machined && compact },
+  { capped: icon, compact },
   className,
 ];
 const linkAttrs = external
@@ -59,43 +52,31 @@ const linkAttrs = external
 const buttonAttrs = { type: "button" as const, ...attrs };
 ---
 
-{machined ? (
-  href ? (
-    <a href={href} class:list={classes} {...linkAttrs}>
-      <span class="engrave">
-        <slot />
-      </span>
-      {icon && (
-        <span class="cap" aria-hidden="true">
-          <span class="spun turn" data-rest={rest}>
-            <Icon name={icon} size={compact ? 14 : 16} class="engraved-icon" />
-          </span>
-        </span>
-      )}
-    </a>
-  ) : (
-    <button class:list={classes} {...buttonAttrs}>
-      <span class="engrave">
-        <slot />
-      </span>
-      {icon && (
-        <span class="cap" aria-hidden="true">
-          <span class="spun turn" data-rest={rest}>
-            <Icon name={icon} size={compact ? 14 : 16} class="engraved-icon" />
-          </span>
-        </span>
-      )}
-    </button>
-  )
-) : href ? (
+{href ? (
   <a href={href} class:list={classes} {...linkAttrs}>
-    <slot />
-    {icon && <Icon name={icon} size={15} />}
+    <span class="engrave">
+      <slot />
+    </span>
+    {icon && (
+      <span class="cap" aria-hidden="true">
+        <span class="spun turn" data-rest={rest}>
+          <Icon name={icon} size={compact ? 14 : 16} class="engraved-icon" />
+        </span>
+      </span>
+    )}
   </a>
 ) : (
   <button class:list={classes} {...buttonAttrs}>
-    <slot />
-    {icon && <Icon name={icon} size={15} />}
+    <span class="engrave">
+      <slot />
+    </span>
+    {icon && (
+      <span class="cap" aria-hidden="true">
+        <span class="spun turn" data-rest={rest}>
+          <Icon name={icon} size={compact ? 14 : 16} class="engraved-icon" />
+        </span>
+      </span>
+    )}
   </button>
 )}
 
@@ -116,46 +97,9 @@ const buttonAttrs = { type: "button" as const, ...attrs };
       border-color 0.25s;
   }
 
-  .btn :global(svg) {
-    transition: transform 0.25s var(--ease-soft);
-  }
-
-  .btn:hover :global(svg) {
-    transform: translateX(3px);
-  }
-
   .btn:focus-visible {
-    outline: 2px solid var(--color-accent-cyan);
+    outline: 2px solid var(--gold-text);
     outline-offset: 3px;
-  }
-
-  .primary {
-    background: linear-gradient(
-      100deg,
-      var(--color-accent-cyan),
-      var(--color-accent-violet)
-    );
-    color: var(--color-on-accent);
-    box-shadow: 0 8px 30px -8px
-      color-mix(in srgb, var(--color-accent-cyan) 55%, transparent);
-  }
-
-  .primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 40px -8px
-      color-mix(in srgb, var(--color-accent-cyan) 70%, transparent);
-  }
-
-  .ghost {
-    border: 1px solid var(--color-line-strong);
-    background: color-mix(in srgb, var(--color-ink) 2%, transparent);
-    color: var(--color-ink);
-  }
-
-  .ghost:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
-    background: color-mix(in srgb, var(--color-ink) 6%, transparent);
   }
 
   /*
@@ -249,10 +193,6 @@ const buttonAttrs = { type: "button" as const, ...attrs };
         calc(var(--wall) * 0.4 + 1px) 2px 0 var(--metal-contact),
       calc(var(--lean) * var(--slant) * 6px) 6px 10px -4px var(--metal-drop),
       calc(var(--lean) * var(--slant) * 10px) 10px 18px -12px var(--metal-drop);
-  }
-
-  .machined:focus-visible {
-    outline-color: var(--gold-text);
   }
 
   .steel {
