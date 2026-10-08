@@ -3,6 +3,17 @@
   "label": "Experience",
   "headline": "Production trace & impact.",
   "timelineLabel": "Roles, most recent first",
+  "views": {
+    "label": "Experience layout",
+    "trace": "Trace",
+    "timeline": "Timeline"
+  },
+  "trace": {
+    "title": "adioz — career.trace",
+    "rolesLabel": "Roles",
+    "now": "now",
+    "live": "live"
+  },
   "ongoing": "Present",
   "roles": [
     {

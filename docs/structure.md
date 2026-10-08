@@ -43,7 +43,8 @@ adioz-dev/
 │   │   │   └── CoreFocusCard.astro
 │   │   ├── Contact/           # Contact section: email call to action
 │   │   │   └── ContactSection.astro
-│   │   ├── Experience/        # Experience section: roles down a steel rail filling with gold
+│   │   ├── Experience/        # Experience section: career trace and timeline, with the view switch
+│   │   │   ├── CareerTrace.astro
 │   │   │   ├── ExperienceItem.astro
 │   │   │   └── ExperienceSection.astro
 │   │   ├── Footer/            # Site footer: copyright, credits, source link
@@ -89,7 +90,7 @@ adioz-dev/
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: id, label, headline, bio, portrait, pillars with icons, service record
 │   │   ├── contact.json       # Contact section: id, label, heading, body, button label and icon
-│   │   ├── experience.json    # Experience section: id, label, headline, timeline label and roles, from public/resume.pdf
+│   │   ├── experience.json    # Experience section: id, label, headline, view and trace labels, roles, from public/resume.pdf
 │   │   ├── footer.json        # Copyright, credit links and source link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
@@ -133,6 +134,7 @@ adioz-dev/
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
 │   │   ├── theme.ts           # Theme switching, saving and device tracking
 │   │   ├── timeline.ts        # Experience rail: span and gold fill as the page scrolls
+│   │   ├── trace.ts           # Career trace: scale, tabs, span draw-in, view switch
 │   │   └── view.ts            # View turn: raised parts lean away from the pointer
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
@@ -162,6 +164,7 @@ adioz-dev/
 │   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
 │   ├── theme.test.ts          # Main design tokens and their contrast
 │   ├── timeline.test.ts       # Experience rail fill and passed stops
+│   ├── trace.test.ts          # Career trace scale, tabs and view switch
 │   ├── typography.test.ts     # Main design type tokens, fonts and text styles
 │   ├── ui.test.ts             # UI primitives
 │   └── view.test.ts           # View turn helpers and frames

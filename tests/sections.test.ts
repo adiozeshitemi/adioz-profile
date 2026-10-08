@@ -19,6 +19,7 @@ import {
   techStack,
   terminal,
 } from "../src/data/index";
+import { traceOrder, yearOf } from "../src/scripts/trace";
 import { render, text } from "./render";
 
 /** Text and href of each link in `elements`. */
@@ -458,6 +459,62 @@ describe("ExperienceSection", () => {
     expect(doc.querySelector("ol.timeline")?.getAttribute("aria-label")).toBe(
       experience.timelineLabel,
     );
+  });
+
+  it("renders the view switch hidden, Timeline pressed, for the script to show", async () => {
+    const doc = await render(ExperienceSection);
+    const group = doc.querySelector(".view-switch");
+    expect(group?.getAttribute("role")).toBe("group");
+    expect(group?.getAttribute("aria-label")).toBe(experience.views.label);
+    expect(group?.hasAttribute("hidden")).toBe(true);
+    expect(
+      [...(group?.querySelectorAll("button") ?? [])].map((button) => [
+        text(button),
+        button.getAttribute("data-view"),
+        button.getAttribute("aria-pressed"),
+      ]),
+    ).toEqual([
+      [experience.views.trace, "trace", "false"],
+      [experience.views.timeline, "timeline", "true"],
+    ]);
+  });
+
+  it("renders the career trace: a tab per role earliest first, each controlling its panel", async () => {
+    const doc = await render(ExperienceSection);
+    const trace = doc.querySelector(".trace");
+    expect(text(trace?.querySelector(".trace-bar .engraved") ?? null)).toBe(
+      experience.trace.title,
+    );
+    const list = trace?.querySelector("[role=tablist]");
+    expect(list?.getAttribute("aria-label")).toBe(experience.trace.rolesLabel);
+    const tabs = [...(list?.querySelectorAll("[role=tab]") ?? [])];
+    const starts = tabs.map((tab) =>
+      Number(/(\d{4}) —/.exec(text(tab.querySelector("small")))![1]),
+    );
+    expect(starts).toEqual([...starts].sort((a, b) => a - b));
+    expect(tabs.map((tab) => text(tab.querySelector("b")))).toEqual(
+      traceOrder(
+        experience.roles.map((role) => role.period),
+        yearOf(new Date()),
+      ).map((index) => experience.roles[index]!.company),
+    );
+    tabs.forEach((tab) => {
+      const panel = doc.getElementById(tab.getAttribute("aria-controls")!);
+      expect(panel?.getAttribute("role")).toBe("tabpanel");
+      expect(panel?.getAttribute("aria-labelledby")).toBe(tab.id);
+      const isSelected = tab.getAttribute("aria-selected") === "true";
+      expect(panel?.hasAttribute("hidden")).toBe(!isSelected);
+      expect(tab.getAttribute("tabindex")).toBe(isSelected ? "0" : "-1");
+      expect(
+        tab.querySelector(".trace-track")?.getAttribute("aria-hidden"),
+      ).toBe("true");
+    });
+    const live = experience.roles.find((role) => role.period.end === null)!;
+    const chosen = tabs.find(
+      (tab) => tab.getAttribute("aria-selected") === "true",
+    );
+    expect(text(chosen?.querySelector("b") ?? null)).toBe(live.company);
+    expect(chosen?.querySelector(".trace-span.live .pulse")).not.toBeNull();
   });
 
   it("lists the roles most recent first, as in experience.json", async () => {

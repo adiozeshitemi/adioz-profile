@@ -15,7 +15,7 @@ import Lamp from "../UI/Lamp.astro";
   <button class="log-reopen" type="button" hidden>
     Open {terminal.name}
   </button>
-  <figure class="log" aria-labelledby="log-title">
+  <figure class="log slab slab-dark" aria-labelledby="log-title">
     <div class="log-bar">
       <span class="window-controls">
         <button
@@ -74,9 +74,10 @@ import Lamp from "../UI/Lamp.astro";
 
 <style>
   /*
-   * The log is dark in both themes: a brushed gunmetal case on a --slab-wall,
-   * a brushed title bar, and a screen sunk into the case under faint
-   * scanlines (--scan) and a gold glow along its top. Entries glow like a lit
+   * The log is dark in both themes: a brushed gunmetal case on the dark
+   * theme's --slab-wall (.slab-dark), a brushed title bar, and a screen sunk
+   * into the case under faint scanlines (--scan) and a gold glow along its
+   * top. Entries glow like a lit
    * display: writers in gold, good messages in pale gold, bad ones in ember.
    * Each typed entry slides in and types out, and the newest ends in a
    * blinking cursor. Below 560px entries drop their clock times.
