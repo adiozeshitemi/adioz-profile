@@ -37,22 +37,52 @@ describe("Header", () => {
     link.url,
   ]);
 
-  it("links every section from navigation.json in order", async () => {
+  it("links every section from navigation.json in order as key caps on the rail", async () => {
     const doc = await render(Header);
     const nav = doc.querySelector("nav.links");
     expect(nav?.getAttribute("aria-label")).toBe(navigation.label);
-    expect(links(nav?.querySelectorAll("a") ?? [])).toEqual(navTargets);
+    const rail = nav?.querySelector("ul.rail");
+    expect(links(rail?.querySelectorAll("a") ?? [])).toEqual(
+      navigation.links.map((link) => [link.title, link.url]),
+    );
+    for (const link of rail?.querySelectorAll("a") ?? []) {
+      expect(link.querySelector(".key-cap")).not.toBeNull();
+    }
   });
 
-  it("links the brand to the top of the page with the logo mark", async () => {
+  it("lays the gold plate on the rail, hidden from assistive technology", async () => {
+    const doc = await render(Header);
+    const plate = doc.querySelector(".rail > .rail-plate");
+    expect(plate?.getAttribute("aria-hidden")).toBe("true");
+    expect(plate?.querySelector("a")).toBeNull();
+  });
+
+  it("links the contact section from a machined accent button", async () => {
+    const doc = await render(Header);
+    const contact = doc.querySelector(".controls a.contact");
+    expect(contact?.getAttribute("href")).toBe(navigation.cta.url);
+    expect([...(contact?.classList ?? [])]).toEqual(
+      expect.arrayContaining(["accent", "machined", "compact"]),
+    );
+    expect(text(contact)).toBe(navigation.cta.title);
+  });
+
+  it("links the brand mark alone to the top of the page", async () => {
     const doc = await render(Header);
     const brand = doc.querySelector("a.brand");
     expect(brand?.getAttribute("href")).toBe("#top");
-    expect(brand?.querySelector("img")?.getAttribute("src")).toBe(
-      "/images/logo.svg",
-    );
-    expect(brand?.querySelector("img")?.getAttribute("alt")).toBe("");
-    expect(text(brand)).toBe(profile.name);
+    expect(brand?.getAttribute("aria-label")).toBe("adioz.dev, back to top");
+    expect(
+      brand?.querySelector("svg.brand-mark")?.getAttribute("aria-hidden"),
+    ).toBe("true");
+    expect(text(brand)).toBe("");
+  });
+
+  it("keeps the fixed header's height in the page flow", async () => {
+    const doc = await render(Header);
+    expect(
+      doc.querySelector("header + .header-space")?.getAttribute("aria-hidden"),
+    ).toBe("true");
   });
 
   it("wires the menu button to the popover drawer with the same links", async () => {
@@ -83,9 +113,9 @@ describe("Header", () => {
 
   it("hides the scroll progress bar from assistive technology", async () => {
     const doc = await render(Header);
-    expect(doc.querySelector(".progress")?.getAttribute("aria-hidden")).toBe(
-      "true",
-    );
+    expect(
+      doc.querySelector(".progress")?.closest("[aria-hidden]")?.className,
+    ).toContain("edge");
   });
 });
 

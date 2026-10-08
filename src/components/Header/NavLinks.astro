@@ -2,98 +2,353 @@
 import { navigation } from "../../data/index";
 
 interface Props {
-  /** bar: inline links and a button-style contact link; drawer: a stacked list for the menu drawer. */
+  /** bar: the header's rail of key caps; drawer: a stacked list for the menu drawer. */
   variant?: "bar" | "drawer";
 }
 
 const { variant = "bar" } = Astro.props;
 ---
 
-<ul class:list={["links", variant]}>
-  {navigation.links.map((link) => (
+{variant === "bar" ? (
+  <ul class="rail">
+    <li class="rail-plate" aria-hidden="true" />
+    {navigation.links.map((link) => (
+      <li>
+        <a href={link.url}>
+          <span class="key-cap">{link.title}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+) : (
+  <ul class="drawer">
+    {navigation.links.map((link) => (
+      <li>
+        <a href={link.url}>{link.title}</a>
+      </li>
+    ))}
     <li>
-      <a href={link.url}>{link.title}</a>
+      <a href={navigation.cta.url}>{navigation.cta.title}</a>
     </li>
-  ))}
-  <li>
-    <a href={navigation.cta.url} class="cta">
-      {navigation.cta.title}
-    </a>
-  </li>
-</ul>
+  </ul>
+)}
 
 <style>
-  .links {
+  /*
+   * The rail is clear glass lying flat in the header: a tint under a top gloss
+   * and a window reflection, a 1px glinting rim, and one slot per link split by
+   * seams. Each link's .key-cap is the piece of the rail in its slot. The link
+   * marked aria-current holds a brushed --plate-metal plate: once the plate
+   * seats (rail.ts adds .seated) the link's key is that plate, its label
+   * engraved in --plate-ink, and it breaks out of the rail, rising by --lift
+   * on a stepped wall and tilting by --tilt-x and --tilt-y, while it is under
+   * the pointer or focused; the socket it leaves shows as a recess. The
+   * .rail-plate is the same plate travelling between slots, at --plate-x and
+   * --plate-w, lifted by --plate-lift and swung by --plate-tilt-x, hidden once
+   * it seats (.plate-seated). --seam (0 to 1) flashes a slot's left seam gold.
+   */
+  .rail {
+    position: relative;
     display: flex;
+    align-items: center;
+    height: 40px;
+    margin: 0;
+    padding: 0 4px;
+    border-radius: 14px;
+    list-style: none;
+    font-size: clamp(12.5px, 1.25vw, 14px);
+    color: var(--body);
+    background:
+      linear-gradient(
+        118deg,
+        transparent 53%,
+        var(--gl-sheen) 53.4%,
+        transparent 67%
+      ),
+      var(--gl-spot), var(--gl-gloss),
+      linear-gradient(var(--gl-body), var(--gl-body));
   }
 
-  a {
-    display: block;
-    font-weight: 500;
-    color: var(--color-ink-muted);
+  /* The rim: a 1px ring lit where it faces the light (top right), blurred into a glint. */
+  .rail::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from 55deg,
+      var(--rim-hi) 0deg,
+      transparent 55deg,
+      transparent 300deg,
+      var(--rim-hi) 360deg
+    );
+    filter: blur(var(--gl-glint-blur));
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
-  a:focus-visible {
-    outline: 2px solid var(--color-accent-cyan);
+  .rail li:not(.rail-plate) {
+    display: contents;
+  }
+
+  .rail a {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    height: 32px;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* A focused link's ring follows its raised key. */
+  .rail a:focus-visible {
+    outline: none;
+  }
+
+  .rail a:focus-visible .key-cap {
+    outline: 2px solid var(--gold-text);
     outline-offset: 2px;
   }
 
-  .bar {
-    align-items: center;
-    gap: 0.25rem;
+  .rail li + li + li a::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    bottom: 7px;
+    left: 0;
+    width: 1px;
+    background: var(--rail-seam);
+    box-shadow: 0 0 calc(var(--seam, 0) * 10px) calc(var(--seam, 0) * 1.5px)
+      rgb(var(--particle-gold) / calc(var(--seam, 0) * 0.95));
+    pointer-events: none;
   }
 
-  .bar a {
-    padding: 0.5rem 0.875rem;
-    border-radius: 99px;
-    font-size: 0.84375rem;
-    transition:
-      color 0.22s,
-      background-color 0.22s;
+  /* The socket a raised key leaves. */
+  .rail a::after {
+    content: "";
+    position: absolute;
+    inset: 0 2px;
+    border-radius: 9px;
+    box-shadow: inset calc(var(--lean) * var(--slant) * -2px) 3px 8px
+      var(--rail-socket);
+    opacity: clamp(0, var(--lift, 0), 1);
+    pointer-events: none;
   }
 
-  .bar a:hover {
-    background: color-mix(in srgb, var(--color-ink) 4.5%, transparent);
-    color: var(--color-ink);
+  .key-cap {
+    --cap-rise: max(0px, var(--lift, 0) * 7px);
+    --cap-depth: var(--cap-rise);
+    --cap-on: clamp(0, var(--lift, 0), 1);
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    margin: 0 2px;
+    padding: 0 clamp(4px, calc(0.9vw - 2px), 12px);
+    border-radius: 9px;
+    white-space: nowrap;
+    color: color-mix(
+      in srgb,
+      var(--text) calc(var(--cap-on) * 100%),
+      var(--body)
+    );
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(
+          in srgb,
+          var(--cap-rim) calc(var(--cap-on) * 22%),
+          transparent
+        ),
+        transparent 60%
+      ),
+      color-mix(
+        in srgb,
+        var(--cap-face) calc(var(--cap-on) * 100%),
+        transparent
+      );
+    box-shadow:
+      inset calc(var(--lean) * 1px) 1px 1px -0.5px
+        color-mix(
+          in srgb,
+          var(--cap-rim) calc(var(--cap-on) * 100%),
+          transparent
+        ),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.1667)
+        calc(var(--cap-depth) * 0.1667) 0 var(--gl-wall-1),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.3333)
+        calc(var(--cap-depth) * 0.3333) 0 var(--gl-wall-3),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.5)
+        calc(var(--cap-depth) * 0.5) 0 var(--gl-wall-5),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.6667)
+        calc(var(--cap-depth) * 0.6667) 0 var(--gl-wall-7),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.8333)
+        calc(var(--cap-depth) * 0.8333) 0 var(--gl-wall-9),
+      calc(var(--lean) * var(--slant) * var(--cap-depth)) var(--cap-depth) 0
+        var(--gl-wall-12),
+      calc(var(--lean) * var(--slant) * (var(--cap-depth) + 4px))
+        calc(var(--cap-depth) + 4px) 10px -3px
+        color-mix(
+          in srgb,
+          var(--cap-drop) calc(var(--cap-on) * 100%),
+          transparent
+        );
+    transform: translate(
+        calc(var(--lean) * var(--slant) * var(--cap-rise) * -1),
+        calc(var(--cap-rise) * -1)
+      )
+      perspective(240px) rotateX(var(--tilt-y, 0deg))
+      rotateY(var(--tilt-x, 0deg));
   }
 
-  .bar .cta {
-    margin-left: 0.625rem;
-    padding: 0.5625rem 1.125rem;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 0.625rem;
-    background: color-mix(in srgb, var(--color-ink) 6%, transparent);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--color-ink);
-    transition:
-      background-color 0.22s,
-      border-color 0.22s,
-      transform 0.22s;
+  .rail a:hover .key-cap {
+    color: var(--text);
   }
 
-  .bar .cta:hover {
-    transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--color-accent-cyan) 45%, transparent);
-    background: color-mix(in srgb, var(--color-accent-cyan) 12%, transparent);
+  .rail a.seated .key-cap {
+    --cap-depth: calc(2px + var(--cap-rise));
+    color: var(--plate-ink);
+    -webkit-text-stroke: 0.35px currentColor;
+    text-shadow: calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--plate-lip);
+    background-image:
+      radial-gradient(
+        ellipse 22% 160% at var(--lx) 50%,
+        var(--plate-shine),
+        transparent 70%
+      ),
+      var(--brush-noise-soft), var(--plate-metal);
+    background-size:
+      100% 100%,
+      320px 140px,
+      100% 100%;
+    background-blend-mode: screen, overlay, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.1667)
+        calc(var(--cap-depth) * 0.1667) 0 var(--plate-wall-1),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.3333)
+        calc(var(--cap-depth) * 0.3333) 0 var(--plate-wall-2),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.5)
+        calc(var(--cap-depth) * 0.5) 0 var(--plate-wall-3),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.6667)
+        calc(var(--cap-depth) * 0.6667) 0 var(--plate-wall-4),
+      calc(var(--lean) * var(--slant) * var(--cap-depth) * 0.8333)
+        calc(var(--cap-depth) * 0.8333) 0 var(--plate-wall-5),
+      calc(var(--lean) * var(--slant) * var(--cap-depth)) var(--cap-depth) 0
+        var(--plate-wall-5),
+      calc(var(--lean) * var(--slant) * var(--cap-depth)) var(--cap-depth) 0 1px
+        var(--metal-outline),
+      calc(var(--lean) * var(--slant) * (var(--cap-depth) + 5px))
+        calc(var(--cap-depth) + 5px) 10px -2px var(--metal-drop),
+      0 0 18px rgb(var(--particle-gold) / calc(0.22 + var(--cap-on) * 0.3));
+  }
+
+  .rail-plate {
+    --plate-rise: max(0px, var(--plate-lift, 0) * 7px);
+    --plate-depth: calc(2px + var(--plate-rise));
+    position: absolute;
+    z-index: 2;
+    top: 4px;
+    left: 0;
+    display: block;
+    width: var(--plate-w, 0px);
+    height: 32px;
+    border-radius: 9px;
+    background-image:
+      radial-gradient(
+        ellipse 22% 160% at var(--lx) 50%,
+        var(--plate-shine),
+        transparent 70%
+      ),
+      var(--brush-noise-soft), var(--plate-metal);
+    background-size:
+      100% 100%,
+      320px 140px,
+      100% 100%;
+    background-blend-mode: screen, overlay, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * var(--plate-depth) * 0.1667)
+        calc(var(--plate-depth) * 0.1667) 0 var(--plate-wall-1),
+      calc(var(--lean) * var(--slant) * var(--plate-depth) * 0.3333)
+        calc(var(--plate-depth) * 0.3333) 0 var(--plate-wall-2),
+      calc(var(--lean) * var(--slant) * var(--plate-depth) * 0.5)
+        calc(var(--plate-depth) * 0.5) 0 var(--plate-wall-3),
+      calc(var(--lean) * var(--slant) * var(--plate-depth) * 0.6667)
+        calc(var(--plate-depth) * 0.6667) 0 var(--plate-wall-4),
+      calc(var(--lean) * var(--slant) * var(--plate-depth) * 0.8333)
+        calc(var(--plate-depth) * 0.8333) 0 var(--plate-wall-5),
+      calc(var(--lean) * var(--slant) * var(--plate-depth)) var(--plate-depth) 0
+        var(--plate-wall-5),
+      calc(var(--lean) * var(--slant) * var(--plate-depth)) var(--plate-depth) 0
+        1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * (var(--plate-depth) + 5px))
+        calc(var(--plate-depth) + 5px) 10px -2px var(--metal-drop),
+      0 0 18px
+        rgb(var(--particle-gold) / calc(0.22 + var(--plate-lift, 0) * 0.3));
+    transform: translate(
+        calc(
+          var(--plate-x, 0px) + var(--lean) * var(--slant) * var(--plate-rise) *
+            -1
+        ),
+        calc(var(--plate-rise) * -1)
+      )
+      perspective(240px) rotateX(var(--plate-tilt-y, 0deg))
+      rotateY(var(--plate-tilt-x, 0deg));
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  .rail.plate-seated .rail-plate {
+    visibility: hidden;
+  }
+
+  /* Without JavaScript the current link's key shows the plate at once. */
+  .rail a[aria-current="true"]:not(.seated) .key-cap {
+    color: var(--text);
   }
 
   .drawer {
+    display: flex;
     flex-direction: column;
     gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   .drawer a {
+    display: block;
     padding: 0.8125rem 0.25rem;
     border-bottom: 1px solid var(--color-line);
     font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-ink-muted);
   }
 
   .drawer li:last-child a {
     border-bottom: none;
   }
 
-  .drawer a:hover {
+  .drawer a:hover,
+  .drawer a[aria-current="true"] {
     color: var(--color-ink);
+  }
+
+  .drawer a:focus-visible {
+    outline: 2px solid var(--color-accent-cyan);
+    outline-offset: 2px;
   }
 </style>

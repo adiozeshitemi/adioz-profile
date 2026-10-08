@@ -24,7 +24,6 @@ adioz-dev/
 │   │   ├── montserrat-OFL.txt
 │   │   └── montserrat-variable.woff2
 │   ├── images/
-│   │   ├── logo.svg           # Prototype AD logo mark (header brand)
 │   │   ├── og.png             # Prototype social share preview image (1200×630)
 │   │   └── profile_pic.svg    # Profile avatar
 │   ├── apple-touch-icon.png   # Dividers mark home-screen icon (180 px)
@@ -48,7 +47,7 @@ adioz-dev/
 │   │   │   └── ExperienceSection.astro
 │   │   ├── Footer/            # Site footer: copyright, credits, source link
 │   │   │   └── Footer.astro
-│   │   ├── Header/            # Sticky header: brand, section links, theme knob, menu drawer
+│   │   ├── Header/            # Fixed header: brand mark, rail of section links, theme knob, contact button, menu drawer
 │   │   │   ├── BrandLogo.astro
 │   │   │   ├── Header.astro
 │   │   │   ├── MobileMenu.astro
@@ -121,6 +120,7 @@ adioz-dev/
 │   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
+│   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
 │   │   ├── theme.ts           # Theme switching, saving and device tracking
 │   │   └── view.ts            # View turn: raised parts lean away from the pointer
@@ -141,6 +141,7 @@ adioz-dev/
 │   ├── field.test.ts          # Particle field helpers and drawing
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── page.test.ts           # Assembled landing page
+│   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer
 │   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
