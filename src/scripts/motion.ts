@@ -1,8 +1,7 @@
 /*
  * The page's motion effects that CSS cannot express. Each one only adds to
  * markup that is complete without it: with this script missing, the header
- * keeps its glass background, the stat numbers show their final values, and
- * the card spotlight stays centred.
+ * keeps its glass background and the stat numbers show their final values.
  */
 
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -52,13 +51,4 @@ if (!reduceMotion) {
   )) {
     counters.observe(element);
   }
-}
-
-/* Card spotlight: each .spot element tracks the pointer in --mx and --my. */
-for (const card of document.querySelectorAll<HTMLElement>(".spot")) {
-  card.addEventListener("pointermove", (event) => {
-    const rect = card.getBoundingClientRect();
-    card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
-    card.style.setProperty("--my", `${event.clientY - rect.top}px`);
-  });
 }

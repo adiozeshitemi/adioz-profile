@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import Badge from "../src/components/UI/Badge.astro";
 import BrandMark from "../src/components/UI/BrandMark.astro";
 import Button from "../src/components/UI/Button.astro";
 import Emphasis from "../src/components/UI/Emphasis.astro";
@@ -11,8 +10,6 @@ import Panel from "../src/components/UI/Panel.astro";
 import ParticleField from "../src/components/UI/ParticleField.astro";
 import Plate from "../src/components/UI/Plate.astro";
 import Screw from "../src/components/UI/Screw.astro";
-import Section from "../src/components/UI/Section.astro";
-import SectionHeader from "../src/components/UI/SectionHeader.astro";
 import StatBanner from "../src/components/UI/StatBanner.astro";
 import StatCard from "../src/components/UI/StatCard.astro";
 import Tag from "../src/components/UI/Tag.astro";
@@ -20,14 +17,14 @@ import { stats } from "../src/data/index";
 import { render, text } from "./render";
 
 describe("Button", () => {
-  it("renders a primary link when href is set", async () => {
+  it("renders a machined accent link by default when href is set", async () => {
     const doc = await render(Button, {
-      props: { href: "#work" },
+      props: { href: "#projects" },
       slots: { default: "View work" },
     });
-    const link = doc.querySelector("a.btn");
-    expect(link?.getAttribute("href")).toBe("#work");
-    expect(link?.classList.contains("primary")).toBe(true);
+    const link = doc.querySelector("a.btn.machined");
+    expect(link?.getAttribute("href")).toBe("#projects");
+    expect(link?.classList.contains("accent")).toBe(true);
     expect(link?.hasAttribute("target")).toBe(false);
     expect(text(link)).toBe("View work");
     expect(doc.querySelector("button")).toBeNull();
@@ -54,15 +51,15 @@ describe("Button", () => {
     expect(doc.querySelector("button")?.getAttribute("type")).toBe("submit");
   });
 
-  it("applies the ghost variant and a trailing decorative icon", async () => {
+  it("renders a steel button and keeps its icon out of the accessibility tree", async () => {
     const doc = await render(Button, {
-      props: { href: "#projects", variant: "ghost", icon: "arrow-right" },
+      props: { href: "#projects", variant: "steel", icon: "arrow-right" },
       slots: { default: "View work" },
     });
     const link = doc.querySelector("a.btn");
-    expect(link?.classList.contains("ghost")).toBe(true);
-    expect(link?.lastElementChild?.tagName.toLowerCase()).toBe("svg");
-    expect(link?.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
+    expect(link?.classList.contains("steel")).toBe(true);
+    expect(link?.lastElementChild?.classList.contains("cap")).toBe(true);
+    expect(link?.querySelector(".cap")?.getAttribute("aria-hidden")).toBe(
       "true",
     );
   });
@@ -105,16 +102,6 @@ describe("Button", () => {
     );
     expect(button?.classList.contains("capped")).toBe(false);
     expect(button?.querySelector(".cap")).toBeNull();
-  });
-
-  it("ignores compact on the prototype variants", async () => {
-    const doc = await render(Button, {
-      props: { compact: true },
-      slots: { default: "Open" },
-    });
-    expect(doc.querySelector("button.btn")?.classList.contains("compact")).toBe(
-      false,
-    );
   });
 });
 
@@ -165,33 +152,6 @@ describe("Knob", () => {
     expect(knob?.querySelector(".face svg.custom")).not.toBeNull();
     expect(text(knob?.querySelector(".name") ?? null)).toBe("Switch theme");
     expect(knob?.querySelector(".face .name")).toBeNull();
-  });
-});
-
-describe("Badge", () => {
-  it("renders a tag by default", async () => {
-    const doc = await render(Badge, { slots: { default: "Rust" } });
-    const badge = doc.querySelector(".badge");
-    expect(badge?.classList.contains("tag")).toBe(true);
-    expect(text(badge)).toBe("Rust");
-  });
-
-  it("renders a chip", async () => {
-    const doc = await render(Badge, {
-      props: { variant: "chip" },
-      slots: { default: "Kafka" },
-    });
-    expect(doc.querySelector(".badge")?.classList.contains("chip")).toBe(true);
-  });
-
-  it("renders a status pill with a decorative dot", async () => {
-    const doc = await render(Badge, {
-      props: { variant: "status" },
-      slots: { default: "Available" },
-    });
-    const dot = doc.querySelector(".badge.status .dot");
-    expect(dot?.getAttribute("aria-hidden")).toBe("true");
-    expect(text(doc.querySelector(".badge"))).toBe("Available");
   });
 });
 
@@ -277,64 +237,6 @@ describe("StatBanner", () => {
     );
     const labels = [...doc.querySelectorAll("dt")].map((dt) => text(dt));
     expect(labels).toEqual(stats.map((stat) => stat.label));
-  });
-});
-
-describe("SectionHeader", () => {
-  it("numbers the label with two digits and ids the heading", async () => {
-    const doc = await render(SectionHeader, {
-      props: {
-        index: 3,
-        label: "Experience",
-        title: "Production Trace",
-        id: "x-title",
-      },
-    });
-    expect(text(doc.querySelector(".label"))).toBe("03 — Experience");
-    expect(doc.querySelector("h2")?.id).toBe("x-title");
-    expect(doc.querySelector(".intro")).toBeNull();
-  });
-
-  it("renders the intro string and slotted paragraphs", async () => {
-    const doc = await render(SectionHeader, {
-      props: { index: 1, label: "About", title: "Title", intro: "First." },
-      slots: { default: "<p>Second.</p>" },
-    });
-    const paragraphs = [...doc.querySelectorAll(".intro p")].map((p) =>
-      text(p),
-    );
-    expect(paragraphs).toEqual(["First.", "Second."]);
-  });
-
-  it("centres the header when aligned to the center", async () => {
-    const doc = await render(SectionHeader, {
-      props: { index: 5, label: "Contact", title: "Title", align: "center" },
-    });
-    expect(doc.querySelector("header")?.classList.contains("center")).toBe(
-      true,
-    );
-  });
-});
-
-describe("Section", () => {
-  it("links the section to its heading and numbers it from navigation.json", async () => {
-    const doc = await render(Section, {
-      props: { id: "stack", label: "Tech Stack", title: "Toolkit" },
-      slots: { intro: "<p>Intro.</p>", default: "<p>Content.</p>" },
-    });
-    const section = doc.querySelector("section");
-    expect(section?.id).toBe("stack");
-    expect(section?.getAttribute("aria-labelledby")).toBe("stack-title");
-    expect(doc.querySelector("h2")?.id).toBe("stack-title");
-    expect(text(doc.querySelector(".label"))).toBe("02 — Tech Stack");
-    expect(text(doc.querySelector(".intro"))).toBe("Intro.");
-    expect(text(doc.querySelector(".inner > p"))).toBe("Content.");
-  });
-
-  it("throws for a section that no navigation link targets", async () => {
-    await expect(
-      render(Section, { props: { id: "missing", label: "X", title: "X" } }),
-    ).rejects.toThrow('navigation.json: no link targets section "missing"');
   });
 });
 

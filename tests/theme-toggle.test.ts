@@ -36,8 +36,8 @@ beforeEach(() => {
   delete root.dataset.theme;
   delete root.dataset.themeSaved;
   document.head.innerHTML = `
-    <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)" data-theme-color="light">
-    <meta name="theme-color" content="#05060b" media="(prefers-color-scheme: dark)" data-theme-color="dark">`;
+    <meta name="theme-color" content="#eceef2" media="(prefers-color-scheme: light)" data-theme-color="light">
+    <meta name="theme-color" content="#08090b" media="(prefers-color-scheme: dark)" data-theme-color="dark">`;
 });
 
 afterEach(() => {
@@ -56,7 +56,7 @@ describe("theme-init.js", () => {
     runInit();
     expect(root.dataset.theme).toBe("light");
     expect("themeSaved" in root.dataset).toBe(false);
-    expect(metaColors()).toEqual(["#f6f7fb", "#05060b"]);
+    expect(metaColors()).toEqual(["#eceef2", "#08090b"]);
   });
 
   it("applies a saved theme over the device's and its theme-color", () => {
@@ -65,7 +65,7 @@ describe("theme-init.js", () => {
     runInit();
     expect(root.dataset.theme).toBe("dark");
     expect("themeSaved" in root.dataset).toBe(true);
-    expect(metaColors()).toEqual(["#05060b", "#05060b"]);
+    expect(metaColors()).toEqual(["#08090b", "#08090b"]);
   });
 
   it("ignores an unknown saved value", () => {
@@ -97,7 +97,7 @@ describe("theme.ts", () => {
     expect(root.dataset.theme).toBe("light");
     expect(localStorage.getItem(THEME_KEY)).toBe("light");
     expect("themeSaved" in root.dataset).toBe(true);
-    expect(metaColors()).toEqual(["#f6f7fb", "#f6f7fb"]);
+    expect(metaColors()).toEqual(["#eceef2", "#eceef2"]);
     expect(toggleTheme()).toBe("dark");
     expect(localStorage.getItem(THEME_KEY)).toBe("dark");
   });

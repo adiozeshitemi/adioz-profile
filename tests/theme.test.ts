@@ -129,12 +129,29 @@ describe("main theme tokens", () => {
     }
   }
 
-  it("gives every prototype color token a light and a dark value", () => {
+  it("keeps only the layout, type and motion tokens in Tailwind's @theme", () => {
     const theme = css.match(/@theme static\s*\{([^}]*)\}/)?.[1] ?? "";
-    const colors = [...theme.matchAll(/(--color-[\w-]+)\s*:\s*([^;]+);/g)];
-    expect(colors.length).toBeGreaterThan(0);
-    for (const [, name, value] of colors) {
-      expect(value, name).toMatch(/^light-dark\(/);
+    expect(
+      [...theme.matchAll(/(--[\w-]+)\s*:/g)].map(([, name]) => name),
+    ).toEqual([
+      "--font-sans",
+      "--font-mono",
+      "--container-page",
+      "--spacing-header",
+      "--ease-soft",
+    ]);
+  });
+
+  it("leaves no prototype token in the styles or components", () => {
+    const sources = import.meta.glob(["../src/**/*.{astro,css,ts,js}"], {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }) as Record<string, string>;
+    const prototype =
+      /--color-[\w-]+|--radius-card|--breakpoint-|--animate-|light-dark\(|data-scheme|\.spot\b/;
+    for (const [file, source] of Object.entries(sources)) {
+      expect(source, file).not.toMatch(prototype);
     }
   });
 

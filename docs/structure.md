@@ -66,8 +66,7 @@ adioz-dev/
 │   │   │   ├── Gauge.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
-│   │   └── UI/                # Reusable primitives: brand mark, buttons, knobs, panels, plates, tags, lamps, badges, emphasis, engraving filters, icons, stats, sections
-│   │       ├── Badge.astro
+│   │   └── UI/                # Reusable primitives: brand mark, buttons, knobs, panels, plates, ports, tags, lamps, emphasis, engraving filters, icons, stats, section titles
 │   │       ├── BrandMark.astro
 │   │       ├── Button.astro
 │   │       ├── Emphasis.astro
@@ -81,8 +80,6 @@ adioz-dev/
 │   │       ├── Plate.astro
 │   │       ├── Port.astro
 │   │       ├── Screw.astro
-│   │       ├── Section.astro
-│   │       ├── SectionHeader.astro
 │   │       ├── SectionTitle.astro
 │   │       ├── StatBanner.astro
 │   │       ├── StatCard.astro
@@ -127,7 +124,7 @@ adioz-dev/
 │   │   ├── gauges.ts          # Tech stack gauges: scale geometry, needle sweep and drag
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
-│   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
+│   │   ├── motion.ts          # Header scroll state, stat counters
 │   │   ├── pillars.ts         # About pillars: the .lit fallback and the swinging drawstrings
 │   │   ├── pipeline3d.ts      # 3D agent pipeline: Three.js parts, conduits, pulse and labels
 │   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
@@ -139,7 +136,7 @@ adioz-dev/
 │   │   ├── trace.ts           # Career trace: scale, tabs, span draw-in, view switch
 │   │   └── view.ts            # View turn: raised parts lean away from the pointer
 │   └── styles/                # 🎨 Global styling
-│       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
+│       ├── animations.css     # Scroll-driven reveal, reduced motion
 │       ├── engraving.css      # Main design engraved, carved and inlaid text
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
 │       ├── metal.css          # Shared metal finishes: spun steel
