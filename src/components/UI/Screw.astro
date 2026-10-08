@@ -1,0 +1,42 @@
+---
+interface Props {
+  /** The angle of the slot across the head, in degrees. */
+  angle?: number;
+  class?: string;
+}
+
+const { angle = 28, class: className } = Astro.props;
+---
+
+<span
+  class:list={["screw", "spun", className]}
+  style={`--slot: ${angle}deg`}
+  aria-hidden="true"
+></span>
+
+<style>
+  /*
+   * A screw is an 11px spun steel head with a dark slot across it at --slot,
+   * outlined and casting a short shadow slanted by --lean. The parent places
+   * it with position: absolute.
+   */
+  .screw {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 2px rgb(0 0 0 / 0.45);
+  }
+
+  .screw::after {
+    content: "";
+    position: absolute;
+    top: calc(50% - 0.75px);
+    right: 1px;
+    left: 1px;
+    height: 1.5px;
+    background: rgb(18 21 26 / 0.8);
+    transform: rotate(var(--slot));
+  }
+</style>

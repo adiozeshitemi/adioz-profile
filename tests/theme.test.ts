@@ -40,6 +40,7 @@ const THEMED_TOKENS = [
   "--steel",
   "--gold",
   "--plate-metal",
+  "--plate-shine",
   "--plate-wall-1",
   "--plate-wall-5",
   "--plate-lip",

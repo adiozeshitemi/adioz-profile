@@ -4,6 +4,9 @@ import Button from "../src/components/UI/Button.astro";
 import Emphasis from "../src/components/UI/Emphasis.astro";
 import Icon from "../src/components/UI/Icon.astro";
 import Knob from "../src/components/UI/Knob.astro";
+import Nameplate from "../src/components/UI/Nameplate.astro";
+import Plate from "../src/components/UI/Plate.astro";
+import Screw from "../src/components/UI/Screw.astro";
 import Section from "../src/components/UI/Section.astro";
 import SectionHeader from "../src/components/UI/SectionHeader.astro";
 import StatBanner from "../src/components/UI/StatBanner.astro";
@@ -326,5 +329,70 @@ describe("Section", () => {
     await expect(
       render(Section, { props: { id: "missing", label: "X", title: "X" } }),
     ).rejects.toThrow('navigation.json: no link targets section "missing"');
+  });
+});
+
+describe("Screw", () => {
+  it("renders a hidden spun head with its slot angle", async () => {
+    const doc = await render(Screw, { props: { angle: -52 } });
+    const screw = doc.querySelector(".screw");
+    expect(screw?.classList.contains("spun")).toBe(true);
+    expect(screw?.getAttribute("aria-hidden")).toBe("true");
+    expect(screw?.getAttribute("style")).toContain("--slot: -52deg");
+  });
+});
+
+describe("Plate", () => {
+  it("screws a div down at its four corners around its content", async () => {
+    const doc = await render(Plate, { slots: { default: "<p>Gauges</p>" } });
+    const plate = doc.querySelector("div.plate");
+    const screws = [...(plate?.querySelectorAll(":scope > .screw") ?? [])];
+    expect(
+      screws.map((screw) =>
+        ["top-left", "top-right", "bottom-left", "bottom-right"].find((place) =>
+          screw.classList.contains(place),
+        ),
+      ),
+    ).toEqual(["top-left", "top-right", "bottom-left", "bottom-right"]);
+    expect(text(plate?.querySelector("p") ?? null)).toBe("Gauges");
+  });
+
+  it("renders another element and leaves out the screws on request", async () => {
+    const doc = await render(Plate, {
+      props: { as: "section", screws: false, id: "board" },
+    });
+    const plate = doc.querySelector("section.plate");
+    expect(plate?.id).toBe("board");
+    expect(plate?.querySelector(".screw")).toBeNull();
+  });
+});
+
+describe("Nameplate", () => {
+  it("carves the name as a heading between two screws", async () => {
+    const doc = await render(Nameplate, { props: { name: "BBRaiN" } });
+    const plate = doc.querySelector("div.nameplate");
+    expect(plate?.querySelectorAll(":scope > .screw")).toHaveLength(2);
+    const name = plate?.querySelector("h3.carved");
+    expect(text(name ?? null)).toBe("BBRaiN");
+    expect(doc.querySelector("a")).toBeNull();
+  });
+
+  it("sets the heading level", async () => {
+    const doc = await render(Nameplate, {
+      props: { name: "Hisiya", level: 2 },
+    });
+    expect(text(doc.querySelector("h2.carved"))).toBe("Hisiya");
+  });
+
+  it("renders a link with the carved name and no heading when href is set", async () => {
+    const doc = await render(Nameplate, {
+      props: { name: "contact@adioz.dev", href: "mailto:contact@adioz.dev" },
+    });
+    const link = doc.querySelector("a.nameplate");
+    expect(link?.getAttribute("href")).toBe("mailto:contact@adioz.dev");
+    expect(text(link?.querySelector(".carved") ?? null)).toBe(
+      "contact@adioz.dev",
+    );
+    expect(link?.querySelector("h1, h2, h3, h4")).toBeNull();
   });
 });
