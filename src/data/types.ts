@@ -68,13 +68,20 @@ export interface Navigation {
   cta: NavLink;
 }
 
-/** Site-wide copy: the page head's defaults (the default title is `Profile.name | Profile.role`) and the new-tab note. */
+/** Site-wide copy: the page head's title, description and link preview, and the new-tab note. */
 export interface SiteMeta {
-  /** Default meta and Open Graph description. */
+  /** Default page title, e.g. "Adioz D Eshitemi · Full-stack AI engineer"; also the link preview's title. */
+  title: string;
+  /** Default meta description, for search results. */
   description: string;
-  /** Open Graph image path under public/, e.g. "/images/og.png". */
+  /** The link preview's shorter description (Open Graph and Twitter card). */
+  previewDescription: string;
+  /** Link preview image path under public/, e.g. "/og.png". */
   image: string;
-  /** Alt text for the Open Graph image. */
+  /** The link preview image's width and height in pixels, e.g. 1200 by 630. */
+  imageWidth: number;
+  imageHeight: number;
+  /** Alt text for the link preview image. */
   imageAlt: string;
   /** Read after the label of a link that opens in a new tab, e.g. "(opens in a new tab)". */
   newTab: string;

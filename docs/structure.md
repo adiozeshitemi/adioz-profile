@@ -24,7 +24,6 @@ adioz-dev/
 │   │   ├── montserrat-OFL.txt
 │   │   └── montserrat-variable.woff2
 │   ├── images/
-│   │   ├── og.png             # Prototype social share preview image (1200×630)
 │   │   └── profile_pic.svg    # Profile avatar
 │   ├── apple-touch-icon.png   # Dividers mark home-screen icon (180 px)
 │   ├── favicon.ico            # Dividers mark favicon fallback (16, 32, 48 px, transparent)
@@ -94,7 +93,7 @@ adioz-dev/
 │   │   ├── pipeline.json      # Agent pipeline figure label and each part's title and detail
 │   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and email
 │   │   ├── projects.json      # Projects section: id, label, headline, new-tab words and projects, from public/resume.pdf
-│   │   ├── site.json          # Default meta description and Open Graph image, new-tab words
+│   │   ├── site.json          # Page title, descriptions, link preview image and alt, new-tab words
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries

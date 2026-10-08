@@ -2,25 +2,29 @@
 import "../styles/global.css";
 import EngravingFilters from "../components/UI/EngravingFilters.astro";
 import ParticleField from "../components/UI/ParticleField.astro";
-import { profile, site } from "../data/index";
+import { site } from "../data/index";
 import themeInit from "../scripts/theme-init.js?raw";
 
+/** Each prop defaults to its site.json value. */
 interface Props {
-  /** Page title; defaults to "<name> | <role>" from profile.json. */
+  /** Page title, also the link preview's title. */
   title?: string;
-  /** Meta and Open Graph description; defaults to site.json. */
+  /** Meta description, for search results. */
   description?: string;
-  /** Open Graph image path under public/; defaults to site.json. */
+  /** The link preview's description. */
+  previewDescription?: string;
+  /** Link preview image path under public/, 1200 by 630. */
   image?: string;
-  /** Alt text for the Open Graph image; defaults to site.json. */
+  /** Alt text for the link preview image. */
   imageAlt?: string;
   /** Draws the particle field behind the page; off by default. */
   field?: boolean;
 }
 
 const {
-  title = `${profile.name} | ${profile.role}`,
+  title = site.title,
   description = site.description,
+  previewDescription = site.previewDescription,
   image = site.image,
   imageAlt = site.imageAlt,
   field = false,
@@ -67,8 +71,10 @@ const imageUrl = new URL(image, Astro.site);
       type="font/woff2"
       crossorigin
     />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="canonical" href={canonical} />
     <meta name="generator" content={Astro.generator} />
 
@@ -78,8 +84,10 @@ const imageUrl = new URL(image, Astro.site);
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={previewDescription} />
     <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:width" content={String(site.imageWidth)} />
+    <meta property="og:image:height" content={String(site.imageHeight)} />
     <meta property="og:image:alt" content={imageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <script is:inline set:html={themeInit} />
