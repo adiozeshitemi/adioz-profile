@@ -5,6 +5,7 @@ import {
   about,
   contact,
   experience,
+  pipeline,
   profile,
   projects,
   sectionNumber,
@@ -58,6 +59,22 @@ describe("data", () => {
       expect(line.who).not.toBe("");
       expect(line.text).not.toBe("");
       expect(tones).toContain(line.tone);
+    }
+  });
+
+  it("gives every pipeline part, in run order, a title and a detail", () => {
+    expect(Object.keys(pipeline.parts)).toEqual([
+      "request",
+      "agent",
+      "model",
+      "tool",
+      "guard",
+      "pass",
+      "fail",
+    ]);
+    for (const part of Object.values(pipeline.parts)) {
+      expect(part.title).not.toBe("");
+      expect(part.detail).not.toBe("");
     }
   });
 

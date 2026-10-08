@@ -15,7 +15,8 @@ Full-stack AI engineer with a background in backend systems and web applications
 
 ## 🚀 Key Features
 
-- **Static by Default**: Astro pre-renders the site to static HTML and CSS; the only client-side JavaScript is two short inline scripts, for the mobile menu and for motion.
+- **Static by Default**: Astro pre-renders the site to static HTML and CSS; client-side scripts only add to markup that is complete without them.
+- **3D Agent Pipeline**: the hero's Three.js scene of machined parts runs a request through an agent, a model on CPU, a typed tool and a guardrail, writing each step to the agent log. It loads after first paint, shows a flat diagram without JavaScript or WebGL, and holds still under reduced motion.
 - **Progressive Motion**: scroll-driven CSS reveals sections, fills the skill bars and drives a scroll progress bar where browsers support it; a small script adds the stat counters, the header's scroll state and the card spotlight. Every section is complete without them, and reduced motion turns them off.
 - **Design Tokens in CSS**: Tailwind CSS v4 is configured in `src/styles/theme.css` with an `@theme` block (colors, fonts, radius, page width, header height, easing and breakpoints); there is no `tailwind.config.*` file.
 - **Light and Dark Themes**: the colors follow the device's `prefers-color-scheme` setting until the visitor picks a theme with the header's theme knob; the choice is saved in `localStorage` and applied before first paint. Without JavaScript the device's setting applies. Text meets WCAG AA contrast in both themes.
@@ -40,6 +41,7 @@ For a detailed breakdown of the project's layout and design philosophy, please r
 - [![Astro](https://img.shields.io/badge/Astro-BC52EE?logo=astro&logoColor=fff&style=for-the-badge)](https://astro.build)
 - [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS%20v4-06B6D4?logo=tailwindcss&logoColor=fff&style=for-the-badge)](https://tailwindcss.com/)
 - [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff&style=for-the-badge)](https://www.typescriptlang.org/)
+- [![Three.js](https://img.shields.io/badge/Three.js-000000?logo=threedotjs&logoColor=fff&style=for-the-badge)](https://threejs.org/)
 
 ## 🔧 Getting Started
 

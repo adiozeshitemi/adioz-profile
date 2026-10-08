@@ -266,3 +266,22 @@ export interface CreditGroup {
   /** Links to each tool's documentation. */
   links: LinkItem[];
 }
+
+/** The parts of the hero's agent pipeline, in the order a request reaches them. */
+export type PipelinePartName =
+  "request" | "agent" | "model" | "tool" | "guard" | "pass" | "fail";
+
+/** A part's label under it in the pipeline. */
+export interface PipelinePart {
+  /** The part's name, e.g. "Guardrail". */
+  title: string;
+  /** A short note under the name, e.g. "fail-closed gates". */
+  detail: string;
+}
+
+/** The hero's agent pipeline. */
+export interface PipelineContent {
+  /** Accessible name of the pipeline figure, describing what it shows. */
+  label: string;
+  parts: Record<PipelinePartName, PipelinePart>;
+}

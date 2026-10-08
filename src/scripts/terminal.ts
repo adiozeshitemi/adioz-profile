@@ -2,6 +2,17 @@
  * The hero's agent log: the entries typing in one after another, and the
  * window buttons on its title bar.
  */
+import type { TerminalTone } from "../data/types";
+
+/** The window event that writes an entry to the agent log; its detail is a LogEntry. */
+export const LOG_EVENT = "agent-log:write";
+
+/** An agent log entry, shaped like a terminal.json line. */
+export interface LogEntry {
+  who: string;
+  text: string;
+  tone?: TerminalTone;
+}
 
 /** Milliseconds between two log entries. */
 export const LINE_GAP = 1100;
@@ -23,8 +34,10 @@ export const clock = (date: Date) =>
  * each led by a <time> holding the clock reading it was written at. The
  * screen keeps the newest KEEP entries (KEEP_ZOOMED while the .log is
  * .zoomed). Typing pauses while the tab is hidden or the list is off screen.
- * Under reduced motion the rendered entries stay as they are. Returns a
- * function that stops it.
+ * From the first LOG_EVENT on window (the 3D pipeline writing its steps) the
+ * screen is cleared and the log writes only those entries. Under reduced
+ * motion the rendered entries stay as they are. Returns a function that
+ * stops it.
  */
 export function startLog(
   list: HTMLElement,
@@ -36,22 +49,43 @@ export function startLog(
   let next = 0;
   let timer = 0;
   let onScreen = true;
+  let driven = false;
+  const template = script[0]!;
 
-  function write() {
-    timer = 0;
-    const entry = script[next]!.cloneNode(true) as Element;
-    next = (next + 1) % script.length;
+  /** Appends `entry` led by the clock time, keeping the newest entries. */
+  function append(entry: Element) {
     const time = document.createElement("time");
     time.textContent = clock(new Date());
     entry.prepend(time);
     list.append(entry);
     const keep = log?.classList.contains("zoomed") ? KEEP_ZOOMED : KEEP;
     while (list.children.length > keep) list.firstElementChild!.remove();
+  }
+
+  function write() {
+    timer = 0;
+    append(script[next]!.cloneNode(true) as Element);
+    next = (next + 1) % script.length;
     schedule();
   }
 
+  /** Writes a LOG_EVENT entry, shaped like the rendered entries. */
+  const onEntry = (event: Event) => {
+    const { who, text, tone } = (event as CustomEvent<LogEntry>).detail;
+    if (!driven) list.replaceChildren();
+    driven = true;
+    pause();
+    const entry = template.cloneNode(true) as Element;
+    entry.querySelector(".who")!.textContent = who;
+    const message = entry.querySelector(".message")!;
+    message.textContent = text;
+    message.classList.remove("good", "bad");
+    if (tone) message.classList.add(tone);
+    append(entry);
+  };
+
   function schedule() {
-    if (!timer && onScreen && !document.hidden) {
+    if (!timer && !driven && onScreen && !document.hidden) {
       timer = window.setTimeout(write, LINE_GAP);
     }
   }
@@ -63,6 +97,7 @@ export function startLog(
 
   const visibility = () => (document.hidden ? pause() : schedule());
   document.addEventListener("visibilitychange", visibility);
+  addEventListener(LOG_EVENT, onEntry);
   const watch = new IntersectionObserver(([entry]) => {
     onScreen = entry?.isIntersecting ?? true;
     if (onScreen) schedule();
@@ -77,6 +112,7 @@ export function startLog(
     pause();
     watch.disconnect();
     document.removeEventListener("visibilitychange", visibility);
+    removeEventListener(LOG_EVENT, onEntry);
   };
 }
 

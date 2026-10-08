@@ -10,6 +10,7 @@ import contactJson from "./contact.json";
 import experienceJson from "./experience.json";
 import footerJson from "./footer.json";
 import navigationJson from "./navigation.json";
+import pipelineJson from "./pipeline.json";
 import profileJson from "./profile.json";
 import projectsJson from "./projects.json";
 import siteJson from "./site.json";
@@ -22,6 +23,7 @@ import type {
   ExperienceContent,
   FooterContent,
   Navigation,
+  PipelineContent,
   Profile,
   ProjectsContent,
   SiteMeta,
@@ -83,6 +85,7 @@ export const techStack: TechStack = {
   ...techStackJson,
   skills: techStackJson.skills.map(toSkillItem),
 };
+export const pipeline: PipelineContent = pipelineJson;
 export const terminal: TerminalContent = {
   ...terminalJson,
   lines: terminalJson.lines.map(toTerminalLine),

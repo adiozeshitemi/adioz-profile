@@ -53,8 +53,9 @@ adioz-dev/
 │   │   │   ├── MobileMenu.astro
 │   │   │   ├── NavLinks.astro
 │   │   │   └── ThemeToggle.astro
-│   │   ├── Hero/              # First screen: copy, call-to-action links, terminal, stats
+│   │   ├── Hero/              # First screen: copy, actions, stats, 3D agent pipeline, agent log
 │   │   │   ├── Hero.astro
+│   │   │   ├── Pipeline3D.astro
 │   │   │   ├── SocialLinks.astro
 │   │   │   └── Terminal.astro
 │   │   ├── Projects/          # Featured projects section: project cards
@@ -90,6 +91,7 @@ adioz-dev/
 │   │   ├── footer.json        # Copyright, credit links and source link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
+│   │   ├── pipeline.json      # Agent pipeline figure label and each part's title and detail
 │   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and social links
 │   │   ├── projects.json      # Projects section: id, label, headline and projects, from public/resume.pdf
 │   │   ├── site.json          # Default meta description and Open Graph image
@@ -121,6 +123,7 @@ adioz-dev/
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
+│   │   ├── pipeline3d.ts      # 3D agent pipeline: Three.js parts, conduits, pulse and labels
 │   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
 │   │   ├── terminal.ts        # Agent log: typing the entries and the window buttons
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
@@ -144,6 +147,7 @@ adioz-dev/
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── menu.test.ts           # Phone menu sheet states
 │   ├── page.test.ts           # Assembled landing page
+│   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer

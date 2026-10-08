@@ -1,0 +1,12 @@
+{
+  "label": "Animated 3D model of a request passing through an agent, a model on CPU, a typed tool and a guardrail, then applied to the database or rolled back",
+  "parts": {
+    "request": { "title": "Request", "detail": "plain language" },
+    "agent": { "title": "Agent", "detail": "Rust · slot extraction" },
+    "model": { "title": "Model on CPU", "detail": "INT8 · no GPU runtime" },
+    "tool": { "title": "Typed tool", "detail": "audited write" },
+    "guard": { "title": "Guardrail", "detail": "fail-closed gates" },
+    "pass": { "title": "Applied", "detail": "operator on record" },
+    "fail": { "title": "Rolled back", "detail": "nothing applied" }
+  }
+}
