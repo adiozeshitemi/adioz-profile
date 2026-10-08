@@ -148,6 +148,7 @@ describe("Knob", () => {
     expect(knob?.getAttribute("type")).toBe("button");
     expect(knob?.classList.contains("compact")).toBe(true);
     expect(doc.querySelector("a")).toBeNull();
+    expect(knob?.querySelector(".turn")?.hasAttribute("data-rest")).toBe(false);
   });
 
   it("fills the face from the default slot and names the knob from the label slot", async () => {

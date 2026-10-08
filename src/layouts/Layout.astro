@@ -85,6 +85,9 @@ const imageUrl = new URL(image, Astro.site);
     <slot />
     <script>
       import "../scripts/motion";
+      import { lightEnabled, startLight } from "../scripts/light";
+
+      if (lightEnabled()) startLight();
     </script>
   </body>
 </html>
