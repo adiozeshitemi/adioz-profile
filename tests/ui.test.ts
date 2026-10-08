@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import Badge from "../src/components/UI/Badge.astro";
+import BrandMark from "../src/components/UI/BrandMark.astro";
 import Button from "../src/components/UI/Button.astro";
 import Emphasis from "../src/components/UI/Emphasis.astro";
 import Icon from "../src/components/UI/Icon.astro";
@@ -457,5 +458,38 @@ describe("ParticleField", () => {
     const canvas = doc.querySelector("canvas#field");
     expect(canvas?.getAttribute("aria-hidden")).toBe("true");
     expect(doc.querySelectorAll("canvas")).toHaveLength(1);
+  });
+});
+
+describe("BrandMark", () => {
+  it("renders the mark as an image named adioz.dev in the theme's metals", async () => {
+    const doc = await render(BrandMark);
+    const svg = doc.querySelector("svg.brand-mark");
+    expect(svg?.getAttribute("role")).toBe("img");
+    expect(svg?.getAttribute("aria-label")).toBe("adioz.dev");
+    expect(svg?.getAttribute("width")).toBe("36");
+    expect(svg?.querySelector("path.leg-left")?.getAttribute("fill")).toBe(
+      "url(#mark-steel)",
+    );
+    expect(svg?.querySelector("path.arc")?.getAttribute("stroke")).toBe(
+      "url(#mark-gold)",
+    );
+  });
+
+  it("keeps the dark theme's metals when bright", async () => {
+    const doc = await render(BrandMark, { props: { bright: true, size: 28 } });
+    const svg = doc.querySelector("svg.brand-mark");
+    expect(svg?.getAttribute("width")).toBe("28");
+    expect(svg?.querySelector("path.leg-right")?.getAttribute("fill")).toBe(
+      "url(#mark-steel-bright)",
+    );
+  });
+
+  it("hides the mark when its label is empty", async () => {
+    const doc = await render(BrandMark, { props: { label: "" } });
+    const svg = doc.querySelector("svg.brand-mark");
+    expect(svg?.getAttribute("aria-hidden")).toBe("true");
+    expect(svg?.hasAttribute("role")).toBe(false);
+    expect(svg?.hasAttribute("aria-label")).toBe(false);
   });
 });

@@ -9,7 +9,13 @@ const engraving = read("styles/engraving.css");
 const global = read("styles/global.css");
 const layout = read("layouts/Layout.astro");
 
-const FILTERS = ["engrave", "carve", "dial-groove", "dial-raise"];
+const FILTERS = ["engrave", "carve", "dial-groove", "mark-raise", "dial-raise"];
+const GRADIENTS = [
+  "mark-steel",
+  "mark-gold",
+  "mark-steel-bright",
+  "mark-gold-bright",
+];
 
 /** The declarations of the rule in engraving.css whose selector list is exactly `selector`. */
 function rule(selector: string): string {
@@ -24,7 +30,7 @@ function rule(selector: string): string {
 }
 
 describe("engraving filters", () => {
-  it("renders the four filters in one hidden, zero-size SVG", async () => {
+  it("renders the filters and the mark's gradients in one hidden, zero-size SVG", async () => {
     const doc = await render(EngravingFilters);
     const svg = doc.querySelector("svg");
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
@@ -34,6 +40,11 @@ describe("engraving filters", () => {
     expect(
       [...doc.querySelectorAll("filter")].map((filter) => filter.id),
     ).toEqual(FILTERS);
+    expect(
+      [...doc.querySelectorAll("linearGradient")].map(
+        (gradient) => gradient.id,
+      ),
+    ).toEqual(GRADIENTS);
     for (const filter of doc.querySelectorAll("filter")) {
       expect(filter.children.length, filter.id).toBeGreaterThan(0);
       expect(filter.getAttribute("color-interpolation-filters")).toBe("sRGB");

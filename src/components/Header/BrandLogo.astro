@@ -1,14 +1,13 @@
 ---
 /*
- * Brand link to the top of the page: the logo mark from public/favicon.svg,
- * the same file as the site icon, and profile.json's name as a lowercase
- * wordmark.
+ * Brand link to the top of the page: the prototype's logo mark from
+ * public/images/logo.svg and profile.json's name as a lowercase wordmark.
  */
 import { profile } from "../../data/index";
 ---
 
 <a href="#top" class="brand">
-  <img src="/favicon.svg" alt="" width="30" height="30" class="mark" />
+  <img src="/images/logo.svg" alt="" width="30" height="30" class="mark" />
   <span class="wordmark">{profile.name}</span>
 </a>
 

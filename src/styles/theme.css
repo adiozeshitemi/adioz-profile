@@ -301,6 +301,20 @@
   /* The particle field's steel and gold beads, as rgb triples. */
   --particle: 205 214 228;
   --particle-gold: 230 192 98;
+  /*
+   * The Dividers mark's metals: its steel legs (--mark-steel-1 to -5) and gold
+   * pivot and arc (--mark-gold-1 to -4); darker gunmetal and deep bronze on
+   * the light theme, so the mark holds its contrast.
+   */
+  --mark-steel-1: #ffffff;
+  --mark-steel-2: #c3c8ce;
+  --mark-steel-3: #8e959e;
+  --mark-steel-4: #d8dce1;
+  --mark-steel-5: #6c737c;
+  --mark-gold-1: #fff1b8;
+  --mark-gold-2: #e9c460;
+  --mark-gold-3: #c4973a;
+  --mark-gold-4: #8f6718;
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -420,6 +434,15 @@
   --glow: 0.15;
   --particle: 38 46 58;
   --particle-gold: 150 110 24;
+  --mark-steel-1: #9aa1aa;
+  --mark-steel-2: #5d646d;
+  --mark-steel-3: #343a41;
+  --mark-steel-4: #6b727b;
+  --mark-steel-5: #22262b;
+  --mark-gold-1: #e7b06c;
+  --mark-gold-2: #c27f42;
+  --mark-gold-3: #8f5524;
+  --mark-gold-4: #5e3812;
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;

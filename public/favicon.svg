@@ -1,10 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="9 8 46 46">
+  <!-- The adioz.dev mark: an "A" drawn as a pair of steel dividers hinged on a gold pivot, the
+       gold adjusting arc (centred on the pivot) as its crossbar. -->
+  <style>
+    .s1 { stop-color: #ffffff } .s2 { stop-color: #c3c8ce } .s3 { stop-color: #8e959e } .s4 { stop-color: #d8dce1 } .s5 { stop-color: #6c737c }
+    .g1 { stop-color: #fff1b8 } .g2 { stop-color: #e9c460 } .g3 { stop-color: #c4973a } .g4 { stop-color: #8f6718 }
+    /* On a light browser chrome the legs take darker gunmetal and the gold deep bronze. */
+    @media (prefers-color-scheme: light) {
+      .s1 { stop-color: #9aa1aa } .s2 { stop-color: #5d646d } .s3 { stop-color: #343a41 } .s4 { stop-color: #6b727b } .s5 { stop-color: #22262b }
+      .g1 { stop-color: #e7b06c } .g2 { stop-color: #c27f42 } .g3 { stop-color: #8f5524 } .g4 { stop-color: #5e3812 }
+    }
+  </style>
   <defs>
-    <linearGradient id="adioz-mark" x1="0.047" y1="-0.04" x2="0.953" y2="1.04">
-      <stop offset="0" stop-color="#22d3ee"/>
-      <stop offset="1" stop-color="#a78bfa"/>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" class="s1" />
+      <stop offset="0.38" class="s2" />
+      <stop offset="0.55" class="s3" />
+      <stop offset="0.78" class="s4" />
+      <stop offset="1" class="s5" />
     </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" class="g1" />
+      <stop offset="0.35" class="g2" />
+      <stop offset="0.7" class="g3" />
+      <stop offset="1" class="g4" />
+    </linearGradient>
+    <filter id="raise" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="-0.6" stdDeviation="0" flood-color="#fff" flood-opacity="0.45" />
+      <feDropShadow dx="0.6" dy="1.4" stdDeviation="0.8" flood-color="#000" flood-opacity="0.7" />
+    </filter>
   </defs>
-  <rect width="64" height="64" rx="19.2" fill="url(#adioz-mark)"/>
-  <path fill="#05060b" d="M9.6 41.98 18.41 22.02H23.97L32.79 41.98H26.93L20.04 24.78H22.25L15.36 41.98ZM14.42 38.09 15.87 33.94H25.61L27.08 38.09ZM33.84 41.98V22.02H43.27Q46.57 22.02 49.08 23.25Q51.59 24.47 52.99 26.7Q54.4 28.93 54.4 32Q54.4 35.05 52.99 37.29Q51.59 39.53 49.08 40.75Q46.57 41.98 43.27 41.98ZM39.49 37.48H43.02Q44.74 37.48 46.01 36.83Q47.29 36.18 48 34.94Q48.7 33.71 48.7 32Q48.7 30.27 48 29.04Q47.29 27.82 46.01 27.17Q44.74 26.52 43.02 26.52H39.49Z"/>
+  <g filter="url(#raise)">
+    <path d="M28.6 17.4 33.8 19.4 18.4 52.6Z" fill="url(#steel)" />
+    <path d="M35.4 17.4 30.2 19.4 45.6 52.6Z" fill="url(#steel)" />
+    <path d="M22.4 37.6Q32 43.4 41.6 37.6" fill="none" stroke="url(#gold)" stroke-width="3.4" stroke-linecap="round" />
+    <circle cx="32" cy="15" r="6" fill="url(#gold)" />
+    <circle cx="32" cy="15" r="2" fill="#5a4210" />
+  </g>
 </svg>

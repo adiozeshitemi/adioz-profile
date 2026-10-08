@@ -49,7 +49,7 @@ describe("Header", () => {
     const brand = doc.querySelector("a.brand");
     expect(brand?.getAttribute("href")).toBe("#top");
     expect(brand?.querySelector("img")?.getAttribute("src")).toBe(
-      "/favicon.svg",
+      "/images/logo.svg",
     );
     expect(brand?.querySelector("img")?.getAttribute("alt")).toBe("");
     expect(text(brand)).toBe(profile.name);
