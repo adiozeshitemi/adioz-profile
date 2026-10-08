@@ -9,7 +9,11 @@ interface Common {
   icon?: string;
   /** compact: 36px on a 3px wall, for bars; otherwise 62px on a 6px wall. */
   compact?: boolean;
-  /** The icon's angle at rest, in degrees clockwise, read by the light script as data-rest. */
+  /**
+   * The icon's angle at rest, in degrees clockwise, read by the light script
+   * as data-rest; the icon turns toward the pointer. Omit it for an icon that
+   * stays upright.
+   */
   rest?: number;
 }
 
@@ -22,7 +26,7 @@ const {
   label,
   icon,
   compact = false,
-  rest = 0,
+  rest,
   href,
   class: className,
   ...attrs
