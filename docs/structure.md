@@ -59,10 +59,11 @@ adioz-dev/
 │   │   │   ├── SkillBar.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
-│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, icons, stats, sections
+│   │   └── UI/                # Reusable primitives: buttons, badges, emphasis, engraving filters, icons, stats, sections
 │   │       ├── Badge.astro
 │   │       ├── Button.astro
 │   │       ├── Emphasis.astro
+│   │       ├── EngravingFilters.astro
 │   │       ├── Icon.astro
 │   │       ├── Section.astro
 │   │       ├── SectionHeader.astro
@@ -107,6 +108,7 @@ adioz-dev/
 │   │   └── theme.ts           # Theme switching, saving and device tracking
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
+│       ├── engraving.css      # Main design engraved, carved and inlaid text
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
 │       ├── theme.css          # Design tokens (@theme), light-scheme overrides, main design tokens
 │       └── typography.css     # Main design titles, section labels and section numbers
@@ -115,6 +117,7 @@ adioz-dev/
 │   ├── fixtures/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
 │   ├── data.test.ts           # Data rules and load-time errors
+│   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── page.test.ts           # Assembled landing page
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer

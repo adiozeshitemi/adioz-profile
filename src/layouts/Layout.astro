@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import EngravingFilters from "../components/UI/EngravingFilters.astro";
 import { profile, site } from "../data/index";
 import themeInit from "../scripts/theme-init.js?raw";
 
@@ -80,6 +81,7 @@ const imageUrl = new URL(image, Astro.site);
     <script is:inline set:html={themeInit} />
   </head>
   <body class="min-h-screen flex flex-col">
+    <EngravingFilters />
     <slot />
     <script>
       import "../scripts/motion";

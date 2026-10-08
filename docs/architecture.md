@@ -14,7 +14,7 @@ flowchart LR
     subgraph Src ["📁 src/"]
         direction TB
         Data["data/ (JSON content, typed exports)"]
-        Styles["styles/ (theme, animations, global)"]
+        Styles["styles/ (theme, typography, engraving, animations, global)"]
         Scripts["scripts/ (motion, theme)"]
         Icons["icons/ (SVG icons)"]
         UI["components/UI/ (primitives)"]
@@ -43,7 +43,7 @@ flowchart LR
 ## 1. Pages, Components and Data
 
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Header`; `Hero`, `AboutSection`, `TechStackSection`, `ExperienceSection`, `ProjectsSection` and `ContactSection` inside `<main>`; and `Footer`, all inside `Layout`.
-- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme (marked with `data-theme-color`), preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, imports `global.css`, inlines `src/scripts/theme-init.js` at the end of `<head>`, and loads `src/scripts/motion.ts`.
+- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme (marked with `data-theme-color`), preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, imports `global.css`, inlines `src/scripts/theme-init.js` at the end of `<head>`, renders `EngravingFilters` at the start of `<body>`, and loads `src/scripts/motion.ts`.
 - **`src/components/Header/`**: The site header, built from `navigation.json` and `profile.json`:
   - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background, transparent while the page is within 40px of the top (`data-at-top`, set by `motion.ts`). It holds the brand link, the section links (from 760px), the theme knob, the menu button (below 760px), and a scroll progress bar along its top edge.
   - `BrandLogo.astro`: a link to the top of the page with the logo mark, `public/favicon.svg` (the same file as the site icon), and `Profile.name` as a lowercase wordmark.
@@ -72,6 +72,7 @@ flowchart LR
 - **`src/components/UI/`**: Reusable primitives that render static HTML:
   - `Button.astro`: a `primary` (cyan-to-violet gradient) or `ghost` (outlined) button with an optional trailing icon. With `href` it renders an `<a>`, and `external` opens the link in a new tab with `rel="noopener noreferrer"`; without `href` it renders a `<button>` whose `type` defaults to `button`.
   - `Badge.astro`: a `tag` (outlined label), `chip` (tool label) or `status` (pill with a pulsing success dot).
+  - `EngravingFilters.astro`: the main design's SVG filters in one hidden, zero-size SVG that `Layout.astro` renders once per page: `#engrave` (small shapes cut into metal), `#carve` (large text cut into a plate), `#dial-groove` (a gauge arc shaded by its cut's upper wall) and `#dial-raise` (gauge ticks standing off the face).
   - `Emphasis.astro`: renders text with each `**` pair as `<strong>`; an unpaired `**` fails the build.
   - `Icon.astro`: inlines `src/icons/<name>.svg` at a given pixel size. The icon is hidden from assistive technology unless it has a `label`, and a name with no SVG file fails the build.
   - `StatCard.astro`: one `stats.json` entry as a `<dt>` label and a `<dd>` value with its suffix, shown value first. The number carries `data-count` and `data-decimals` for the counter in `motion.ts`.
@@ -93,8 +94,9 @@ Tailwind CSS v4 runs through the `@tailwindcss/vite` plugin registered in `astro
   - theme-independent metals and brushing noise (`--bronze-metal`, `--steel-brushed`, `--brush-noise`, `--brush-noise-soft`), the display weight and tracking (`--display-wght: 650`, `--track`) and the view tokens: `--lean` (registered, inherited, -1 at rest), `--slant` and `--lx` (registered, 70% at rest);
   - `.slab`, which builds `--slab-wall` (ten stepped box-shadows) and `--slab-drop` from the element's own `--depth` (6px unless set) and `--lean`.
 - **`src/styles/typography.css`**: The main design's text styles: `.display` (hero title) and `.h2` (section title) in Montserrat at `--display-wght` with `--track`; `.eyebrow`, a section label in gold spaced capitals; and `.eyebrow-no`, the section number in JetBrains Mono engraved into a small brushed `--plate-metal` plate on a 3px wall.
+- **`src/styles/engraving.css`**: The main design's text cut into metal, each a fill clipped to the glyphs under its lips: `.engraved` (cut into dark gunmetal: a shaded steel floor, a shadowed top lip and a lit bottom lip), `.carved` (large text cut into `--plate-metal` through `#carve`), `.inlaid` (gold, `--inlay-gold`, in a deep cut) and `.inlaid-steel` (steel, `--inlay-steel`, in a shallow cut), and `.engraved-icon` (an icon cut in through `#engrave`). The cut tokens (`--inlay-gold`, `--inlay-steel`, `--cut-shade`, `--cut-lip`, `--cut-lip-deep`) are in `theme.css`, per theme.
 - **`src/styles/animations.css`**: Keyframes exposed as `animate-*` utilities, the scroll-driven `[data-reveal]` and `[data-fill]` animations, the `.spot` card spotlight, and reduced-motion rules.
-- **`src/styles/global.css`**: Imports Tailwind and the three files above, declares `@font-face` rules for the self-hosted fonts, and sets base element styles, including `color-scheme: light dark` and a `scroll-padding-top` of the header height, so a section reached through a link starts below the sticky header.
+- **`src/styles/global.css`**: Imports Tailwind and the four files above, declares `@font-face` rules for the self-hosted fonts, and sets base element styles, including `color-scheme: light dark` and a `scroll-padding-top` of the header height, so a section reached through a link starts below the sticky header.
 - **Component styles**: the components in `src/components/` use scoped `<style>` blocks that read the tokens as CSS variables (for example `var(--color-ink)`), so they follow both color schemes. Their media queries use the `--breakpoint-*` widths.
 
 ### Motion
@@ -129,6 +131,7 @@ The site is pre-rendered at build time (SSG). `npm run build` runs `astro check`
   - `ui.test.ts`: the UI primitives.
   - `theme.test.ts`: the main design tokens in `theme.css`: every themed token in both themes, WCAG AA contrast of each text colour on `--bg` and of `--plate-ink` on every `--plate-metal` stop, the shared metals, type and view tokens, `.slab`'s wall and drop, a `light-dark()` value for every prototype color token, and the `color-scheme` set from `data-theme`.
   - `theme-toggle.test.ts` (happy-dom environment): `theme-init.js` with no saved theme, a saved theme, an unknown value and blocked storage, and `theme.ts`'s toggling, saving, `theme-color` recoloring and device tracking.
+  - `engraving.test.ts`: the four filters in one hidden SVG rendered once by the layout, CSS references only to those filters, the import order, and each engraved style's fill, lips and filter.
   - `typography.test.ts`: the 650 display weight, the self-hosted weight ranges, the import order, and the title, label and section-number styles.
   - `sections.test.ts`: the header, each section and the footer against their data.
   - `page.test.ts`: the assembled landing page: a section for every navigation link, one `h1`, the landmarks and unique ids. `tests/fixtures/BareLayout.astro` stands in for `Layout.astro`, whose head needs `Astro.site`, which the Container API leaves unset.

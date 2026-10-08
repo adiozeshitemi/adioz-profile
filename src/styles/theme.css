@@ -202,6 +202,29 @@
   --metal-drop: rgb(0 0 0 / 0.9);
   --metal-contact: rgb(0 0 0 / 0.65);
   --metal-contact-lift: rgb(0 0 0 / 0.32);
+  /*
+   * Inlaid cuts: the gold and steel fills, each shading from the cut's dark
+   * upper wall to its lit floor; the shadowed top lip (--cut-shade) and the lit
+   * bottom lip (--cut-lip, --cut-lip-deep for a deeper cut).
+   */
+  --inlay-gold: linear-gradient(
+    180deg,
+    #241a06 0%,
+    #4e390d 24%,
+    #a87f27 50%,
+    #e9c460 78%,
+    #fff0b8 100%
+  );
+  --inlay-steel: linear-gradient(
+    180deg,
+    #3a4048 0%,
+    #7c858f 35%,
+    #b9c1ca 75%,
+    #dfe4ea 100%
+  );
+  --cut-shade: #000000;
+  --cut-lip: rgb(255 255 255 / 0.28);
+  --cut-lip-deep: rgb(255 255 255 / 0.4);
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -264,6 +287,17 @@
   --metal-drop: rgb(25 35 50 / 0.45);
   --metal-contact: rgb(25 35 50 / 0.42);
   --metal-contact-lift: rgb(25 35 50 / 0.2);
+  --inlay-gold: linear-gradient(
+    180deg,
+    #120c02 0%,
+    #261a04 28%,
+    #4c3708 58%,
+    #8a6514 100%
+  );
+  --inlay-steel: linear-gradient(180deg, #23272d 0%, #3c434b 40%, #545c66 100%);
+  --cut-shade: rgb(20 26 34 / 0.55);
+  --cut-lip: #ffffff;
+  --cut-lip-deep: #ffffff;
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;
