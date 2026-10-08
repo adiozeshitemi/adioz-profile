@@ -41,7 +41,7 @@ adioz-dev/
 │   │   │   ├── AboutPortrait.astro
 │   │   │   ├── AboutSection.astro
 │   │   │   └── CoreFocusCard.astro
-│   │   ├── Contact/           # Contact section: email call to action
+│   │   ├── Contact/           # Contact section: email nameplate, copy knob, link ports
 │   │   │   └── ContactSection.astro
 │   │   ├── Experience/        # Experience section: career trace and timeline, with the view switch
 │   │   │   ├── CareerTrace.astro
@@ -58,7 +58,6 @@ adioz-dev/
 │   │   ├── Hero/              # First screen: copy, actions, stats, 3D agent pipeline, agent log
 │   │   │   ├── Hero.astro
 │   │   │   ├── Pipeline3D.astro
-│   │   │   ├── SocialLinks.astro
 │   │   │   └── Terminal.astro
 │   │   ├── Projects/          # Featured projects section: machined cards with nameplates and link ports
 │   │   │   ├── ProjectCard.astro
@@ -80,6 +79,7 @@ adioz-dev/
 │   │       ├── Panel.astro
 │   │       ├── ParticleField.astro
 │   │       ├── Plate.astro
+│   │       ├── Port.astro
 │   │       ├── Screw.astro
 │   │       ├── Section.astro
 │   │       ├── SectionHeader.astro
@@ -89,15 +89,15 @@ adioz-dev/
 │   │       └── Tag.astro
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: id, label, headline, bio, portrait, pillars with icons, service record
-│   │   ├── contact.json       # Contact section: id, label, heading, body, button label and icon
+│   │   ├── contact.json       # Contact section: id, label, headline, lead, copy notes, link ports, résumé label
 │   │   ├── experience.json    # Experience section: id, label, headline, view and trace labels, roles, from public/resume.pdf
 │   │   ├── footer.json        # Copyright, credit links and source link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
 │   │   ├── pipeline.json      # Agent pipeline figure label and each part's title and detail
-│   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and social links
+│   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and email
 │   │   ├── projects.json      # Projects section: id, label, headline, new-tab words and projects, from public/resume.pdf
-│   │   ├── site.json          # Default meta description and Open Graph image
+│   │   ├── site.json          # Default meta description and Open Graph image, new-tab words
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
@@ -122,6 +122,7 @@ adioz-dev/
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
 │   ├── scripts/               # 📜 Client scripts
+│   │   ├── copy.ts            # Contact copy knob: Clipboard API with a textarea fallback
 │   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
 │   │   ├── gauges.ts          # Tech stack gauges: scale geometry, needle sweep and drag
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
@@ -149,6 +150,7 @@ adioz-dev/
 │   ├── fixtures/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
 │   ├── brand.test.ts          # Brand files: sizes, favicon scheme switch, manifest
+│   ├── copy.test.ts           # Copy action, its fallback and the knob's notes
 │   ├── data.test.ts           # Data rules and load-time errors
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── field.test.ts          # Particle field helpers and drawing

@@ -44,8 +44,8 @@ export interface Profile {
   actions: LinkItem[];
   /** The résumé in public/, downloaded from the knob after the hero's call-to-action buttons. */
   resume: ResumeLink;
-  /** GitHub, LinkedIn and email links in display order; the email link is the only `mailto:` URL. */
-  links: LinkItem[];
+  /** The email address as a `mailto:` link, carved into the contact section's nameplate. */
+  email: LinkItem;
 }
 
 /** A link to a section of the page, e.g. "About" to "#about". */
@@ -68,7 +68,7 @@ export interface Navigation {
   cta: NavLink;
 }
 
-/** Site-wide defaults for the page head; the default title is `Profile.name | Profile.role`. */
+/** Site-wide copy: the page head's defaults (the default title is `Profile.name | Profile.role`) and the new-tab note. */
 export interface SiteMeta {
   /** Default meta and Open Graph description. */
   description: string;
@@ -76,6 +76,8 @@ export interface SiteMeta {
   image: string;
   /** Alt text for the Open Graph image. */
   imageAlt: string;
+  /** Read after the label of a link that opens in a new tab, e.g. "(opens in a new tab)". */
+  newTab: string;
 }
 
 /** One headline metric in the hero stats banner. */
@@ -233,8 +235,6 @@ export interface ProjectsContent {
   label: string;
   /** Section headline, a sentence ending in a full stop. */
   headline: string;
-  /** Read after each project link's label, which opens in a new tab. */
-  newTab: string;
   /** Projects in display order; the section shows those with `featured` set. */
   projects: ProjectItem[];
 }
@@ -257,14 +257,18 @@ export interface ProjectItem {
 export interface ContactContent {
   /** Section id, the target of its navigation.json link, e.g. "contact". */
   id: string;
-  /** Section name after its number, e.g. "Get In Touch". */
+  /** Section name after its number, e.g. "Contact". */
   label: string;
-  heading: string;
-  body: string;
-  /** Label of the email button, e.g. "Send an email". */
-  ctaLabel: string;
-  /** Icon name after the email button's label, e.g. "arrow-right". */
-  ctaIcon: string;
+  /** Section headline, a sentence ending in a full stop. */
+  headline: string;
+  /** The paragraph above the email nameplate. */
+  lead: string;
+  /** The copy knob's accessible name and the status notes after a copy succeeds or fails. */
+  copy: { label: string; copied: string; failed: string };
+  /** Link ports in display order, each opening in a new tab, e.g. GitHub. */
+  links: LinkItem[];
+  /** Label of the last port, which downloads `Profile.resume`, e.g. "Résumé (PDF)". */
+  resume: string;
 }
 
 /** Content of the site footer. */

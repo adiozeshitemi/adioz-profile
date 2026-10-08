@@ -2,7 +2,6 @@
   "id": "projects",
   "label": "Featured Projects",
   "headline": "Systems built for scale.",
-  "newTab": "(opens in a new tab)",
   "projects": [
     {
       "title": "BBRaiN",

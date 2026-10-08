@@ -1,8 +1,8 @@
 ---
 /*
- * The first screen: profile.json's availability pill, gold headline, lede and
- * actions, the stats panel and the social links beside the 3D agent pipeline
- * and its agent log.
+ * The first screen: profile.json's availability pill, gold headline, lede,
+ * actions and the stats panel, beside the 3D agent pipeline and its agent
+ * log.
  */
 import { profile } from "../../data/index";
 import Button from "../UI/Button.astro";
@@ -12,7 +12,6 @@ import Lamp from "../UI/Lamp.astro";
 import Panel from "../UI/Panel.astro";
 import Pipeline3D from "./Pipeline3D.astro";
 import StatBanner from "../UI/StatBanner.astro";
-import SocialLinks from "./SocialLinks.astro";
 import Terminal from "./Terminal.astro";
 
 /** The direction each action icon points, in degrees clockwise, read by the light script. */
@@ -65,7 +64,6 @@ const ICON_REST: Record<string, number> = {
           </span>
         </div>
         <StatBanner class="hero-stats" />
-        <SocialLinks />
       </div>
       <div class="system">
         <Pipeline3D />
@@ -154,10 +152,6 @@ const ICON_REST: Record<string, number> = {
 
   .copy :global(.hero-stats) {
     margin-top: 48px;
-  }
-
-  .copy :global(.socials) {
-    margin-top: 28px;
   }
 
   @media (width <= 40rem) {
