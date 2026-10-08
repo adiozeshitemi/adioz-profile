@@ -40,6 +40,12 @@ const THEMED_TOKENS = [
   "--steel",
   "--gold",
   "--plate-metal",
+  "--plate-wall-1",
+  "--plate-wall-5",
+  "--plate-lip",
+  "--plate-ink",
+  "--metal-outline",
+  "--metal-drop",
   ...Array.from({ length: 10 }, (_, index) => `--slab-${index + 1}`),
   "--slab-contact",
   "--slab-ambient",
@@ -53,6 +59,20 @@ describe("main theme tokens", () => {
       expect(Object.keys(values)).toEqual(
         expect.arrayContaining(THEMED_TOKENS),
       );
+    });
+
+    it(`keeps --plate-ink at WCAG AA on every --plate-metal stop in the ${theme} theme`, () => {
+      const plate = values["--plate-metal"].replace(
+        /var\((--[\w-]+)\)/,
+        (_, name: string) => tokens(":root")[name],
+      );
+      const stops = plate.match(/#[0-9a-f]{6}/gi) ?? [];
+      expect(stops.length).toBeGreaterThan(0);
+      for (const stop of stops) {
+        expect(contrast(values["--plate-ink"], stop)).toBeGreaterThanOrEqual(
+          4.5,
+        );
+      }
     });
 
     for (const name of TEXT_TOKENS) {
@@ -78,6 +98,8 @@ describe("main theme tokens", () => {
         "--brush-noise",
         "--brush-noise-soft",
         "--slant",
+        "--display-wght",
+        "--track",
       ]),
     );
     expect(css).toMatch(/@property --lean\s*\{[^}]*initial-value: -1;/);

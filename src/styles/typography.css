@@ -1,0 +1,73 @@
+/*
+ * Main design text styles. Display text is Montserrat (--font-sans) at
+ * --display-wght; labels and section numbers are JetBrains Mono
+ * (--font-mono) or spaced capitals. Colours and metals come from the main
+ * tokens in theme.css.
+ */
+
+/* .display is the hero title; .h2 is a section title. */
+.display,
+.h2 {
+  font-family: var(--font-sans);
+  font-weight: var(--display-wght);
+  letter-spacing: var(--track);
+}
+
+.display {
+  margin: 0 0 26px;
+  font-size: clamp(40px, 5.5vw, 74px);
+  line-height: 1.03;
+}
+
+.h2 {
+  margin: 0 0 22px;
+  font-size: clamp(32px, 4.4vw, 54px);
+  line-height: 1.06;
+}
+
+/* .eyebrow is a section's label above its title: gold spaced capitals, led by its .eyebrow-no. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 20px;
+  color: var(--gold-text);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/*
+ * .eyebrow-no is the section number engraved into a small brushed plate of
+ * --plate-metal on a 3px wall slanted by --lean, in --plate-ink over a lit
+ * --plate-lip.
+ */
+.eyebrow-no {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 7px;
+  background-image: var(--brush-noise-soft), var(--plate-metal);
+  background-size:
+    320px 140px,
+    100% 100%;
+  background-blend-mode: overlay, normal;
+  box-shadow:
+    inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+    inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25),
+    0 0 0 1px var(--metal-outline),
+    calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--plate-wall-1),
+    calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--plate-wall-3),
+    calc(var(--lean) * var(--slant) * 3px) 3px 0 0 var(--plate-wall-5),
+    calc(var(--lean) * var(--slant) * 3px) 3px 0 1px var(--metal-outline),
+    calc(var(--lean) * var(--slant) * 7px) 7px 8px -2px var(--metal-drop);
+  color: var(--plate-ink);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-shadow: calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--plate-lip);
+}

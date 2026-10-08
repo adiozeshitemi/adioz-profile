@@ -21,7 +21,7 @@ Full-stack AI engineer with a background in backend systems and web applications
 - **Light and Dark Themes**: the color tokens follow the device's `prefers-color-scheme` setting, with no toggle or JavaScript, and text meets WCAG AA contrast in both schemes.
 - **Accessible Navigation**: a sticky header with section links from `src/data/navigation.json`; on narrow screens they open in an HTML popover drawer that `Escape` closes and that keyboard and screen-reader users cannot reach while closed.
 - **Search and Social Metadata**: `Layout.astro` sets the canonical URL and the Open Graph and Twitter card tags from `site` in `astro.config.mjs` and `src/data/site.json`.
-- **Self-Hosted Fonts**: Montserrat and JetBrains Mono variable fonts are served from `public/fonts/` and preloaded; JetBrains Mono sets only the hero terminal.
+- **Self-Hosted Fonts**: Montserrat and JetBrains Mono variable fonts are served from `public/fonts/` and preloaded; JetBrains Mono sets the hero terminal and the main design's section numbers.
 - **Strict TypeScript**: `tsconfig.json` extends `astro/tsconfigs/strict` and defines path aliases (`@components/*`, `@layouts/*`, `@styles/*`, `@data/*`, `@utils/*`).
 - **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
 - **Unit Tests**: Vitest renders the components through the Astro Container API and checks the data rules, the UI primitives, every section and the assembled page (`npm test`).
