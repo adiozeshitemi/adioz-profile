@@ -1,6 +1,10 @@
 {
-  "description": "Full-stack AI engineer who takes AI into production for enterprise clients: tool-using agents that make auditable changes, and small, quantized models that meet tight latency budgets.",
-  "image": "/images/og.png",
-  "imageAlt": "Adioz takes AI into production. Full-stack AI engineer, shown beside an illustrated portrait.",
+  "title": "Adioz D Eshitemi · Full-stack AI engineer",
+  "description": "Full-stack AI engineer. Builds backend systems and web applications, and takes AI into production for enterprise clients: tool-using agents and resource-aware models that run on CPU, in your VPC.",
+  "previewDescription": "AI that runs on CPU, in your VPC, in production.",
+  "image": "/og.png",
+  "imageWidth": 1200,
+  "imageHeight": 630,
+  "imageAlt": "The adioz.dev mark beside the line: AI that runs on CPU, in your VPC, in production.",
   "newTab": "(opens in a new tab)"
 }

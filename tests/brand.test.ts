@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { site } from "../src/data/index";
+import layout from "../src/layouts/Layout.astro?raw";
 
 const publicFile = (path: string) =>
   new URL(`../public/${path}`, import.meta.url);
@@ -69,5 +71,52 @@ describe("brand assets", () => {
     for (const icon of manifest.icons) {
       expect(existsSync(publicFile(icon.src.slice(1))), icon.src).toBe(true);
     }
+  });
+});
+
+describe("head tags", () => {
+  it("links the SVG favicon first, then the ICO, the touch icon and the manifest", () => {
+    const links = [
+      ...layout.matchAll(
+        /<link rel="(icon|apple-touch-icon|manifest)" href="([^"]+)"/g,
+      ),
+    ].map(([, rel, href]) => `${rel} ${href}`);
+    expect(links).toEqual([
+      "icon /favicon.svg",
+      "icon /favicon.ico",
+      "apple-touch-icon /apple-touch-icon.png",
+      "manifest /site.webmanifest",
+    ]);
+    for (const [, , href] of layout.matchAll(
+      /<link rel="(icon|apple-touch-icon|manifest)" href="\/([^"]+)"/g,
+    )) {
+      expect(existsSync(publicFile(href!)), href).toBe(true);
+    }
+  });
+
+  it("previews the page with the main design's image at its declared size", () => {
+    expect(site.image).toBe("/og.png");
+    expect(pngSize(site.image.slice(1))).toEqual([
+      site.imageWidth,
+      site.imageHeight,
+    ]);
+    expect(existsSync(publicFile("images/og.png"))).toBe(false);
+    for (const tag of [
+      'property="og:title"',
+      'property="og:description" content={previewDescription}',
+      'property="og:image:width"',
+      'property="og:image:height"',
+      'property="og:image:alt"',
+      'name="twitter:card" content="summary_large_image"',
+    ]) {
+      expect(layout, tag).toContain(tag);
+    }
+  });
+
+  it("titles the page with the owner's full name and role", () => {
+    expect(site.title).toBe("Adioz D Eshitemi · Full-stack AI engineer");
+    expect(site.previewDescription.length).toBeLessThan(
+      site.description.length,
+    );
   });
 });
