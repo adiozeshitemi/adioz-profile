@@ -181,3 +181,31 @@ describe("main theme tokens", () => {
     expect(slab["--slab-drop-lift"]).toContain("var(--slab-ambient)");
   });
 });
+
+describe("footer strip", () => {
+  const footer = readFileSync(
+    new URL("../src/components/Footer/Footer.astro", import.meta.url),
+    "utf8",
+  );
+  /** The #rrggbb colours inside the first rule of `selector`'s block. */
+  const colours = (selector: string) => {
+    const start = footer.indexOf(`${selector} {`);
+    const body = footer.slice(start, footer.indexOf("\n  }", start));
+    return [...body.matchAll(/#[0-9a-f]{6}/g)].map(([hex]) => hex);
+  };
+
+  it("keeps every stop of the engraved copyright at 4.5:1 on both ends of the strip", () => {
+    const strip = colours(".footer-bar").slice(0, 2);
+    const stops = colours(".copyright");
+    expect(strip).toEqual(["#262b31", "#15181c"]);
+    expect(stops).toHaveLength(4);
+    for (const stop of stops) {
+      for (const face of strip) {
+        expect(
+          contrast(stop, face),
+          `${stop} on ${face}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+});

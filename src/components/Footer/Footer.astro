@@ -1,127 +1,104 @@
 ---
 /*
- * The site footer from footer.json: "© <build year>" with the copyright
- * statement, then each credit group and the source link: one per line below
- * --breakpoint-md, and in one line separated by " · " from --breakpoint-md.
- * The links are underlined so they stand apart from the text around them, and
- * they open in a new tab.
+ * The site footer from footer.json: a brushed gunmetal strip, dark in both
+ * themes, holding the Dividers mark, "© <build year>" and the rights holder
+ * engraved into the strip, and the compact back-to-top Knob.
  */
 import { footer } from "../../data/index";
-import type { LinkItem } from "../../data/types";
-import Icon from "../UI/Icon.astro";
+import BrandMark from "../UI/BrandMark.astro";
+import Knob from "../UI/Knob.astro";
 
 const year = new Date().getFullYear();
-const linkAttributes = (link: LinkItem) => ({
-  href: link.url,
-  target: "_blank",
-  rel: "noopener noreferrer",
-});
 ---
 
 <footer class="site-footer">
   <div class="inner">
-    <p>
-      © {year} {footer.copyright}
-    </p>
-    <ul class="credits">
-      {footer.credits.map((group) => (
-        <li>
-          {group.label}{" "}
-          {group.links.map((link, index) => (
-            <>
-              {index > 0 && " & "}
-              <a {...linkAttributes(link)}>
-                <Icon name={link.icon} size={13} />
-                {link.title}
-              </a>
-            </>
-          ))}
-        </li>
-      ))}
-      <li>
-        <a {...linkAttributes(footer.source)}>
-          <Icon name={footer.source.icon} size={13} />
-          {footer.source.title}
-        </a>
-      </li>
-    </ul>
+    <div class="footer-bar">
+      <BrandMark label="" bright size={26} />
+      <p class="copyright">
+        © {year} {footer.copyright}
+      </p>
+      <Knob
+        compact
+        href={footer.top.url}
+        icon={footer.top.icon}
+        label={footer.top.title}
+        class="to-top"
+      />
+    </div>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    padding-block: 2.125rem;
-    border-top: 1px solid var(--color-line);
-    font-size: 0.75rem;
-    color: var(--color-ink-faint);
+    padding-block: 30px 40px;
   }
 
   .inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
+    width: 100%;
     max-width: var(--container-page);
     margin-inline: auto;
-    padding-inline: 1.25rem;
-    text-align: center;
-  }
-
-  .credits {
-    display: grid;
-    justify-items: center;
-    gap: 0.375rem;
-  }
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3125rem;
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-color: var(--color-line-strong);
-    text-underline-offset: 0.25em;
-    transition:
-      color 0.25s,
-      text-decoration-color 0.25s;
-  }
-
-  a:hover {
-    color: var(--color-accent-cyan);
-    text-decoration-color: currentColor;
-  }
-
-  a:focus-visible {
-    border-radius: 0.25rem;
-    outline: 2px solid var(--color-accent-cyan);
-    outline-offset: 3px;
+    padding-inline: 28px;
   }
 
   /*
-   * --breakpoint-md: copyright and credits at either end of one row, the
-   * credit items in a line separated by " · ". The separator's empty
-   * alternative text keeps screen readers from reading it; browsers without
-   * alternative text use the plain declaration.
+   * The strip: brushed gunmetal on a 4px wall slanted by --lean, its mark in
+   * the dark theme's metals (bright) on both themes.
    */
-  @media (width >= 47.5rem) {
+  .footer-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 26px;
+    padding: 12px 14px 12px 22px;
+    border-radius: 14px;
+    background-image:
+      var(--brush-noise-soft), linear-gradient(190deg, #262b31, #15181c);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.13),
+      0 0 0 1px rgb(0 0 0 / 0.55),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 #3d4148,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 #2f3237,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 1px rgb(0 0 0 / 0.55),
+      calc(var(--lean) * var(--slant) * 14px) 16px 34px -14px var(--metal-drop);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  /*
+   * The copyright is engraved into the strip like the log title, but set
+   * small, so its cut has a shallower, lighter wall that keeps the text at
+   * 4.5:1 or more against the strip.
+   */
+  .copyright {
+    margin: 0;
+    background-image: linear-gradient(
+      180deg,
+      #8a929c 0%,
+      #a9b1bb 38%,
+      #d6dce3 72%,
+      #f2f5f8 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 -1px 0 #000)
+      drop-shadow(0 -1px 0.5px rgb(0 0 0 / 0.85))
+      drop-shadow(0 1px 0 rgb(255 255 255 / 0.3));
+  }
+
+  .footer-bar :global(.to-top) {
+    margin-left: auto;
+  }
+
+  @media (width <= 40rem) {
     .inner {
-      flex-direction: row;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 1.25rem;
-      padding-inline: 1.75rem;
-      text-align: start;
-    }
-
-    .credits {
-      display: flex;
-      flex-wrap: wrap;
-    }
-
-    .credits li + li::before {
-      content: "·";
-      content: "·" / "";
-      margin-inline: 0.5rem;
+      padding-inline: 16px;
     }
   }
 </style>

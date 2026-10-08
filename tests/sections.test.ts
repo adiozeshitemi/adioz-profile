@@ -683,20 +683,26 @@ describe("ContactSection", () => {
 });
 
 describe("Footer", () => {
-  it("renders the copyright with the build year, the credits and the source link", async () => {
+  it("engraves the copyright with the build year on the strip beside the mark", async () => {
     const doc = await render(Footer);
-    expect(text(doc.querySelector("footer p"))).toBe(
+    const bar = doc.querySelector("footer .footer-bar");
+    expect(text(bar?.querySelector(".copyright") ?? null)).toBe(
       `© ${new Date().getFullYear()} ${footer.copyright}`,
     );
+    expect(bar?.querySelector(".brand-mark")?.getAttribute("aria-hidden")).toBe(
+      "true",
+    );
+  });
+
+  it("links the back-to-top knob to the top of the page, named for assistive technology", async () => {
+    const doc = await render(Footer);
     const anchors = [...doc.querySelectorAll("footer a")];
-    expect(links(anchors)).toEqual([
-      ...footer.credits.flatMap((group) =>
-        group.links.map((link) => [link.title, link.url]),
-      ),
-      [footer.source.title, footer.source.url],
-    ]);
-    for (const anchor of anchors) {
-      expect(anchor.getAttribute("target")).toBe("_blank");
-    }
+    expect(anchors).toHaveLength(1);
+    const knob = anchors[0]!;
+    expect(knob.classList.contains("knob")).toBe(true);
+    expect(knob.getAttribute("href")).toBe("#top");
+    expect(knob.getAttribute("href")).toBe(footer.top.url);
+    expect(knob.getAttribute("aria-label")).toBe(footer.top.title);
+    expect(knob.querySelector("svg")).not.toBeNull();
   });
 });

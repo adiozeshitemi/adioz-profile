@@ -56,7 +56,7 @@ describe("Button", () => {
 
   it("applies the ghost variant and a trailing decorative icon", async () => {
     const doc = await render(Button, {
-      props: { href: "#work", variant: "ghost", icon: "arrow-up-right" },
+      props: { href: "#projects", variant: "ghost", icon: "arrow-right" },
       slots: { default: "View work" },
     });
     const link = doc.querySelector("a.btn");

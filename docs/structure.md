@@ -47,7 +47,7 @@ adioz-dev/
 │   │   │   ├── CareerTrace.astro
 │   │   │   ├── ExperienceItem.astro
 │   │   │   └── ExperienceSection.astro
-│   │   ├── Footer/            # Site footer: copyright, credits, source link
+│   │   ├── Footer/            # Site footer: gunmetal strip with mark, copyright and back-to-top knob
 │   │   │   └── Footer.astro
 │   │   ├── Header/            # Fixed header: brand mark, rail of section links, theme knob, contact button, phone menu
 │   │   │   ├── BrandLogo.astro
@@ -91,7 +91,7 @@ adioz-dev/
 │   │   ├── about.json         # About section: id, label, headline, bio, portrait, pillars with icons, service record
 │   │   ├── contact.json       # Contact section: id, label, headline, lead, copy notes, link ports, résumé label
 │   │   ├── experience.json    # Experience section: id, label, headline, view and trace labels, roles, from public/resume.pdf
-│   │   ├── footer.json        # Copyright, credit links and source link
+│   │   ├── footer.json        # Copyright holder and back-to-top link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
 │   │   ├── pipeline.json      # Agent pipeline figure label and each part's title and detail
@@ -105,18 +105,18 @@ adioz-dev/
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
 │   │   ├── activity.svg
 │   │   ├── arrow-right.svg
-│   │   ├── arrow-up-right.svg
-│   │   ├── astro.svg
+│   │   ├── arrow-up.svg
 │   │   ├── box.svg
-│   │   ├── cloudflare.svg
 │   │   ├── code-slash.svg
+│   │   ├── copy.svg
 │   │   ├── download.svg
 │   │   ├── email.svg
+│   │   ├── file-text.svg
 │   │   ├── github.svg
 │   │   ├── globe.svg
 │   │   ├── LICENSE.md
 │   │   ├── linkedin.svg
-│   │   └── tailwindcss.svg
+│   │   └── send.svg
 │   ├── layouts/               # 🏗️ Page shells
 │   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload, theme script
 │   ├── pages/                 # 📄 File-based routes
