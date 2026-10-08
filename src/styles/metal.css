@@ -1,0 +1,36 @@
+/*
+ * Main design metal finishes shared by several components.
+ */
+
+/*
+ * .spun is circularly brushed steel: fine rings over a two-fold light cross
+ * whose bright axis starts at --light (degrees clockwise from 12 o'clock,
+ * 45deg unless set).
+ */
+.spun {
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgb(255 255 255 / 0.1) 0 0.6px,
+      rgb(0 0 0 / 0.08) 0.6px 1.3px,
+      transparent 1.3px 2.1px
+    ),
+    conic-gradient(
+      from var(--light, 45deg),
+      #f7f8fa 0deg,
+      #c9ced4 24deg,
+      #e8ebee 56deg,
+      #6a7078 90deg,
+      #c9ced4 124deg,
+      #aeb4bb 156deg,
+      #f7f8fa 180deg,
+      #c9ced4 204deg,
+      #e8ebee 236deg,
+      #5a6068 270deg,
+      #c9ced4 304deg,
+      #aeb4bb 336deg,
+      #f7f8fa 360deg
+    );
+  background-blend-mode: overlay, normal;
+}
