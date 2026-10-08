@@ -6,6 +6,7 @@ import Icon from "../src/components/UI/Icon.astro";
 import Knob from "../src/components/UI/Knob.astro";
 import Lamp from "../src/components/UI/Lamp.astro";
 import Nameplate from "../src/components/UI/Nameplate.astro";
+import Panel from "../src/components/UI/Panel.astro";
 import Plate from "../src/components/UI/Plate.astro";
 import Screw from "../src/components/UI/Screw.astro";
 import Section from "../src/components/UI/Section.astro";
@@ -426,5 +427,24 @@ describe("Lamp", () => {
   it("renders the red live lamp", async () => {
     const doc = await render(Lamp, { props: { variant: "live" } });
     expect(doc.querySelector(".lamp")?.classList.contains("live")).toBe(true);
+  });
+});
+
+describe("Panel", () => {
+  it("renders a steel-rimmed slab around its content", async () => {
+    const doc = await render(Panel, { slots: { default: "<p>Card</p>" } });
+    const panel = doc.querySelector("div.panel");
+    expect(panel?.classList.contains("slab")).toBe(true);
+    expect(panel?.classList.contains("gold")).toBe(false);
+    expect(text(panel?.querySelector("p") ?? null)).toBe("Card");
+  });
+
+  it("renders another element with a gold rim for featured cards", async () => {
+    const doc = await render(Panel, {
+      props: { as: "article", gold: true, id: "featured" },
+    });
+    const panel = doc.querySelector("article.panel");
+    expect(panel?.classList.contains("gold")).toBe(true);
+    expect(panel?.id).toBe("featured");
   });
 });

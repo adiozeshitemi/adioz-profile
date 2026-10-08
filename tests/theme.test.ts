@@ -69,6 +69,12 @@ const THEMED_TOKENS = [
   "--tag-ring-lit",
   "--lamp-lens",
   "--lamp-glow",
+  "--panel-face",
+  "--panel-shine",
+  "--panel-lip",
+  "--steel-edge",
+  "--gold-edge",
+  "--glow",
   ...Array.from({ length: 10 }, (_, index) => `--slab-${index + 1}`),
   "--slab-contact",
   "--slab-ambient",
@@ -158,12 +164,14 @@ describe("main theme tokens", () => {
     expect(css).toMatch(/@property --lx\s*\{[^}]*initial-value: 70%;/);
   });
 
-  it("builds --slab-wall from all ten slab tones and --slab-drop on .slab", () => {
+  it("builds --slab-wall from all ten slab tones, --slab-drop and --slab-drop-lift on .slab", () => {
     const slab = tokens(".slab");
     for (let step = 1; step <= 10; step++) {
       expect(slab["--slab-wall"]).toContain(`var(--slab-${step})`);
     }
     expect(slab["--slab-drop"]).toContain("var(--slab-contact)");
     expect(slab["--slab-drop"]).toContain("var(--slab-ambient)");
+    expect(slab["--slab-drop-lift"]).toContain("var(--slab-contact)");
+    expect(slab["--slab-drop-lift"]).toContain("var(--slab-ambient)");
   });
 });
