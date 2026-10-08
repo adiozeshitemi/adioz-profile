@@ -202,15 +202,47 @@ describe("Hero", () => {
     });
   });
 
-  it("prints every terminal.json line in order with its kind", async () => {
+  it("engraves the log title beside the window buttons and the live lamp", async () => {
     const doc = await render(Hero);
-    expect(text(doc.querySelector(".terminal .title"))).toBe(terminal.title);
-    const lines = [...doc.querySelectorAll(".terminal .line")];
-    expect(texts(lines)).toEqual(terminal.lines.map((line) => line.text));
-    lines.forEach((line, index) => {
-      expect(line.classList.contains(terminal.lines[index]!.kind)).toBe(true);
+    const log = doc.querySelector(".terminal figure.log");
+    const title = log?.querySelector(".log-bar #log-title.engraved");
+    expect(text(title ?? null)).toBe(terminal.title);
+    expect(log?.getAttribute("aria-labelledby")).toBe("log-title");
+    expect(text(log?.querySelector(".live") ?? null)).toBe(terminal.live);
+    expect(log?.querySelector(".live .lamp.live")).not.toBeNull();
+    const buttons = [
+      ...(log?.querySelectorAll(".window-controls button") ?? []),
+    ];
+    expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      `Close ${terminal.name}`,
+      `Minimise ${terminal.name}`,
+      `Zoom ${terminal.name}`,
+    ]);
+    for (const button of buttons)
+      expect(button.hasAttribute("disabled")).toBe(true);
+    const reopen = doc.querySelector(".terminal .log-reopen");
+    expect(reopen?.hasAttribute("hidden")).toBe(true);
+    expect(text(reopen)).toBe(`Open ${terminal.name}`);
+    expect(doc.querySelector(".log-shade")?.getAttribute("popover")).toBe(
+      "manual",
+    );
+  });
+
+  it("renders every terminal.json entry in order with its writer and tone", async () => {
+    const doc = await render(Hero);
+    const entries = [...doc.querySelectorAll(".log .screen li")];
+    expect(
+      entries.map((entry) => [
+        text(entry.querySelector(".who")),
+        text(entry.querySelector(".message")),
+      ]),
+    ).toEqual(terminal.lines.map((line) => [line.who, line.text]));
+    entries.forEach((entry, index) => {
+      const tone = terminal.lines[index]!.tone;
+      const message = entry.querySelector(".message")!;
+      expect(message.classList.contains("good")).toBe(tone === "good");
+      expect(message.classList.contains("bad")).toBe(tone === "bad");
     });
-    expect(doc.querySelector(".terminal .input .caret")).not.toBeNull();
   });
 
   it("renders the stats panel from stats.json under the actions", async () => {

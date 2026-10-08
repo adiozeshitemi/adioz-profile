@@ -90,24 +90,27 @@ export interface StatItem {
   label: string;
 }
 
-/**
- * Hero terminal line styles: `cmd` is a command including its "$ " prompt,
- * `out` is muted output, `ok` is success output and `key` is an
- * accent-coloured note.
- */
-export type TerminalLineKind = "cmd" | "out" | "ok" | "key";
+/** A log message's tone: good shows in gold, bad in ember; omitted, it is plain. */
+export type TerminalTone = "good" | "bad";
 
-/** One line the hero terminal prints, in array order. */
+/** One entry of the hero's agent log. */
 export interface TerminalLine {
-  kind: TerminalLineKind;
+  /** The part of the agent pipeline that wrote the entry, e.g. "guardrail". */
+  who: string;
+  /** The message, e.g. "✓ gates passed". */
   text: string;
+  tone?: TerminalTone;
 }
 
-/** Content of the hero terminal. */
+/** Content of the hero's agent log terminal. */
 export interface TerminalContent {
-  /** Window title in the terminal's title bar, e.g. "zsh — 120×32". */
+  /** Text engraved in the title bar, e.g. "adioz — agent.log". */
   title: string;
-  /** Lines printed in order. */
+  /** The window's name in its buttons' accessible names, e.g. "agent.log" in "Close agent.log". */
+  name: string;
+  /** The word engraved beside the red live lamp. */
+  live: string;
+  /** Entries in the order the log types them, cycling back to the first. */
   lines: TerminalLine[];
 }
 

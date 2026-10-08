@@ -2,8 +2,8 @@
  * Typed exports of the portfolio content. Each JSON file is assigned to its
  * interface from types.ts, so `astro check` rejects a file whose structure no
  * longer matches. Rules a type cannot express are checked when this module
- * loads: each terminal line's TerminalLineKind (JSON imports type every string
- * as `string`) and each skill's percent, an integer from 0 to 100.
+ * loads: each terminal line's TerminalTone (JSON imports type every string as
+ * `string`) and each skill's percent, an integer from 0 to 100.
  */
 import aboutJson from "./about.json";
 import contactJson from "./contact.json";
@@ -30,27 +30,30 @@ import type {
   TechStack,
   TerminalContent,
   TerminalLine,
-  TerminalLineKind,
+  TerminalTone,
 } from "./types";
 
-/** Every TerminalLineKind; the Record type makes the compiler require each one. */
-const TERMINAL_LINE_KINDS: Record<TerminalLineKind, true> = {
-  cmd: true,
-  out: true,
-  ok: true,
-  key: true,
+/** Every TerminalTone; the Record type makes the compiler require each one. */
+const TERMINAL_TONES: Record<TerminalTone, true> = {
+  good: true,
+  bad: true,
 };
 
-function isTerminalLineKind(kind: string): kind is TerminalLineKind {
-  return Object.hasOwn(TERMINAL_LINE_KINDS, kind);
+function isTerminalTone(tone: string): tone is TerminalTone {
+  return Object.hasOwn(TERMINAL_TONES, tone);
 }
 
-/** Returns the line with its kind narrowed to TerminalLineKind; throws on any other kind. */
-function toTerminalLine(line: { kind: string; text: string }): TerminalLine {
-  if (!isTerminalLineKind(line.kind)) {
-    throw new Error(`terminal.json: unknown kind "${line.kind}"`);
+/** Returns the line with its tone narrowed to TerminalTone; throws on any other tone. */
+function toTerminalLine(line: {
+  who: string;
+  text: string;
+  tone?: string;
+}): TerminalLine {
+  if (line.tone === undefined) return { who: line.who, text: line.text };
+  if (!isTerminalTone(line.tone)) {
+    throw new Error(`terminal.json: unknown tone "${line.tone}"`);
   }
-  return { kind: line.kind, text: line.text };
+  return { who: line.who, text: line.text, tone: line.tone };
 }
 
 /** Returns the skill; throws when its percent is not an integer from 0 to 100. */
@@ -81,7 +84,7 @@ export const techStack: TechStack = {
   skills: techStackJson.skills.map(toSkillItem),
 };
 export const terminal: TerminalContent = {
-  title: terminalJson.title,
+  ...terminalJson,
   lines: terminalJson.lines.map(toTerminalLine),
 };
 

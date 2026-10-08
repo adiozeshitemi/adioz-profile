@@ -95,7 +95,7 @@ adioz-dev/
 │   │   ├── site.json          # Default meta description and Open Graph image
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skill bars, tools by category
-│   │   ├── terminal.json      # Hero terminal window title and lines
+│   │   ├── terminal.json      # Agent log title, window name, live word and entries
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
 │   │   ├── activity.svg
@@ -122,6 +122,7 @@ adioz-dev/
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
 │   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
+│   │   ├── terminal.ts        # Agent log: typing the entries and the window buttons
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
 │   │   ├── theme.ts           # Theme switching, saving and device tracking
 │   │   └── view.ts            # View turn: raised parts lean away from the pointer
@@ -146,6 +147,7 @@ adioz-dev/
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer
+│   ├── terminal.test.ts       # Agent log typing and window buttons
 │   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
 │   ├── theme.test.ts          # Main design tokens and their contrast
 │   ├── typography.test.ts     # Main design type tokens, fonts and text styles
