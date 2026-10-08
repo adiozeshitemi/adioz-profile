@@ -105,7 +105,7 @@ adioz-dev/
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
 │       ├── global.css         # Tailwind import, @font-face rules, base styles
-│       └── theme.css          # Design tokens (@theme) and light-scheme overrides
+│       └── theme.css          # Design tokens (@theme), light-scheme overrides, main design tokens
 │
 ├── tests/                     # 🧪 Vitest unit tests (npm test)
 │   ├── fixtures/
@@ -114,6 +114,7 @@ adioz-dev/
 │   ├── page.test.ts           # Assembled landing page
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer
+│   ├── theme.test.ts          # Main design tokens and their contrast
 │   └── ui.test.ts             # UI primitives
 │
 ├── .editorconfig              # Editor encoding, line endings and indentation
