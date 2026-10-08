@@ -47,7 +47,7 @@ adioz-dev/
 │   │   │   └── ExperienceSection.astro
 │   │   ├── Footer/            # Site footer: copyright, credits, source link
 │   │   │   └── Footer.astro
-│   │   ├── Header/            # Fixed header: brand mark, rail of section links, theme knob, contact button, menu drawer
+│   │   ├── Header/            # Fixed header: brand mark, rail of section links, theme knob, contact button, phone menu
 │   │   │   ├── BrandLogo.astro
 │   │   │   ├── Header.astro
 │   │   │   ├── MobileMenu.astro
@@ -119,6 +119,7 @@ adioz-dev/
 │   ├── scripts/               # 📜 Client scripts
 │   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
+│   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
 │   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
@@ -140,6 +141,7 @@ adioz-dev/
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── field.test.ts          # Particle field helpers and drawing
 │   ├── light.test.ts          # Pointer light helpers and frames
+│   ├── menu.test.ts           # Phone menu sheet states
 │   ├── page.test.ts           # Assembled landing page
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing

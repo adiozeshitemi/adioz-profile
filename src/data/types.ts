@@ -48,12 +48,12 @@ export interface NavLink {
   url: string;
 }
 
-/** The header navigation: inline links on wide screens, a menu drawer on narrow ones. */
+/** The header navigation: a rail of links on wide screens, a menu sheet on narrow ones. */
 export interface Navigation {
-  /** Accessible name of the navigation landmark, e.g. "Primary". */
+  /** Accessible name of the navigation landmarks, e.g. "Primary". */
   label: string;
-  /** Accessible name of the button that opens the menu drawer, e.g. "Menu". */
-  menuLabel: string;
+  /** Accessible names of the menu knob while the sheet is closed and open. */
+  menuLabel: { open: string; close: string };
   /** Section links in display order. */
   links: NavLink[];
   /** Contact link after the section links, styled as a button in the header bar. */
