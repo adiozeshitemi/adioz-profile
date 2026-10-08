@@ -62,7 +62,7 @@ adioz-dev/
 │   │   ├── Projects/          # Featured projects section: project cards
 │   │   │   ├── ProjectCard.astro
 │   │   │   └── ProjectsSection.astro
-│   │   ├── TechStack/         # Tech stack section: gauge cluster, tool categories
+│   │   ├── TechStack/         # Tech stack section: gauge cluster beside the tool categories
 │   │   │   ├── Gauge.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro

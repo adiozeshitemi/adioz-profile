@@ -1,8 +1,8 @@
 ---
 /*
  * The tech stack section from techStack.json: the gold headline and intro,
- * the gauge cluster (a Gauge per skill on one brushed Plate screwed down at
- * its corners), then a TagCloud per tool category.
+ * the kit: the gauge cluster (a Gauge per skill on one brushed Plate
+ * screwed down at its corners) and a TagCloud per tool category.
  */
 import { techStack } from "../../data/index";
 import Plate from "../UI/Plate.astro";
@@ -23,17 +23,19 @@ const titleId = `${techStack.id}-title`;
     >
       <p>{techStack.intro}</p>
     </SectionTitle>
-    <Plate class="cluster">
-      <dl class="gauges">
-        {techStack.skills.map((skill) => (
-          <Gauge skill={skill} />
+    <div class="kit">
+      <Plate class="cluster">
+        <dl class="gauges">
+          {techStack.skills.map((skill) => (
+            <Gauge skill={skill} />
+          ))}
+        </dl>
+      </Plate>
+      <div class="categories">
+        {techStack.categories.map((category) => (
+          <TagCloud category={category} />
         ))}
-      </dl>
-    </Plate>
-    <div class="categories">
-      {techStack.categories.map((category) => (
-        <TagCloud category={category} />
-      ))}
+      </div>
     </div>
   </div>
 </section>
@@ -57,7 +59,14 @@ const titleId = `${techStack.id}-title`;
     padding-inline: 28px;
   }
 
-  /* The cluster wraps its gauges into centred rows. */
+  /*
+   * Below 1000px the cluster sits above the categories, its gauges wrapping
+   * into centred rows. From 1000px the kit sets the cluster beside them as a
+   * 380px vertical strip, each gauge a row of its 128px dial and its label;
+   * on screens at least 900px tall the strip stays in view below the header
+   * while the longer category column scrolls. Up to 640px the gauges shrink
+   * to 128px dials, two to a row.
+   */
   .inner :global(.plate.cluster) {
     margin: 0 0 22px;
     padding: 46px 28px 38px;
@@ -73,14 +82,53 @@ const titleId = `${techStack.id}-title`;
 
   .categories {
     display: grid;
-    gap: 1.75rem;
+    gap: 40px;
     margin-top: 64px;
   }
 
-  /* --breakpoint-md */
-  @media (width >= 47.5rem) {
+  @media (width >= 62.5rem) {
+    .kit {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 56px;
+      align-items: start;
+    }
+
+    .inner :global(.plate.cluster) {
+      margin: 0;
+      padding: 34px 30px 36px;
+    }
+
+    .gauges {
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .gauges > :global(.gauge) {
+      flex: none;
+      flex-direction: row;
+      gap: 22px;
+      text-align: left;
+    }
+
+    .gauges > :global(.gauge dt) {
+      max-width: none;
+      margin-top: 0;
+    }
+
+    .gauges > :global(.gauge .dial) {
+      --dial: 128px;
+    }
+
     .categories {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0;
+    }
+  }
+
+  @media (width >= 62.5rem) and (height >= 56.25rem) {
+    .inner :global(.plate.cluster) {
+      position: sticky;
+      top: 100px;
     }
   }
 
@@ -90,7 +138,24 @@ const titleId = `${techStack.id}-title`;
     }
 
     .inner :global(.plate.cluster) {
-      padding: 46px 16px 34px;
+      padding: 38px 12px 30px;
+    }
+
+    .gauges {
+      gap: 28px 8px;
+    }
+
+    .gauges > :global(.gauge) {
+      flex-basis: 136px;
+    }
+
+    .gauges > :global(.gauge .dial) {
+      --dial: 128px;
+      padding: 5px;
+    }
+
+    .gauges > :global(.gauge dt) {
+      font-size: 13px;
     }
   }
 </style>

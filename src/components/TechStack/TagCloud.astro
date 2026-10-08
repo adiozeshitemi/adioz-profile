@@ -1,7 +1,10 @@
 ---
-/* One techStack.json category: its name as a heading and its tools as chips. */
+/*
+ * One techStack.json category: its name as a gold heading behind a short
+ * rule, over its tools as machined Tags.
+ */
 import type { TechStackCategory } from "../../data/types";
-import Badge from "../UI/Badge.astro";
+import Tag from "../UI/Tag.astro";
 
 interface Props {
   category: TechStackCategory;
@@ -10,30 +13,78 @@ interface Props {
 const { category } = Astro.props;
 ---
 
-<div class="cloud" data-reveal>
+<div class="cat">
   <h3>{category.name}</h3>
   <ul class="tools">
     {category.tools.map((tool) => (
-      <li>
-        <Badge variant="chip">{tool}</Badge>
-      </li>
+      <Tag as="li">{tool}</Tag>
     ))}
   </ul>
 </div>
 
 <style>
+  /*
+   * The heading is gold mono capitals led by a 32px rule fading in from the
+   * left. Hovering the category lengthens and lights the rule, lifts the
+   * heading to --text and brightens the tags; a hovered tag rings in gold.
+   */
   h3 {
-    margin-bottom: 0.875rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 18px;
+    color: var(--gold-text);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--color-ink-faint);
+    transition: color 0.35s var(--ease-soft);
+  }
+
+  h3::before {
+    content: "";
+    flex: none;
+    width: 32px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, currentColor);
+    transition:
+      width 0.5s var(--ease-soft),
+      box-shadow 0.5s var(--ease-soft);
+  }
+
+  .cat:hover h3 {
+    color: var(--text);
+  }
+
+  .cat:hover h3::before {
+    width: 46px;
+    background: linear-gradient(90deg, transparent, var(--gold-text));
+    box-shadow: 0 0 12px rgb(var(--particle-gold) / 0.6);
   }
 
   .tools {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5625rem;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tools :global(.tag) {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .cat:hover .tools :global(.tag) {
+    color: var(--text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    h3,
+    h3::before {
+      transition: none;
+    }
   }
 </style>
