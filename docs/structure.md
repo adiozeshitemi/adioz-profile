@@ -62,8 +62,8 @@ adioz-dev/
 │   │   ├── Projects/          # Featured projects section: project cards
 │   │   │   ├── ProjectCard.astro
 │   │   │   └── ProjectsSection.astro
-│   │   ├── TechStack/         # Tech stack section: skill bars, tool categories
-│   │   │   ├── SkillBar.astro
+│   │   ├── TechStack/         # Tech stack section: gauge cluster, tool categories
+│   │   │   ├── Gauge.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
 │   │   └── UI/                # Reusable primitives: brand mark, buttons, knobs, panels, plates, tags, lamps, badges, emphasis, engraving filters, icons, stats, sections
@@ -98,7 +98,7 @@ adioz-dev/
 │   │   ├── projects.json      # Projects section: id, label, headline and projects, from public/resume.pdf
 │   │   ├── site.json          # Default meta description and Open Graph image
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
-│   │   ├── techStack.json     # Stack section: id, label, headline, intro, skill bars, tools by category
+│   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
@@ -122,6 +122,7 @@ adioz-dev/
 │   │   └── index.astro        # Landing page (/)
 │   ├── scripts/               # 📜 Client scripts
 │   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
+│   │   ├── gauges.ts          # Tech stack gauges: scale geometry, needle sweep and drag
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
@@ -147,6 +148,7 @@ adioz-dev/
 │   ├── data.test.ts           # Data rules and load-time errors
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── field.test.ts          # Particle field helpers and drawing
+│   ├── gauges.test.ts         # Gauge scale, needle springs, sweep and drag
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── menu.test.ts           # Phone menu sheet states
 │   ├── page.test.ts           # Assembled landing page

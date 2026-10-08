@@ -55,18 +55,11 @@
  * these elements show in their final state.
  * - [data-reveal]: fades in and rises into place over the first 10rem of
  *   entering the viewport.
- * - [data-fill]: grows from zero to its own width while entering the viewport.
  */
 @keyframes reveal {
   from {
     opacity: 0;
     transform: translateY(26px);
-  }
-}
-
-@keyframes fill {
-  from {
-    width: 0;
   }
 }
 
@@ -76,12 +69,6 @@
       animation: reveal linear both;
       animation-timeline: view();
       animation-range: entry 0% entry 10rem;
-    }
-
-    [data-fill] {
-      animation: fill var(--ease-soft) both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 40%;
     }
   }
 }

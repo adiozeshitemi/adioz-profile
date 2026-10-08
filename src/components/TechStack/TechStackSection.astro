@@ -1,45 +1,80 @@
 ---
 /*
- * The tech stack section from techStack.json: a SkillBar per skill and a
- * TagCloud per tool category. From --breakpoint-lg the skills sit beside the
- * categories and stay in view while the longer category column scrolls.
+ * The tech stack section from techStack.json: the gold headline and intro,
+ * the gauge cluster (a Gauge per skill on one brushed Plate screwed down at
+ * its corners), then a TagCloud per tool category.
  */
 import { techStack } from "../../data/index";
-import Section from "../UI/Section.astro";
-import SkillBar from "./SkillBar.astro";
+import Plate from "../UI/Plate.astro";
+import SectionTitle from "../UI/SectionTitle.astro";
+import Gauge from "./Gauge.astro";
 import TagCloud from "./TagCloud.astro";
+
+const titleId = `${techStack.id}-title`;
 ---
 
-<Section id={techStack.id} label={techStack.label} title={techStack.headline}>
-  <p slot="intro">{techStack.intro}</p>
-  <div class="layout">
-    <dl class="skills" data-reveal>
-      {techStack.skills.map((skill) => (
-        <SkillBar skill={skill} />
-      ))}
-    </dl>
+<section id={techStack.id} class="stack" aria-labelledby={titleId}>
+  <div class="inner">
+    <SectionTitle
+      section={techStack.id}
+      label={techStack.label}
+      title={techStack.headline}
+      id={titleId}
+    >
+      <p>{techStack.intro}</p>
+    </SectionTitle>
+    <Plate class="cluster">
+      <dl class="gauges">
+        {techStack.skills.map((skill) => (
+          <Gauge skill={skill} />
+        ))}
+      </dl>
+    </Plate>
     <div class="categories">
       {techStack.categories.map((category) => (
         <TagCloud category={category} />
       ))}
     </div>
   </div>
-</Section>
+</section>
+
+<script>
+  import { startGauges } from "../../scripts/gauges";
+
+  const cluster = document.querySelector<HTMLElement>(".stack .cluster");
+  if (cluster) startGauges(cluster);
+</script>
 
 <style>
-  .layout {
-    display: grid;
-    gap: 2.5rem;
+  .stack {
+    padding-block: clamp(84px, 10vw, 140px);
   }
 
-  .skills {
-    display: grid;
-    gap: 1.625rem;
+  .inner {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 28px;
+  }
+
+  /* The cluster wraps its gauges into centred rows. */
+  .inner :global(.plate.cluster) {
+    margin: 0 0 22px;
+    padding: 46px 28px 38px;
+  }
+
+  .gauges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 34px 18px;
+    margin: 0;
   }
 
   .categories {
     display: grid;
     gap: 1.75rem;
+    margin-top: 64px;
   }
 
   /* --breakpoint-md */
@@ -49,21 +84,13 @@ import TagCloud from "./TagCloud.astro";
     }
   }
 
-  /* --breakpoint-lg: skills beside the categories, kept in view below the sticky header. */
-  @media (width >= 65rem) {
-    .layout {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items: start;
-      gap: 3.25rem;
+  @media (width <= 40rem) {
+    .inner {
+      padding-inline: 16px;
     }
 
-    .skills {
-      position: sticky;
-      top: calc(var(--spacing-header) + 2rem);
-    }
-
-    .categories {
-      grid-template-columns: minmax(0, 1fr);
+    .inner :global(.plate.cluster) {
+      padding: 46px 16px 34px;
     }
   }
 </style>
