@@ -1,53 +1,99 @@
 ---
 /*
- * The experience section from experience.json: an ExperienceItem per role,
- * most recent first, along a vertical timeline rail.
+ * The experience section from experience.json: the gold headline over the
+ * timeline, an ExperienceItem per role, most recent first, down a steel rail
+ * that fills with gold as the page scrolls.
  */
 import { experience } from "../../data/index";
-import Section from "../UI/Section.astro";
+import SectionTitle from "../UI/SectionTitle.astro";
 import ExperienceItem from "./ExperienceItem.astro";
+
+const titleId = `${experience.id}-title`;
 ---
 
-<Section
-  id={experience.id}
-  label={experience.label}
-  title={experience.headline}
->
-  <div class="timeline">
-    {experience.roles.map((item) => (
-      <ExperienceItem item={item} ongoing={experience.ongoing} />
-    ))}
+<section id={experience.id} class="experience" aria-labelledby={titleId}>
+  <div class="inner">
+    <SectionTitle
+      section={experience.id}
+      label={experience.label}
+      title={experience.headline}
+      id={titleId}
+    />
+    <ol class="timeline" aria-label={experience.timelineLabel}>
+      {experience.roles.map((item) => (
+        <ExperienceItem item={item} ongoing={experience.ongoing} />
+      ))}
+    </ol>
   </div>
-</Section>
+</section>
+
+<script>
+  import { startTimeline } from "../../scripts/timeline";
+
+  const timeline = document.querySelector<HTMLElement>(".experience .timeline");
+  if (timeline) startTimeline(timeline);
+</script>
 
 <style>
-  /* --rail is the timeline's left padding, where each ExperienceItem draws its dot. */
-  .timeline {
-    --rail: 1.625rem;
-    position: relative;
-    padding-left: var(--rail);
+  .experience {
+    padding-block: clamp(84px, 10vw, 140px);
   }
 
-  /* The rail: a line through the dots' centres, fading out down the timeline. */
-  .timeline::before {
+  .inner {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 28px;
+  }
+
+  /*
+   * The timeline is a steel rail (::before) at --rail from the left, filled
+   * with gold (::after) down to --fill (0 to 1); timeline.ts runs it
+   * --rail-length from --rail-top, the first and last rivets' centres.
+   * Without the script the rail runs from the first rivet to the end of the
+   * list, filled. Each stop's card sits --indent in from the left.
+   */
+  .timeline {
+    --rail: 22px;
+    --indent: 58px;
+    position: relative;
+    display: grid;
+    gap: 26px;
+    margin: 34px 0 0;
+    padding: 0 0 0 var(--indent);
+    list-style: none;
+  }
+
+  .timeline::before,
+  .timeline::after {
     content: "";
     position: absolute;
-    top: 8px;
-    bottom: 8px;
-    left: 7px;
-    width: 1px;
-    background: linear-gradient(
-      180deg,
-      var(--color-accent-cyan),
-      color-mix(in srgb, var(--color-accent-violet) 35%, transparent) 45%,
-      transparent
-    );
+    top: var(--rail-top, 38px);
+    left: calc(var(--rail) - 2px);
+    width: 4px;
+    border-radius: 2px;
   }
 
-  /* --breakpoint-md */
-  @media (width >= 47.5rem) {
+  .timeline::before {
+    height: var(--rail-length, calc(100% - 38px));
+    background: linear-gradient(90deg, #5d646d, #e9ecef 45%, #858d97);
+    box-shadow: 0 0 0 1px var(--metal-outline);
+  }
+
+  .timeline::after {
+    height: calc(var(--fill, 1) * var(--rail-length, calc(100% - 38px)));
+    background: linear-gradient(90deg, #9c7726, #fbe7a6 45%, #c4952f);
+    box-shadow: 0 0 10px rgb(var(--particle-gold) / 0.45);
+  }
+
+  @media (width <= 40rem) {
+    .inner {
+      padding-inline: 16px;
+    }
+
     .timeline {
-      --rail: 2.125rem;
+      --rail: 12px;
+      --indent: 34px;
     }
   }
 </style>

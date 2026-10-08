@@ -190,8 +190,10 @@ export interface ExperienceContent {
   id: string;
   /** Section name after its number, e.g. "Experience". */
   label: string;
-  /** Section headline, e.g. "Production Trace & Impact". */
+  /** Section headline, a sentence ending in a full stop. */
   headline: string;
+  /** Accessible name of the timeline's list of roles. */
+  timelineLabel: string;
   /** Text in place of the end year of an ongoing role, e.g. "Present". */
   ongoing: string;
   /** Roles in display order, most recent first. */

@@ -445,32 +445,59 @@ describe("TechStackSection", () => {
 });
 
 describe("ExperienceSection", () => {
-  it("renders each role with its years, highlights and technologies", async () => {
+  it("numbers the eyebrow and renders the gold headline over the timeline", async () => {
     const doc = await render(ExperienceSection);
-    expect(doc.querySelector("section")?.id).toBe(experience.id);
-    const roles = [...doc.querySelectorAll("article.role")];
-    expect(texts(roles.map((role) => role.querySelector("h3")!))).toEqual(
+    const section = doc.querySelector("section");
+    expect(section?.id).toBe(experience.id);
+    expect(section?.getAttribute("aria-labelledby")).toBe(
+      `${experience.id}-title`,
+    );
+    expect(text(doc.querySelector(".eyebrow"))).toBe(`03 ${experience.label}`);
+    expect(text(doc.querySelector("h2 .gilt"))).toBe(experience.headline);
+    expect(doc.querySelector(".sub")).toBeNull();
+    expect(doc.querySelector("ol.timeline")?.getAttribute("aria-label")).toBe(
+      experience.timelineLabel,
+    );
+  });
+
+  it("lists the roles most recent first, as in experience.json", async () => {
+    const doc = await render(ExperienceSection);
+    const stops = [...doc.querySelectorAll("ol.timeline > li.stop")];
+    expect(stops.map((stop) => text(stop.querySelector("h3")))).toEqual(
       experience.roles.map((role) => role.role),
     );
-    roles.forEach((role, index) => {
+    const starts = experience.roles.map((role) => role.period.start);
+    expect(starts).toEqual([...starts].sort((a, b) => b - a));
+  });
+
+  it("gives each role a rivet and a machined card with its years, company, tags and highlights", async () => {
+    const doc = await render(ExperienceSection);
+    const stops = [...doc.querySelectorAll("li.stop")];
+    stops.forEach((stop, index) => {
       const item = experience.roles[index]!;
-      const years = [...role.querySelectorAll(".when time")].map((time) =>
-        time.getAttribute("datetime"),
+      const live = item.period.end === null;
+      expect(stop.classList.contains("live")).toBe(live);
+      const rivet = stop.querySelector(":scope > .rivet");
+      expect(rivet?.getAttribute("aria-hidden")).toBe("true");
+      expect(rivet?.classList.contains("spun")).toBe(!live);
+      const card = stop.querySelector("article.panel.stop-card");
+      const years = [...(card?.querySelectorAll(".when time") ?? [])].map(
+        (time) => time.getAttribute("datetime"),
       );
       expect(years[0]).toBe(String(item.period.start));
-      if (item.period.end === null) {
-        expect(text(role.querySelector(".when"))).toBe(
+      if (live) {
+        expect(text(card?.querySelector(".when") ?? null)).toBe(
           `${item.period.start} — ${experience.ongoing}`,
         );
       } else {
         expect(years[1]).toBe(String(item.period.end));
       }
-      expect(text(role.querySelector(".company"))).toBe(item.company);
-      expect(role.querySelectorAll(".highlights li")).toHaveLength(
-        item.highlights.length,
-      );
-      expect(texts(role.querySelectorAll(".tags .badge"))).toEqual(
+      expect(text(card?.querySelector(".company") ?? null)).toBe(item.company);
+      expect(texts(card?.querySelectorAll(".tags li.tag") ?? [])).toEqual(
         item.technologies,
+      );
+      expect(card?.querySelectorAll(".highlights li")).toHaveLength(
+        item.highlights.length,
       );
     });
   });

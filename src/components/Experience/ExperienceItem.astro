@@ -1,12 +1,14 @@
 ---
 /*
- * One experience.json role on the timeline: its years, role, company and
- * location, highlights and technologies. Its dot sits on the timeline rail at
- * the --rail offset that ExperienceSection sets.
+ * One experience.json role as a stop on the timeline: a rivet on the rail
+ * (gold and pulsing for the ongoing role) and its card on a machined Panel:
+ * its years engraved on a plate, its title, company and technologies beside
+ * its highlights.
  */
 import type { ExperienceItem } from "../../data/types";
-import Badge from "../UI/Badge.astro";
 import Emphasis from "../UI/Emphasis.astro";
+import Panel from "../UI/Panel.astro";
+import Tag from "../UI/Tag.astro";
 
 interface Props {
   item: ExperienceItem;
@@ -16,131 +18,214 @@ interface Props {
 
 const { item, ongoing } = Astro.props;
 const { start, end } = item.period;
+const live = end === null;
 // A role that starts and ends in the same year shows that year alone.
 const hasEnd = end !== start;
 ---
 
-<article class="role" data-reveal>
-  <p class="when">
-    <time datetime={String(start)}>{start}</time>
-    {hasEnd && (
-      <>
-        {" — "}
-        {end === null ? ongoing : <time datetime={String(end)}>{end}</time>}
-      </>
-    )}
-  </p>
-  <h3>{item.role}</h3>
-  <p class="company">
-    {item.company}
-    {item.location && <span class="location">{item.location}</span>}
-  </p>
-  <ul class="highlights">
-    {item.highlights.map((highlight) => (
-      <li>
-        <Emphasis text={highlight} />
-      </li>
-    ))}
-  </ul>
-  <ul class="tags">
-    {item.technologies.map((technology) => (
-      <li>
-        <Badge>{technology}</Badge>
-      </li>
-    ))}
-  </ul>
-</article>
+<li class:list={["stop", { live }]}>
+  <span class:list={["rivet", { spun: !live }]} aria-hidden="true"></span>
+  <Panel as="article" class="stop-card">
+    <div class="stop-head">
+      <p class="eyebrow-no when">
+        <time datetime={String(start)}>{start}</time>
+        {hasEnd && (
+          <>
+            {" — "}
+            {live ? ongoing : <time datetime={String(end)}>{end}</time>}
+          </>
+        )}
+      </p>
+      <h3>{item.role}</h3>
+      <p class="company">
+        {item.company}
+        {item.location && <span class="location">{item.location}</span>}
+      </p>
+      <ul class="tags">
+        {item.technologies.map((technology) => (
+          <Tag as="li">{technology}</Tag>
+        ))}
+      </ul>
+    </div>
+    <ul class="highlights">
+      {item.highlights.map((highlight) => (
+        <li>
+          <Emphasis text={highlight} />
+        </li>
+      ))}
+    </ul>
+  </Panel>
+</li>
 
 <style>
-  .role {
+  /*
+   * The rivet sits on the rail at --rail from the timeline's left edge, set
+   * off the page by a --bg ring. A spun steel rivet the gold has reached
+   * (.passed, from timeline.ts) wears a gold ring; the ongoing role's rivet
+   * is gold and pulses.
+   */
+  .stop {
     position: relative;
-    padding-bottom: 2.875rem;
   }
 
-  .role:last-child {
-    padding-bottom: 0;
-  }
-
-  /* Timeline dot, centred on the rail drawn by ExperienceSection. */
-  .role::before {
-    content: "";
+  .rivet {
     position: absolute;
-    top: 7px;
-    left: calc(-1 * var(--rail));
-    width: 15px;
-    height: 15px;
-    border: 1.5px solid var(--color-accent-cyan);
+    top: 26px;
+    left: calc(var(--rail) - var(--indent) - 12px);
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: var(--color-canvas);
-    box-shadow: 0 0 0 4px
-      color-mix(in srgb, var(--color-accent-cyan) 9%, transparent);
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      0 0 0 5px var(--bg),
+      calc(var(--lean) * var(--slant) * 4px) 4px 8px 3px rgb(0 0 0 / 0.3);
+    transition: box-shadow 0.5s var(--ease-soft);
   }
 
+  .stop:global(.passed) .rivet.spun {
+    box-shadow:
+      0 0 0 1px var(--metal-outline),
+      0 0 0 3px #e3bf62,
+      0 0 0 5px var(--bg),
+      calc(var(--lean) * var(--slant) * 4px) 4px 8px 3px rgb(0 0 0 / 0.3);
+  }
+
+  .live .rivet {
+    background: radial-gradient(
+      circle at 65% 30%,
+      #fff4cc,
+      #e3bf62 42%,
+      #9c7726 85%
+    );
+    animation: rivet-pulse 2.4s ease-out infinite;
+  }
+
+  @keyframes rivet-pulse {
+    0% {
+      box-shadow:
+        0 0 0 1px var(--metal-outline),
+        0 0 0 5px var(--bg),
+        0 0 0 5px rgb(var(--particle-gold) / 0.6);
+    }
+
+    70%,
+    100% {
+      box-shadow:
+        0 0 0 1px var(--metal-outline),
+        0 0 0 5px var(--bg),
+        0 0 0 16px rgb(var(--particle-gold) / 0);
+    }
+  }
+
+  /* The card: its head (years, title, company, tags) beside its highlights; stacked up to 860px. */
+  .stop :global(.panel.stop-card) {
+    display: grid;
+    grid-template-columns: 290px minmax(0, 1fr);
+    gap: 22px 34px;
+    padding: 26px 28px 28px;
+  }
+
+  /* The years plate holds its dates on one line, the dash spaced by the gap. */
   .when {
-    margin-bottom: 0.5rem;
-    font-size: 0.71875rem;
-    font-weight: 500;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-accent-cyan);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    margin: 0;
+    white-space: nowrap;
   }
 
   h3 {
-    font-size: 1.16rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--color-ink);
+    margin: 14px 0 4px;
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
   }
 
   .company {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5625rem;
-    margin: 0.3125rem 0 0.875rem;
-    font-size: 0.92rem;
-    color: var(--color-ink-muted);
+    margin: 0 0 16px;
+    color: var(--body);
+    font-size: 14.5px;
   }
 
   .location {
-    font-size: 0.71875rem;
-    color: var(--color-ink-faint);
-  }
-
-  .highlights {
-    display: grid;
-    gap: 0.5625rem;
-  }
-
-  .highlights li {
-    position: relative;
-    padding-left: 1.25rem;
-    font-size: 0.925rem;
-    line-height: 1.7;
-    color: var(--color-ink-muted);
-  }
-
-  .highlights li::before {
-    content: "";
-    position: absolute;
-    top: 11px;
-    left: 2px;
-    width: 6px;
-    height: 1.5px;
-    border-radius: 2px;
-    background: var(--color-accent-violet);
-    opacity: 0.75;
-  }
-
-  .highlights :global(strong) {
-    font-weight: 600;
-    color: var(--color-ink);
+    display: block;
+    color: var(--label);
+    font-size: 12.5px;
   }
 
   .tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4375rem;
-    margin-top: 0.875rem;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tags :global(.tag) {
+    font-size: 11.5px;
+  }
+
+  /* Each highlight is led by a short gold rule. */
+  .highlights {
+    display: grid;
+    gap: 12px;
+    max-width: 76ch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .highlights li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .highlights li::before {
+    content: "";
+    position: absolute;
+    top: 0.8em;
+    left: 0;
+    width: 10px;
+    height: 1px;
+    background: var(--gold-text);
+  }
+
+  .highlights :global(strong) {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  @media (width <= 53.75rem) {
+    .stop :global(.panel.stop-card) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width <= 40rem) {
+    .rivet {
+      left: calc(var(--rail) - var(--indent) - 10px);
+      width: 20px;
+      height: 20px;
+    }
+
+    .stop :global(.panel.stop-card) {
+      padding: 22px 18px 24px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rivet {
+      transition: none;
+    }
+
+    .live .rivet {
+      animation: none;
+    }
   }
 </style>
