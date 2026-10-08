@@ -271,22 +271,12 @@ export interface ContactContent {
   resume: string;
 }
 
-/** Content of the site footer. */
+/** Content of the site footer strip. */
 export interface FooterContent {
-  /** Rights holder and statement shown after "© <year> ", e.g. "Adioz. All rights reserved.". */
+  /** The rights holder engraved after "© <year> ", e.g. "Adioz D Eshitemi". */
   copyright: string;
-  /** Credit groups in display order, separated by " · ". */
-  credits: CreditGroup[];
-  /** Link to the site's source repository. */
-  source: LinkItem;
-}
-
-/** A footer credit, e.g. "Built with" followed by links to the Astro and Tailwind CSS docs. */
-export interface CreditGroup {
-  /** Text before the links, e.g. "Built with". */
-  label: string;
-  /** Links to each tool's documentation. */
-  links: LinkItem[];
+  /** The back-to-top knob: its accessible name, its target and its icon. */
+  top: LinkItem;
 }
 
 /** The parts of the hero's agent pipeline, in the order a request reaches them. */

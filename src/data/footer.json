@@ -1,35 +1,8 @@
 {
-  "copyright": "Adioz. All rights reserved.",
-  "credits": [
-    {
-      "label": "Built with",
-      "links": [
-        {
-          "title": "Astro",
-          "url": "https://docs.astro.build/",
-          "icon": "astro"
-        },
-        {
-          "title": "Tailwind CSS",
-          "url": "https://tailwindcss.com/docs",
-          "icon": "tailwindcss"
-        }
-      ]
-    },
-    {
-      "label": "Deployed on",
-      "links": [
-        {
-          "title": "Cloudflare Workers",
-          "url": "https://developers.cloudflare.com/workers/",
-          "icon": "cloudflare"
-        }
-      ]
-    }
-  ],
-  "source": {
-    "title": "Source",
-    "url": "https://github.com/adiozeshitemi/adioz-dev",
-    "icon": "github"
+  "copyright": "Adioz D Eshitemi",
+  "top": {
+    "title": "Back to top",
+    "url": "#top",
+    "icon": "arrow-up"
   }
 }
