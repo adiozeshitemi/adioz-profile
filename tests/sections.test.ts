@@ -202,6 +202,16 @@ describe("Hero", () => {
     });
   });
 
+  it("sets the 3D pipeline above the agent log beside the copy", async () => {
+    const doc = await render(Hero);
+    const system = doc.querySelector(".grid > .system");
+    expect(
+      [...(system?.children ?? [])]
+        .filter((child) => child.tagName !== "SCRIPT")
+        .map((child) => child.classList[0]),
+    ).toEqual(["pipeline", "terminal"]);
+  });
+
   it("engraves the log title beside the window buttons and the live lamp", async () => {
     const doc = await render(Hero);
     const log = doc.querySelector(".terminal figure.log");

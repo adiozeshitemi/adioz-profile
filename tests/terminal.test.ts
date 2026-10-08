@@ -5,6 +5,8 @@ import {
   KEEP,
   KEEP_ZOOMED,
   LINE_GAP,
+  LOG_EVENT,
+  type LogEntry,
   clock,
   startLog,
   startWindow,
@@ -178,5 +180,29 @@ describe("startWindow", () => {
     expect(shade().hidePopover).toHaveBeenCalled();
     expect(document.querySelector(".log-placeholder")).toBeNull();
     expect(button("zoom").getAttribute("aria-pressed")).toBe("false");
+  });
+});
+
+describe("startLog driven by the pipeline", () => {
+  const write = (detail: LogEntry) =>
+    dispatchEvent(new CustomEvent(LOG_EVENT, { detail }));
+
+  it("clears its own entries and writes each LOG_EVENT entry with its tone", () => {
+    stop = startLog(screen(), false);
+    write({ who: "guardrail", text: "✗ gate failed", tone: "bad" });
+    expect(messages()).toEqual(["✗ gate failed"]);
+    const entry = screen().lastElementChild!;
+    expect(entry.querySelector("time")).not.toBeNull();
+    expect(entry.querySelector(".who")?.textContent).toBe("guardrail");
+    expect(entry.querySelector(".message")?.classList.contains("bad")).toBe(
+      true,
+    );
+  });
+
+  it("stops typing its own script once the pipeline writes", () => {
+    stop = startLog(screen(), false);
+    write({ who: "request", text: "plain-language change" });
+    vi.advanceTimersByTime(LINE_GAP * 3);
+    expect(messages()).toEqual(["plain-language change"]);
   });
 });

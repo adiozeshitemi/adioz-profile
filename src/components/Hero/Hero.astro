@@ -1,7 +1,8 @@
 ---
 /*
  * The first screen: profile.json's availability pill, gold headline, lede and
- * actions, the stats panel and the social links beside the terminal.
+ * actions, the stats panel and the social links beside the 3D agent pipeline
+ * and its agent log.
  */
 import { profile } from "../../data/index";
 import Button from "../UI/Button.astro";
@@ -9,6 +10,7 @@ import Emphasis from "../UI/Emphasis.astro";
 import Knob from "../UI/Knob.astro";
 import Lamp from "../UI/Lamp.astro";
 import Panel from "../UI/Panel.astro";
+import Pipeline3D from "./Pipeline3D.astro";
 import StatBanner from "../UI/StatBanner.astro";
 import SocialLinks from "./SocialLinks.astro";
 import Terminal from "./Terminal.astro";
@@ -65,14 +67,17 @@ const ICON_REST: Record<string, number> = {
         <StatBanner class="hero-stats" />
         <SocialLinks />
       </div>
-      <Terminal />
+      <div class="system">
+        <Pipeline3D />
+        <Terminal />
+      </div>
     </div>
   </div>
 </section>
 
 <style>
   /*
-   * Below 1020px the copy stacks above the terminal; from 1020px they sit
+   * Below 1020px the copy stacks above the pipeline and its log; from 1020px they sit
    * side by side and the hero fills the first screen under the header.
    */
   .hero {
@@ -94,8 +99,14 @@ const ICON_REST: Record<string, number> = {
     align-items: center;
   }
 
-  .copy {
+  .copy,
+  .system {
     min-width: 0;
+  }
+
+  .system {
+    display: grid;
+    gap: 18px;
   }
 
   /* The availability pill: a gold-rimmed machined slab on a 3px wall, led by the status lamp. */
