@@ -59,13 +59,16 @@ adioz-dev/
 │   │   │   ├── SkillBar.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
-│   │   └── UI/                # Reusable primitives: buttons, knobs, badges, emphasis, engraving filters, icons, stats, sections
+│   │   └── UI/                # Reusable primitives: buttons, knobs, plates, badges, emphasis, engraving filters, icons, stats, sections
 │   │       ├── Badge.astro
 │   │       ├── Button.astro
 │   │       ├── Emphasis.astro
 │   │       ├── EngravingFilters.astro
 │   │       ├── Icon.astro
 │   │       ├── Knob.astro
+│   │       ├── Nameplate.astro
+│   │       ├── Plate.astro
+│   │       ├── Screw.astro
 │   │       ├── Section.astro
 │   │       ├── SectionHeader.astro
 │   │       ├── StatBanner.astro

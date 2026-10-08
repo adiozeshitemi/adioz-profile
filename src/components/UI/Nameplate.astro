@@ -1,0 +1,112 @@
+---
+import Screw from "./Screw.astro";
+
+interface Props {
+  /** The carved name. */
+  name: string;
+  /** Renders the plate as a link; otherwise the name is a heading. */
+  href?: string;
+  /** The heading level of the name when the plate is not a link; 3 by default. */
+  level?: 2 | 3 | 4;
+  class?: string;
+}
+
+const { name, href, level = 3, class: className } = Astro.props;
+const Heading = `h${level}` as const;
+---
+
+{href ? (
+  <a href={href} class:list={["nameplate", "link", className]}>
+    <Screw angle={28} class="start" />
+    <Screw angle={-52} class="end" />
+    <span class="name carved">{name}</span>
+  </a>
+) : (
+  <div class:list={["nameplate", className]}>
+    <Screw angle={28} class="start" />
+    <Screw angle={-52} class="end" />
+    <Heading class="name carved">{name}</Heading>
+  </div>
+)}
+
+<style>
+  /*
+   * A nameplate is a narrow brushed --plate-metal plate on a 4px wall slanted by
+   * --lean, screwed down at both ends, with a name carved into it (.carved from
+   * engraving.css). As a link it lifts 1px on hover and shows a gold focus ring.
+   */
+  .nameplate {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 58px;
+    padding: 0 42px;
+    border-radius: 12px;
+    background-image:
+      var(--brush-noise-soft),
+      radial-gradient(
+        ellipse 22% 160% at var(--lx) 50%,
+        var(--plate-shine),
+        transparent 70%
+      ),
+      var(--plate-metal);
+    background-size:
+      320px 140px,
+      100% 100%,
+      100% 100%;
+    background-blend-mode: overlay, screen, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.3),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--plate-wall-1),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--plate-wall-2),
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 var(--plate-wall-3),
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 var(--plate-wall-5),
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 7px) 7px 6px -1px var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 11px) 11px 26px -10px var(--metal-drop);
+  }
+
+  .nameplate > :global(.screw) {
+    top: calc(50% - 5.5px);
+  }
+
+  .nameplate > :global(.start) {
+    left: 15px;
+  }
+
+  .nameplate > :global(.end) {
+    right: 15px;
+  }
+
+  .name {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 27px;
+    font-weight: var(--display-wght);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .link {
+    text-decoration: none;
+    transition: transform 0.3s var(--ease-soft);
+  }
+
+  .link:hover {
+    transform: translate(calc(var(--lean) * var(--slant) * -1px), -1px);
+  }
+
+  .link:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: 5px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .link {
+      transition: none;
+    }
+  }
+</style>

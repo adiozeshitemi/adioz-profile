@@ -191,10 +191,12 @@
     #cfa654 100%
   );
   /*
-   * A plate's side wall, from below its face (--plate-wall-1) to the floor
-   * (--plate-wall-5); --plate-lip lights the lip below text engraved into it.
+   * A plate's highlight band (--plate-shine), its side wall from below its
+   * face (--plate-wall-1) to the floor (--plate-wall-5); --plate-lip lights the
+   * lip below text engraved into it.
    * --plate-ink is that text, at 4.5:1 or more on every --plate-metal stop.
    */
+  --plate-shine: rgb(255 245 214 / 0.62);
   --plate-wall-1: #a8802a;
   --plate-wall-2: #987326;
   --plate-wall-3: #876622;
@@ -300,6 +302,7 @@
   );
   /* Instrument plates: brushed bronze. */
   --plate-metal: var(--bronze-metal);
+  --plate-shine: rgb(255 242 226 / 0.85);
   --plate-wall-1: #976234;
   --plate-wall-2: #87572e;
   --plate-wall-3: #774c28;
