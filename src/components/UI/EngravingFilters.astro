@@ -1,8 +1,8 @@
 ---
 /*
- * The shared SVG filters of the main design, in one zero-size SVG that
- * Layout.astro renders once per page. CSS applies each by id with
- * filter: url(#id). Light falls from the top right.
+ * The shared SVG filters and gradients of the main design, in one zero-size
+ * SVG that Layout.astro renders once per page. CSS and SVG apply each by id
+ * with url(#id). Light falls from the top right.
  */
 ---
 
@@ -120,6 +120,62 @@
       <feMergeNode in="SourceGraphic"></feMergeNode>
       <feMergeNode in="shade"></feMergeNode>
     </feMerge>
+  </filter>
+
+  <!--
+    The Dividers mark's metals for BrandMark.astro: #mark-steel and #mark-gold
+    in the theme's metals (--mark-steel-*, --mark-gold-*), #mark-steel-bright
+    and #mark-gold-bright in the dark theme's in both themes, and #mark-raise,
+    which stands the mark off the page: a lit top edge, then a cast shadow.
+  -->
+  <linearGradient id="mark-steel" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" style="stop-color: var(--mark-steel-1)"></stop>
+    <stop offset="0.38" style="stop-color: var(--mark-steel-2)"></stop>
+    <stop offset="0.55" style="stop-color: var(--mark-steel-3)"></stop>
+    <stop offset="0.78" style="stop-color: var(--mark-steel-4)"></stop>
+    <stop offset="1" style="stop-color: var(--mark-steel-5)"></stop>
+  </linearGradient>
+  <linearGradient id="mark-gold" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" style="stop-color: var(--mark-gold-1)"></stop>
+    <stop offset="0.35" style="stop-color: var(--mark-gold-2)"></stop>
+    <stop offset="0.7" style="stop-color: var(--mark-gold-3)"></stop>
+    <stop offset="1" style="stop-color: var(--mark-gold-4)"></stop>
+  </linearGradient>
+  <linearGradient id="mark-steel-bright" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"></stop>
+    <stop offset="0.38" stop-color="#c3c8ce"></stop>
+    <stop offset="0.55" stop-color="#8e959e"></stop>
+    <stop offset="0.78" stop-color="#d8dce1"></stop>
+    <stop offset="1" stop-color="#6c737c"></stop>
+  </linearGradient>
+  <linearGradient id="mark-gold-bright" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#fff1b8"></stop>
+    <stop offset="0.35" stop-color="#e9c460"></stop>
+    <stop offset="0.7" stop-color="#c4973a"></stop>
+    <stop offset="1" stop-color="#8f6718"></stop>
+  </linearGradient>
+  <filter
+    id="mark-raise"
+    x="-20%"
+    y="-20%"
+    width="140%"
+    height="140%"
+    color-interpolation-filters="sRGB"
+  >
+    <feDropShadow
+      dx="0"
+      dy="-0.6"
+      stdDeviation="0"
+      flood-color="#fff"
+      flood-opacity="0.45"
+    ></feDropShadow>
+    <feDropShadow
+      dx="0.6"
+      dy="1.4"
+      stdDeviation="0.8"
+      flood-color="#000"
+      flood-opacity="0.7"
+    ></feDropShadow>
   </filter>
 
   <!-- #dial-raise stands gauge ticks off the face: a lit top edge, then a cast shadow. -->

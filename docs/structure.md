@@ -24,11 +24,17 @@ adioz-dev/
 │   │   ├── montserrat-OFL.txt
 │   │   └── montserrat-variable.woff2
 │   ├── images/
-│   │   ├── og.png             # Social share preview image (1200×630)
+│   │   ├── logo.svg           # Prototype AD logo mark (header brand)
+│   │   ├── og.png             # Prototype social share preview image (1200×630)
 │   │   └── profile_pic.svg    # Profile avatar
-│   ├── favicon.ico            # Favicon fallback (16, 32, 48 px)
-│   ├── favicon.svg            # AD logo mark (site icon and header brand)
-│   └── resume.pdf             # Downloadable resume; source of the experience and projects data
+│   ├── apple-touch-icon.png   # Dividers mark home-screen icon (180 px)
+│   ├── favicon.ico            # Dividers mark favicon fallback (16, 32 px)
+│   ├── favicon.svg            # Dividers mark site icon, metals follow the browser's colour scheme
+│   ├── icon-192.png           # Web manifest icon
+│   ├── icon-512.png           # Web manifest icon
+│   ├── og.png                 # Main design link preview (1200×630)
+│   ├── resume.pdf             # Downloadable resume; source of the experience and projects data
+│   └── site.webmanifest       # Web app manifest: name and icons
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
@@ -59,8 +65,9 @@ adioz-dev/
 │   │   │   ├── SkillBar.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
-│   │   └── UI/                # Reusable primitives: buttons, knobs, panels, plates, tags, lamps, badges, emphasis, engraving filters, icons, stats, sections
+│   │   └── UI/                # Reusable primitives: brand mark, buttons, knobs, panels, plates, tags, lamps, badges, emphasis, engraving filters, icons, stats, sections
 │   │       ├── Badge.astro
+│   │       ├── BrandMark.astro
 │   │       ├── Button.astro
 │   │       ├── Emphasis.astro
 │   │       ├── EngravingFilters.astro
@@ -128,6 +135,7 @@ adioz-dev/
 ├── tests/                     # 🧪 Vitest unit tests (npm test)
 │   ├── fixtures/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
+│   ├── brand.test.ts          # Brand files: sizes, favicon scheme switch, manifest
 │   ├── data.test.ts           # Data rules and load-time errors
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── field.test.ts          # Particle field helpers and drawing
