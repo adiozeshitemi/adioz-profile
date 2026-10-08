@@ -1,10 +1,14 @@
 {
   "id": "about",
   "label": "Core Engineering Focus",
-  "headline": "AI as efficient as it is intelligent",
+  "headline": "AI as efficient as it is intelligent.",
   "bio": [
     "I take AI into production for enterprise clients and own each system from design to support: agents that act within guardrails, and models sized to the latency budget and hardware they run on."
   ],
+  "portrait": {
+    "src": "/images/profile_pic.svg",
+    "alt": "Illustrated portrait of Adioz Eshitemi"
+  },
   "pillars": [
     {
       "title": "Tool-Using Agents",
@@ -31,5 +35,25 @@
       "tags": ["Rust", "Axum", "Spring Boot", "Kafka", "PostgreSQL"]
     }
   ],
-  "philosophy": "AI should be as efficient as it is intelligent: small, quantized models that meet tight latency budgets without wasted compute."
+  "record": {
+    "title": "Service record",
+    "traits": [
+      {
+        "name": "Robust",
+        "detail": "99% uptime held"
+      },
+      {
+        "name": "Fluent",
+        "detail": "Five languages, front to back"
+      },
+      {
+        "name": "Equipped",
+        "detail": "Vision, text and ranking models"
+      },
+      {
+        "name": "Seasoned",
+        "detail": "8 years in the field"
+      }
+    ]
+  }
 }

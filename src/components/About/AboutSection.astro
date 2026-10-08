@@ -1,57 +1,296 @@
 ---
 /*
- * The about section from about.json: the bio paragraphs under the headline,
- * a CoreFocusCard for each pillar, and the philosophy statement after them.
+ * The about section, the main design's Core Engineering Focus, from
+ * about.json: the gold headline and the bio, the pillars on one brushed
+ * instrument plate (the portrait first, then a CoreFocusCard per pillar),
+ * and the service record plaque under it.
  */
 import { about } from "../../data/index";
-import Section from "../UI/Section.astro";
+import Plate from "../UI/Plate.astro";
+import Screw from "../UI/Screw.astro";
+import SectionTitle from "../UI/SectionTitle.astro";
+import AboutPortrait from "./AboutPortrait.astro";
 import CoreFocusCard from "./CoreFocusCard.astro";
+
+const titleId = `${about.id}-title`;
+const middle = Math.floor(about.pillars.length / 2);
 ---
 
-<Section id={about.id} label={about.label} title={about.headline}>
-  <Fragment slot="intro">
-    {about.bio.map((paragraph) => (
-      <p>{paragraph}</p>
-    ))}
-  </Fragment>
-  <div class="pillars">
-    {about.pillars.map((pillar) => (
-      <CoreFocusCard pillar={pillar} />
-    ))}
+<section id={about.id} class="about" aria-labelledby={titleId}>
+  <div class="inner">
+    <SectionTitle
+      section={about.id}
+      label={about.label}
+      title={about.headline}
+      id={titleId}
+    >
+      {about.bio.map((paragraph) => (
+        <p>{paragraph}</p>
+      ))}
+    </SectionTitle>
+    <Plate class="board">
+      <div class="pillars">
+        <AboutPortrait />
+        {about.pillars.map((pillar, index) => (
+          <CoreFocusCard
+            pillar={pillar}
+            number={index + 1}
+            gold={index === middle}
+          />
+        ))}
+      </div>
+    </Plate>
+    <figure class="plaque">
+      <Screw angle={28} class="top-left" />
+      <Screw angle={-52} class="top-right" />
+      <Screw angle={120} class="bottom-left" />
+      <Screw angle={64} class="bottom-right" />
+      <figcaption>{about.record.title}</figcaption>
+      <dl class="record">
+        {about.record.traits.map((trait) => (
+          <div>
+            <dt>{trait.name}</dt>
+            <dd>{trait.detail}</dd>
+          </div>
+        ))}
+      </dl>
+    </figure>
   </div>
-  <p class="philosophy" data-reveal>
-    {about.philosophy}
-  </p>
-</Section>
+</section>
+
+<script>
+  import { startCords, startPillarFocus } from "../../scripts/pillars";
+
+  const pillars = [...document.querySelectorAll<HTMLElement>(".about .pillar")];
+  startPillarFocus(pillars);
+  const portrait = document.querySelector<HTMLElement>(".pillar-portrait");
+  if (portrait) startCords(portrait);
+</script>
 
 <style>
+  .about {
+    padding-block: clamp(84px, 10vw, 140px);
+  }
+
+  .inner {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 28px;
+  }
+
+  /*
+   * The board is the pillars' instrument plate, screwed down at its corners.
+   * Its pillars sit four to a row from 1180px, two from 700px and stacked
+   * below, split by grooves cut into the plate (--groove-v along a pillar's
+   * left edge, --groove-h along its top). --board-ink is the pillars' text.
+   */
+  .inner :global(.plate.board) {
+    --board-ink: #23160a;
+    --groove-v:
+      inset 1px 0 0 rgb(30 16 2 / 0.35), inset 2px 0 0 rgb(255 240 205 / 0.35);
+    --groove-h:
+      inset 0 1px 0 rgb(30 16 2 / 0.35), inset 0 2px 0 rgb(255 240 205 / 0.35);
+    padding: 52px 30px 40px;
+  }
+
   .pillars {
     display: grid;
-    gap: 1.125rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .philosophy {
-    max-width: 60ch;
-    margin-top: 3rem;
-    padding-left: 1.25rem;
-    border-left: 2px solid var(--color-accent-cyan);
-    font-size: 1.125rem;
-    font-weight: 500;
-    line-height: 1.6;
-    color: var(--color-ink);
+  .pillars > :global(.pillar) {
+    padding: 6px 26px 4px;
   }
 
-  /* --breakpoint-md */
-  @media (width >= 47.5rem) {
+  .pillars > :global(.pillar.pillar-portrait) {
+    padding: 0;
+  }
+
+  .pillars > :global(.pillar + .pillar) {
+    box-shadow: var(--groove-v);
+  }
+
+  @media (width < 73.75rem) {
     .pillars {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .pillars > :global(.pillar) {
+      padding: 26px;
+    }
+
+    .pillars > :global(.pillar + .pillar) {
+      box-shadow: none;
+    }
+
+    .pillars > :global(.pillar:nth-child(2)) {
+      box-shadow: var(--groove-v);
+    }
+
+    .pillars > :global(.pillar:nth-child(3)) {
+      box-shadow: var(--groove-h);
+    }
+
+    .pillars > :global(.pillar:nth-child(4)) {
+      box-shadow: var(--groove-v), var(--groove-h);
+    }
   }
 
-  /* --breakpoint-lg */
-  @media (width >= 65rem) {
+  @media (width < 43.75rem) {
     .pillars {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pillars > :global(.pillar) {
+      padding: 26px 6px;
+    }
+
+    .pillars > :global(.pillar.pillar-portrait) {
+      height: min(560px, 125vw - 120px);
+      padding: 0;
+    }
+
+    .pillars > :global(.pillar:nth-child(n)) {
+      box-shadow: none;
+    }
+
+    .pillars > :global(.pillar + .pillar:nth-child(n)) {
+      box-shadow: var(--groove-h);
+    }
+  }
+
+  /*
+   * The plaque is brushed steel screwed down at its corners, the same in both
+   * themes: --steel-brushed under brushing streaks on a 5px steel wall. Its
+   * record lists four traits, each an engraved word over a stamped line,
+   * split by cut grooves; two to a row below 700px.
+   */
+  .plaque {
+    position: relative;
+    max-width: 860px;
+    margin: 54px auto 0;
+    padding: 40px 64px 36px;
+    border-radius: 18px;
+    background-image: var(--brush-noise), var(--steel-brushed);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.85),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25),
+      0 0 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #aeb4bb,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #9ea4ac,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #8d949c,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 #7c838b,
+      calc(var(--lean) * var(--slant) * 5px) 5px 0 0 #6b727a,
+      calc(var(--lean) * var(--slant) * 5px) 5px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * 9px) 9px 6px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * 18px) 20px 44px -12px var(--metal-drop);
+    text-align: center;
+  }
+
+  .plaque > :global(.top-left) {
+    top: 14px;
+    left: 14px;
+  }
+
+  .plaque > :global(.top-right) {
+    top: 14px;
+    right: 14px;
+  }
+
+  .plaque > :global(.bottom-left) {
+    bottom: 14px;
+    left: 14px;
+  }
+
+  .plaque > :global(.bottom-right) {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  figcaption,
+  dd {
+    color: #3c434b;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-shadow: 0 1px 0 rgb(255 255 255 / 0.7);
+  }
+
+  figcaption {
+    margin-bottom: 22px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .record {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .record > div {
+    padding: 4px 14px;
+  }
+
+  .record > div + div {
+    box-shadow:
+      inset 1px 0 0 rgb(0 0 0 / 0.32),
+      inset 2px 0 0 rgb(255 255 255 / 0.7);
+  }
+
+  /* Each trait is engraved: a dark floor under the cut's upper wall, over a lit lower lip. */
+  dt {
+    font-size: clamp(20px, 2.1vw, 26px);
+    font-weight: var(--display-wght);
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    background-image: linear-gradient(
+      180deg,
+      #0e1013 0%,
+      #22262c 55%,
+      #3a4048 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 0 rgb(255 255 255 / 0.85))
+      drop-shadow(0 -1px 0 rgb(0 0 0 / 0.35));
+  }
+
+  dd {
+    margin: 8px 0 0;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+  }
+
+  @media (width < 43.75rem) {
+    .record {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 22px;
+    }
+
+    .record > div:nth-child(3) {
+      box-shadow: none;
+    }
+  }
+
+  @media (width <= 40rem) {
+    .inner {
+      padding-inline: 16px;
+    }
+
+    .inner :global(.plate.board) {
+      padding: 46px 20px 30px;
+    }
+
+    .plaque {
+      padding: 38px 22px 32px;
     }
   }
 </style>

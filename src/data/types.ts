@@ -120,14 +120,16 @@ export interface AboutContent {
   id: string;
   /** Section name after its number, e.g. "Core Engineering Focus". */
   label: string;
-  /** Section headline, e.g. "AI as efficient as it is intelligent". */
+  /** Section headline, a sentence ending in a full stop. */
   headline: string;
   /** Bio paragraphs in reading order. */
   bio: string[];
-  /** Core focus pillars in display order. */
+  /** The portrait engraved into pillar 00 and its text alternative. */
+  portrait: { src: string; alt: string };
+  /** Core focus pillars in display order, numbered from 01 after the portrait. */
   pillars: FocusPillar[];
-  /** Engineering philosophy statement. */
-  philosophy: string;
+  /** The service record plaque under the pillars. */
+  record: ServiceRecord;
 }
 
 /** One core focus area in the about section. */
@@ -138,6 +140,14 @@ export interface FocusPillar {
   description: string;
   /** Topic labels shown as tags, e.g. "Quantization". */
   tags: string[];
+}
+
+/** A plaque of traits, each an engraved word over a stamped line. */
+export interface ServiceRecord {
+  /** The plaque's caption, e.g. "Service record". */
+  title: string;
+  /** Traits in display order, e.g. "Robust" over "99% uptime held". */
+  traits: { name: string; detail: string }[];
 }
 
 /** Content of the tech stack section. */
