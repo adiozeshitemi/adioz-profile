@@ -86,8 +86,14 @@ const imageUrl = new URL(image, Astro.site);
     <script>
       import "../scripts/motion";
       import { lightEnabled, startLight } from "../scripts/light";
+      import { startView } from "../scripts/view";
 
-      if (lightEnabled()) startLight();
+      // The pointer light and the view turn share one condition: a fine
+      // pointer and no preference for reduced motion.
+      if (lightEnabled()) {
+        startLight();
+        startView();
+      }
     </script>
   </body>
 </html>

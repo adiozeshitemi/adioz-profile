@@ -2,7 +2,7 @@
 
 ## Overview
 
-This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS; the only client-side JavaScript is a pre-paint theme script in `<head>` and short scripts for the theme knob, the mobile menu, motion effects and the pointer light, and every section is complete without them. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`. The colors follow the device's light or dark color scheme until the visitor picks a theme with the header's theme knob.
+This portfolio is a statically generated site built with Astro and Tailwind CSS v4. Every page is pre-rendered at build time into static HTML and CSS; the only client-side JavaScript is a pre-paint theme script in `<head>` and short scripts for the theme knob, the mobile menu, motion effects, the pointer light and the view turn, and every section is complete without them. GitHub Actions deploy `main` to Cloudflare Workers as static assets, served at `adioz.dev`. The colors follow the device's light or dark color scheme until the visitor picks a theme with the header's theme knob.
 
 ## Architecture Flow
 
@@ -15,7 +15,7 @@ flowchart LR
         direction TB
         Data["data/ (JSON content, typed exports)"]
         Styles["styles/ (theme, typography, engraving, metal, animations, global)"]
-        Scripts["scripts/ (motion, theme, light)"]
+        Scripts["scripts/ (motion, theme, light, view)"]
         Icons["icons/ (SVG icons)"]
         UI["components/UI/ (primitives)"]
         Sections["components/ (header, page sections, footer)"]
@@ -43,7 +43,7 @@ flowchart LR
 ## 1. Pages, Components and Data
 
 - **`src/pages/index.astro`**: The only route (`/`). It renders `Header`; `Hero`, `AboutSection`, `TechStackSection`, `ExperienceSection`, `ProjectsSection` and `ContactSection` inside `<main>`; and `Footer`, all inside `Layout`.
-- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme (marked with `data-theme-color`), preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, imports `global.css`, inlines `src/scripts/theme-init.js` at the end of `<head>`, renders `EngravingFilters` at the start of `<body>`, and loads `src/scripts/motion.ts` and, for fine pointers without reduced motion, the pointer light from `src/scripts/light.ts`.
+- **`src/layouts/Layout.astro`**: The HTML shell. Its `title`, `description`, `image` and `imageAlt` props default to `profile.json` (title `<name> | <role>`) and `site.json`. It sets the canonical URL and the Open Graph and Twitter card tags as absolute URLs from `site` in `astro.config.mjs`, a `theme-color` for each color scheme (marked with `data-theme-color`), preloads the Montserrat and JetBrains Mono fonts, links the SVG and ICO favicons, imports `global.css`, inlines `src/scripts/theme-init.js` at the end of `<head>`, renders `EngravingFilters` at the start of `<body>`, and loads `src/scripts/motion.ts` and, for fine pointers without reduced motion, the pointer light from `src/scripts/light.ts` and the view turn from `src/scripts/view.ts`.
 - **`src/components/Header/`**: The site header, built from `navigation.json` and `profile.json`:
   - `Header.astro`: a sticky bar across the top of the page with a translucent, blurred background, transparent while the page is within 40px of the top (`data-at-top`, set by `motion.ts`). It holds the brand link, the section links (from 760px), the theme knob, the menu button (below 760px), and a scroll progress bar along its top edge.
   - `BrandLogo.astro`: a link to the top of the page with the logo mark, `public/favicon.svg` (the same file as the site icon), and `Profile.name` as a lowercase wordmark.
@@ -127,6 +127,10 @@ Motion adds to markup that is complete without it. Where a browser lacks the fea
 
   Each frame every value eases a fixed share of the way to its target, and frames run only while a value is moving. `lightEnabled` allows it only for a fine pointer without `prefers-reduced-motion`; `startLight` returns a function that stops it, and it pauses while the tab is hidden.
 
+### View turn
+
+- **`src/scripts/view.ts`**: turns each raised part's view away from the pointer, under the same condition as the pointer light. Every part (titles, section numbers, machined buttons, knobs, plates and panels) is seen from the lower left at rest (`--lean` -1). A hovered part's `--lean` runs from -1 with the pointer at its right edge to 1 at its left edge, so its walls and shadows swing to the far side; a keyboard-focused part turns to 1. A part inside another part keeps its parent's view unless it is hovered or focused, and elements that are not parts (the gauge dials set into a plate) inherit the plate's `--lean` through CSS. Views ease 7% of the way per frame, frames run only while a view moves and pause while the tab is hidden, and a part that settles back on its parent's view drops its own `--lean`. `startView` returns a function that stops it.
+
 ### Theme
 
 - **`src/scripts/theme-init.js`**: inlined at the end of `<head>`, so it runs before first paint. It sets `data-theme` on `<html>` to the theme saved in `localStorage` under `theme`, or to the device's color scheme when none is saved or storage is unavailable. A saved theme also sets `data-theme-saved` and gives both `theme-color` metas that theme's color.
@@ -149,6 +153,7 @@ The site is pre-rendered at build time (SSG). `npm run build` runs `astro check`
   - `ui.test.ts`: the UI primitives, including the machined `Button` variants, `Knob`, `Panel`, `Plate`, `Nameplate`, `Screw`, `Tag` and `Lamp`.
   - `theme.test.ts`: the main design tokens in `theme.css`: every themed token in both themes, WCAG AA contrast of each text colour on `--bg` of `--plate-ink` on every `--plate-metal` stop and of `--tag-text` on every `--tag-face` stop, the shared metals, type and view tokens, `.slab`'s wall and drop, a `light-dark()` value for every prototype color token, and the `color-scheme` set from `data-theme`.
   - `light.test.ts` (happy-dom environment): the light's angle and distance helpers, `lightEnabled`, and `startLight` driven frame by frame: highlights, panel glow, turning caps, screws that turn their light but not themselves, the return to rest, pausing while hidden, and stopping.
+  - `view.test.ts` (happy-dom environment): `leanAway`, and `startView` driven frame by frame with stubbed hover and focus: easing a hovered part, parts inside a turning part keeping its view, a hovered inner part turning on its own, keyboard focus, the return to rest, pausing while hidden, and stopping.
   - `theme-toggle.test.ts` (happy-dom environment): `theme-init.js` with no saved theme, a saved theme, an unknown value and blocked storage, and `theme.ts`'s toggling, saving, `theme-color` recoloring and device tracking.
   - `engraving.test.ts`: the four filters in one hidden SVG rendered once by the layout, CSS references only to those filters, the import order, and each engraved style's fill, lips and filter.
   - `typography.test.ts`: the 650 display weight, the self-hosted weight ranges, the import order, and the title, label and section-number styles.

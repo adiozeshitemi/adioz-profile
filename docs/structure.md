@@ -113,7 +113,8 @@ adioz-dev/
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── motion.ts          # Header scroll state, stat counters, card spotlight
 │   │   ├── theme-init.js      # Pre-paint theme: saved choice or the device's scheme
-│   │   └── theme.ts           # Theme switching, saving and device tracking
+│   │   ├── theme.ts           # Theme switching, saving and device tracking
+│   │   └── view.ts            # View turn: raised parts lean away from the pointer
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Keyframes, scroll-driven reveal and fill, card spotlight, reduced motion
 │       ├── engraving.css      # Main design engraved, carved and inlaid text
@@ -134,7 +135,8 @@ adioz-dev/
 │   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
 │   ├── theme.test.ts          # Main design tokens and their contrast
 │   ├── typography.test.ts     # Main design type tokens, fonts and text styles
-│   └── ui.test.ts             # UI primitives
+│   ├── ui.test.ts             # UI primitives
+│   └── view.test.ts           # View turn helpers and frames
 │
 ├── .editorconfig              # Editor encoding, line endings and indentation
 ├── .gitignore
