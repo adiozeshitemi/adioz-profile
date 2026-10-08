@@ -1,9 +1,9 @@
 # Icon sources
 
-| Icons                                                                                                                                        | Source                                                    | License |
-| -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------- |
-| `activity`, `arrow-right`, `arrow-up-right`, `box`, `code-slash`, `download`, `email` (envelope-fill), `github`, `globe`, `linkedin`, `send` | [Bootstrap Icons](https://icons.getbootstrap.com/) 1.13.1 | MIT     |
-| `astro`, `cloudflare`, `tailwindcss`                                                                                                         | [Simple Icons](https://simpleicons.org/) 16.34.0          | CC0 1.0 |
+| Icons                                                                                                                                                                                 | Source                                                    | License |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------- |
+| `activity`, `arrow-right`, `arrow-up-right`, `box`, `code-slash`, `copy`, `download`, `email` (envelope-fill), `file-text` (file-earmark-text), `github`, `globe`, `linkedin`, `send` | [Bootstrap Icons](https://icons.getbootstrap.com/) 1.13.1 | MIT     |
+| `astro`, `cloudflare`, `tailwindcss`                                                                                                                                                  | [Simple Icons](https://simpleicons.org/) 16.34.0          | CC0 1.0 |
 
 Each SVG keeps only its path data, merged into one `<path>`, with `fill="currentColor"` on the root element. Brand icons are trademarks of their owners and are used only to link to their sites.
 

@@ -2,17 +2,16 @@
 /*
  * One projects.json project on a machined Panel that tilts toward the
  * pointer (data-tilt): its name carved into a screwed Nameplate, its links
- * as ports, its description, its tags and its result line beside a lamp.
+ * as Ports, its description, its tags and its result line beside a lamp.
  * The description grows, so the tags and result lines of cards in a row
  * line up.
  */
-import { projects } from "../../data/index";
 import type { ProjectItem } from "../../data/types";
 import Emphasis from "../UI/Emphasis.astro";
-import Icon from "../UI/Icon.astro";
 import Lamp from "../UI/Lamp.astro";
 import Nameplate from "../UI/Nameplate.astro";
 import Panel from "../UI/Panel.astro";
+import Port from "../UI/Port.astro";
 import Tag from "../UI/Tag.astro";
 
 interface Props {
@@ -25,28 +24,11 @@ const { project } = Astro.props;
 <Panel as="article" class="project" data-tilt>
   <Nameplate name={project.title} class="project-plate" />
   <ul class="ports">
-    {project.links.map((link) => {
-      const external = link.url.startsWith("https:");
-      return (
-        <li>
-          <a
-            class="port"
-            href={link.url}
-            {...(external
-              ? { target: "_blank", rel: "noopener noreferrer" }
-              : {})}
-          >
-            <span class="port-cap" aria-hidden="true">
-              <span class="port-disc spun">
-                <Icon name={link.icon} size={16} class="engraved-icon" />
-              </span>
-            </span>
-            <span class="port-label">{link.title}</span>
-            {external && <span class="sr-only"> {projects.newTab}</span>}
-          </a>
-        </li>
-      );
-    })}
+    {project.links.map((link) => (
+      <li>
+        <Port link={link} />
+      </li>
+    ))}
   </ul>
   <p class="desc">{project.description}</p>
   <ul class="tags">
@@ -78,12 +60,6 @@ const { project } = Astro.props;
     align-self: flex-start;
   }
 
-  /*
-   * Each link is a port: a spun steel cap set into the panel, its disc
-   * carrying the engraved link icon, then the label. Hovering or focusing a
-   * port lights the icon in --accent-line, gold on the dark theme and bronze
-   * on the light one, and underlines the label in gold.
-   */
   .ports {
     display: flex;
     flex-wrap: wrap;
@@ -91,80 +67,6 @@ const { project } = Astro.props;
     margin: 26px 0 0;
     padding: 0;
     list-style: none;
-  }
-
-  .port {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--body);
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: color 0.3s var(--ease-soft);
-  }
-
-  .port:hover {
-    color: var(--text);
-  }
-
-  .port:focus-visible {
-    border-radius: 6px;
-    outline: 2px solid var(--gold-text);
-    outline-offset: 3px;
-  }
-
-  .port-cap {
-    position: relative;
-    display: grid;
-    flex: none;
-    width: 28px;
-    height: 28px;
-    overflow: hidden;
-    border-radius: 50%;
-    box-shadow:
-      0 0 0 1px var(--metal-outline),
-      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #8a9098,
-      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #6c727a,
-      calc(var(--lean) * var(--slant) * 2px) 2px 0 1px var(--metal-outline),
-      calc(var(--lean) * var(--slant) * 5px) 5px 6px -1px rgb(0 0 0 / 0.45);
-  }
-
-  .port-cap::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    pointer-events: none;
-    box-shadow:
-      inset 0 0 0 1px rgb(255 255 255 / 0.45),
-      inset calc(var(--lean) * var(--slant) * 2px) 2px 2px
-        rgb(255 255 255 / 0.3),
-      inset calc(var(--lean) * var(--slant) * -2px) -2px 4px rgb(0 0 0 / 0.3);
-  }
-
-  .port-disc {
-    display: grid;
-    place-items: center;
-    color: #1b1e23;
-  }
-
-  .port-disc :global(svg) {
-    transition: color 0.3s var(--ease-soft);
-  }
-
-  .port:is(:hover, :focus-visible) .port-disc :global(svg) {
-    color: var(--accent-line);
-  }
-
-  .port-label {
-    text-decoration: underline transparent 1px;
-    text-underline-offset: 0.3em;
-    transition: text-decoration-color 0.3s var(--ease-soft);
-  }
-
-  .port:hover .port-label {
-    text-decoration-color: var(--gold-text);
   }
 
   .desc {
@@ -215,14 +117,6 @@ const { project } = Astro.props;
   @media (width <= 40rem) {
     :global(.panel).project {
       padding: 26px 20px 22px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .port,
-    .port-label,
-    .port-disc :global(svg) {
-      transition: none;
     }
   }
 </style>

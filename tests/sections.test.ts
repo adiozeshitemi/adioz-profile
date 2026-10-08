@@ -15,6 +15,7 @@ import {
   navigation,
   profile,
   projects,
+  site,
   stats,
   techStack,
   terminal,
@@ -187,20 +188,9 @@ describe("Hero", () => {
     expect(text(doc.querySelector(".resume-title"))).toBe(profile.resume.title);
   });
 
-  it("names each social link and opens only https: links in a new tab", async () => {
+  it("leaves the social links to the contact section", async () => {
     const doc = await render(Hero);
-    const socials = [...doc.querySelectorAll(".socials a")];
-    expect(socials).toHaveLength(profile.links.length);
-    socials.forEach((link, index) => {
-      const item = profile.links[index]!;
-      expect(link.getAttribute("href")).toBe(item.url);
-      expect(link.querySelector("svg")?.getAttribute("aria-label")).toBe(
-        item.title,
-      );
-      expect(link.getAttribute("target")).toBe(
-        item.url.startsWith("https:") ? "_blank" : null,
-      );
-    });
+    expect(doc.querySelector(".socials")).toBeNull();
   });
 
   it("sets the 3D pipeline above the agent log beside the copy", async () => {
@@ -615,7 +605,7 @@ describe("ProjectsSection", () => {
       for (const port of ports) {
         expect(port.getAttribute("target")).toBe("_blank");
         expect(port.getAttribute("rel")).toBe("noopener noreferrer");
-        expect(text(port.querySelector(".sr-only"))).toBe(projects.newTab);
+        expect(text(port.querySelector(".sr-only"))).toBe(site.newTab);
         expect(
           port.querySelector(".port-cap")?.getAttribute("aria-hidden"),
         ).toBe("true");
@@ -626,19 +616,69 @@ describe("ProjectsSection", () => {
 });
 
 describe("ContactSection", () => {
-  it("links the email button and address to the profile's mailto: link", async () => {
+  const address = profile.email.url.slice("mailto:".length);
+
+  it("numbers the eyebrow and renders the gold headline and the lead", async () => {
     const doc = await render(ContactSection);
-    const email = profile.links.find((link) => link.url.startsWith("mailto:"))!;
-    expect(doc.querySelector("section")?.id).toBe(contact.id);
-    expect(text(doc.querySelector(".label"))).toBe(`05 — ${contact.label}`);
-    expect(text(doc.querySelector("h2"))).toBe(contact.heading);
-    expect(text(doc.querySelector(".intro"))).toBe(contact.body);
-    const button = doc.querySelector("a.btn");
-    expect(button?.getAttribute("href")).toBe(email.url);
-    expect(text(button)).toBe(contact.ctaLabel);
-    const address = doc.querySelector(".address a");
-    expect(address?.getAttribute("href")).toBe(email.url);
-    expect(text(address)).toBe(email.url.slice("mailto:".length));
+    const section = doc.querySelector("section");
+    expect(section?.id).toBe(contact.id);
+    expect(section?.getAttribute("aria-labelledby")).toBe(
+      `${contact.id}-title`,
+    );
+    expect(text(doc.querySelector(".eyebrow"))).toBe(`05 ${contact.label}`);
+    expect(text(doc.querySelector("h2 .gilt"))).toBe(contact.headline);
+    expect(text(doc.querySelector(".panel.contact-panel .lead"))).toBe(
+      contact.lead,
+    );
+  });
+
+  it("carves the email address into a nameplate linking to the mailto: address", async () => {
+    const doc = await render(ContactSection);
+    const plate = doc.querySelector("a.nameplate.mail");
+    expect(plate?.getAttribute("href")).toBe(profile.email.url);
+    expect(text(plate?.querySelector(".carved") ?? null)).toBe(address);
+    expect(plate?.querySelectorAll(".screw")).toHaveLength(2);
+  });
+
+  it("renders the copy knob hidden until the script runs, with its notes and an empty status", async () => {
+    const doc = await render(ContactSection);
+    const knob = doc.querySelector("button.knob.copy-mail");
+    expect(knob?.hasAttribute("hidden")).toBe(true);
+    expect(knob?.getAttribute("aria-label")).toBe(contact.copy.label);
+    expect(knob?.getAttribute("data-copy")).toBe(address);
+    expect(knob?.getAttribute("data-copied")).toBe(contact.copy.copied);
+    expect(knob?.getAttribute("data-failed")).toBe(contact.copy.failed);
+    const note = doc.querySelector(".copy-note");
+    expect(note?.getAttribute("role")).toBe("status");
+    expect(text(note)).toBe("");
+  });
+
+  it("links a port per contact.json link in a new tab, then the résumé download", async () => {
+    const doc = await render(ContactSection);
+    const ports = [...doc.querySelectorAll(".ports a.port")];
+    expect(
+      ports.map((port) => [
+        text(port.querySelector(".port-label")),
+        port.getAttribute("href"),
+      ]),
+    ).toEqual([
+      ...contact.links.map((link) => [link.title, link.url]),
+      [contact.resume, profile.resume.url],
+    ]);
+    expect(contact.links.map((link) => link.title)).toEqual([
+      "GitHub",
+      "LinkedIn",
+      "Tech articles",
+    ]);
+    for (const port of ports.slice(0, -1)) {
+      expect(port.getAttribute("target")).toBe("_blank");
+      expect(port.getAttribute("rel")).toBe("noopener noreferrer");
+      expect(text(port.querySelector(".sr-only"))).toBe(site.newTab);
+    }
+    const resume = ports.at(-1)!;
+    expect(resume.getAttribute("download")).toBe(profile.resume.file);
+    expect(resume.hasAttribute("target")).toBe(false);
+    expect(resume.querySelector(".sr-only")).toBeNull();
   });
 });
 

@@ -95,9 +95,11 @@ describe("data", () => {
     );
   });
 
-  it("has exactly one mailto: link in profile.json", () => {
-    const mail = profile.links.filter((link) => link.url.startsWith("mailto:"));
-    expect(mail).toHaveLength(1);
+  it("gives profile.json's email a mailto: link and contact.json https: links", () => {
+    expect(profile.email.url.startsWith("mailto:")).toBe(true);
+    for (const link of contact.links) {
+      expect(link.url.startsWith("https:"), link.title).toBe(true);
+    }
   });
 });
 

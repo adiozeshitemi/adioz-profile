@@ -1,5 +1,6 @@
 {
   "description": "Full-stack AI engineer who takes AI into production for enterprise clients: tool-using agents that make auditable changes, and small, quantized models that meet tight latency budgets.",
   "image": "/images/og.png",
-  "imageAlt": "Adioz takes AI into production. Full-stack AI engineer, shown beside an illustrated portrait."
+  "imageAlt": "Adioz takes AI into production. Full-stack AI engineer, shown beside an illustrated portrait.",
+  "newTab": "(opens in a new tab)"
 }
