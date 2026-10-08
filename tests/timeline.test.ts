@@ -21,6 +21,13 @@ describe("startTimeline", () => {
   let stop: () => void = () => {};
 
   beforeEach(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
     document.body.innerHTML = `<ol class="timeline">${[0, 1, 2]
       .map(() => `<li class="stop"><span class="rivet"></span></li>`)
       .join("")}</ol>`;
@@ -36,6 +43,7 @@ describe("startTimeline", () => {
   afterEach(() => {
     stop();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   const timeline = () => document.querySelector<HTMLElement>(".timeline")!;

@@ -1,11 +1,14 @@
 ---
 /*
- * The experience section from experience.json: the gold headline over the
+ * The experience section from experience.json: the gold headline over two
+ * views of the roles, picked by the view switch: the CareerTrace, and the
  * timeline, an ExperienceItem per role, most recent first, down a steel rail
- * that fills with gold as the page scrolls.
+ * that fills with gold as the page scrolls. Without the script only the
+ * timeline shows.
  */
 import { experience } from "../../data/index";
 import SectionTitle from "../UI/SectionTitle.astro";
+import CareerTrace from "./CareerTrace.astro";
 import ExperienceItem from "./ExperienceItem.astro";
 
 const titleId = `${experience.id}-title`;
@@ -19,6 +22,20 @@ const titleId = `${experience.id}-title`;
       title={experience.headline}
       id={titleId}
     />
+    <div
+      class="view-switch"
+      role="group"
+      aria-label={experience.views.label}
+      hidden
+    >
+      <button type="button" data-view="trace" aria-pressed="false">
+        {experience.views.trace}
+      </button>
+      <button type="button" data-view="timeline" aria-pressed="true">
+        {experience.views.timeline}
+      </button>
+    </div>
+    <CareerTrace />
     <ol class="timeline" aria-label={experience.timelineLabel}>
       {experience.roles.map((item) => (
         <ExperienceItem item={item} ongoing={experience.ongoing} />
@@ -29,8 +46,13 @@ const titleId = `${experience.id}-title`;
 
 <script>
   import { startTimeline } from "../../scripts/timeline";
+  import { startTrace, startViewSwitch } from "../../scripts/trace";
 
-  const timeline = document.querySelector<HTMLElement>(".experience .timeline");
+  const section = document.querySelector<HTMLElement>(".experience");
+  const timeline = section?.querySelector<HTMLElement>(".timeline");
+  const trace = section?.querySelector<HTMLElement>(".trace");
+  if (section) startViewSwitch(section);
+  if (trace) startTrace(trace);
   if (timeline) startTimeline(timeline);
 </script>
 
@@ -53,13 +75,66 @@ const titleId = `${experience.id}-title`;
    * Without the script the rail runs from the first rivet to the end of the
    * list, filled. Each stop's card sits --indent in from the left.
    */
+  /*
+   * The view switch shows the trace or the timeline through data-view on the
+   * section; without it (no script) the trace and the switch stay hidden.
+   * The pressed view's button is a brushed --button-metal key.
+   */
+  .view-switch {
+    display: inline-flex;
+    gap: 2px;
+    margin: 12px 0 28px;
+    padding: 3px;
+    border-radius: 11px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-size: 12.5px;
+  }
+
+  .view-switch[hidden] {
+    display: none;
+  }
+
+  .view-switch button {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--body);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .view-switch button[aria-pressed="true"] {
+    color: #140b03;
+    background-image: var(--brush-noise-soft), var(--button-metal);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+  }
+
+  .view-switch button:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: 2px;
+  }
+
+  .experience:not([data-view]) .timeline {
+    margin-top: 34px;
+  }
+
+  .experience:not([data-view="trace"]) :global(.trace),
+  .experience[data-view="trace"] .timeline {
+    display: none;
+  }
+
   .timeline {
     --rail: 22px;
     --indent: 58px;
     position: relative;
     display: grid;
     gap: 26px;
-    margin: 34px 0 0;
+    margin: 0;
     padding: 0 0 0 var(--indent);
     list-style: none;
   }

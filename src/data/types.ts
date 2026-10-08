@@ -194,6 +194,10 @@ export interface ExperienceContent {
   headline: string;
   /** Accessible name of the timeline's list of roles. */
   timelineLabel: string;
+  /** The view switch: its accessible name and the Trace and Timeline button labels. */
+  views: { label: string; trace: string; timeline: string };
+  /** The career trace window: its engraved title, the accessible name of its tabs, the axis label of the present, and the word beside the live lamp. */
+  trace: { title: string; rolesLabel: string; now: string; live: string };
   /** Text in place of the end year of an ongoing role, e.g. "Present". */
   ongoing: string;
   /** Roles in display order, most recent first. */

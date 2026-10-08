@@ -23,8 +23,10 @@ export const readingLine = (height: number, remaining: number) =>
  * Runs the rail of `timeline`, an <ol> of .stop items each holding a
  * .rivet: sets --rail-top and --rail-length to span the first and last
  * rivets' centres and --fill (0 to 1) to the share above the reading line,
- * recomputed on scroll and resize, and marks .passed each stop whose rivet
- * the gold has reached. Under reduced motion the rail fills at once.
+ * and marks .passed each stop whose rivet the gold has reached. It
+ * recomputes on scroll, on resize and whenever the timeline's own size
+ * changes, as when the view switch shows it again. Under reduced motion the
+ * rail fills at once.
  * Returns a function that stops it.
  */
 export function startTimeline(
@@ -66,6 +68,8 @@ export function startTimeline(
 
   if (!reduceMotion) addEventListener("scroll", queue, { passive: true });
   addEventListener("resize", queue);
+  const sizes = new ResizeObserver(queue);
+  sizes.observe(timeline);
   void document.fonts?.ready.then(fill);
   fill();
 
@@ -73,5 +77,6 @@ export function startTimeline(
     cancelAnimationFrame(frame);
     removeEventListener("scroll", queue);
     removeEventListener("resize", queue);
+    sizes.disconnect();
   };
 }

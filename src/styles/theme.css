@@ -638,3 +638,22 @@
     calc(var(--lean) * var(--slant) * (var(--depth) + 26px))
       calc(var(--depth) + 26px) 90px -40px var(--slab-ambient);
 }
+
+/*
+ * .slab-dark gives a slab the dark theme's tones in both themes, for parts
+ * that stay dark on the light page (the agent log, the career trace).
+ */
+.slab-dark {
+  --slab-1: #80858d;
+  --slab-2: #454a51;
+  --slab-3: #41454c;
+  --slab-4: #3d4148;
+  --slab-5: #393d43;
+  --slab-6: #363940;
+  --slab-7: #32353b;
+  --slab-8: #2f3237;
+  --slab-9: #2b2e33;
+  --slab-10: #50555c;
+  --slab-contact: rgb(0 0 0 / 0.55);
+  --slab-ambient: rgb(0 0 0 / 0.95);
+}
