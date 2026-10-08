@@ -1,6 +1,7 @@
 ---
 /*
- * Menu button and drawer for viewports narrower than --breakpoint-md. The
+ * Menu button and drawer for viewports narrower than 980px (61.25rem), where
+ * the header's rail of section links is hidden. The
  * drawer is a popover: closed, it is display: none, so keyboard and
  * screen-reader users cannot reach its links; Escape or a click outside closes
  * it, and the browser exposes the button's expanded state.
@@ -26,7 +27,7 @@ import NavLinks from "./NavLinks.astro";
 
 <script>
   // Closes #site-menu when one of its links is followed, and when the viewport
-  // widens to --breakpoint-md (47.5rem), where the menu button is hidden.
+  // widens to 61.25rem (980px), where the menu button is hidden.
   const menu = document.getElementById("site-menu");
 
   if (menu) {
@@ -40,7 +41,7 @@ import NavLinks from "./NavLinks.astro";
       }
     });
 
-    matchMedia("(width >= 47.5rem)").addEventListener("change", (event) => {
+    matchMedia("(width >= 61.25rem)").addEventListener("change", (event) => {
       if (event.matches) close();
     });
   }
@@ -127,8 +128,8 @@ import NavLinks from "./NavLinks.astro";
     }
   }
 
-  /* --breakpoint-md: the header bar shows the links inline. */
-  @media (width >= 47.5rem) {
+  /* From 980px the header shows the rail of section links instead. */
+  @media (width >= 61.25rem) {
     .toggle,
     .menu {
       display: none;

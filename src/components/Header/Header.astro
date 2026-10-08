@@ -1,5 +1,6 @@
 ---
 import { navigation } from "../../data/index";
+import Button from "../UI/Button.astro";
 import BrandLogo from "./BrandLogo.astro";
 import MobileMenu from "./MobileMenu.astro";
 import NavLinks from "./NavLinks.astro";
@@ -7,7 +8,6 @@ import ThemeToggle from "./ThemeToggle.astro";
 ---
 
 <header class="site-header">
-  <div class="progress" aria-hidden="true"></div>
   <div class="inner">
     <BrandLogo />
     <nav class="links" aria-label={navigation.label}>
@@ -15,57 +15,117 @@ import ThemeToggle from "./ThemeToggle.astro";
     </nav>
     <div class="controls">
       <ThemeToggle />
+      <Button
+        variant="accent"
+        compact
+        href={navigation.cta.url}
+        icon="arrow-right"
+        rest={90}
+        class="contact"
+      >
+        {navigation.cta.title}
+      </Button>
       <MobileMenu />
     </div>
   </div>
+  <div class="edge" aria-hidden="true">
+    <div class="progress"></div>
+  </div>
 </header>
+<div class="header-space" aria-hidden="true"></div>
+
+<script>
+  import { startRail, startScrollSpy } from "../../scripts/rail";
+
+  const rail = document.querySelector<HTMLElement>(".site-header .rail");
+  const groups = [".site-header .rail a", "#site-menu a"].map((selector) => [
+    ...document.querySelectorAll<HTMLAnchorElement>(selector),
+  ]);
+  startScrollSpy(groups);
+  if (rail) startRail(rail);
+</script>
 
 <style>
+  /*
+   * The header stays fixed at the top; .header-space keeps its height in the
+   * page flow. Past the top of the page (motion.ts removes data-at-top) it is
+   * stuck: frosted glass (--nav-fill) fades in behind it, it tightens, and a
+   * steel hairline (.edge) shows under it, filled with gold (.progress) by the
+   * page's scroll position where scroll timelines are supported.
+   */
   .site-header {
-    position: sticky;
-    top: 0;
+    position: fixed;
+    inset: 0 0 auto;
     z-index: 90;
-    border-bottom: 1px solid var(--color-line);
-    /* 85% canvas keeps ink-muted link text at 4.5:1 or more over any page content beneath. */
-    background: color-mix(in srgb, var(--color-canvas) 85%, transparent);
+  }
+
+  .header-space {
+    height: var(--spacing-header);
+  }
+
+  .site-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--nav-fill);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
     backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: calc(var(--lean) * var(--slant) * 13px) 13px 40px -30px
+      rgb(0 0 0 / 0.7);
   }
 
-  /* src/scripts/motion.ts sets data-at-top while the page is within 40px of the top. */
-  .site-header[data-at-top] {
-    border-bottom-color: transparent;
-    background-color: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+  .site-header[data-at-top]::before {
+    opacity: 0;
   }
 
-  /* motion.ts sets data-motion after the first state, so the state on load does not animate. */
-  .site-header[data-motion] {
-    transition:
-      background-color 0.35s var(--ease-soft),
-      border-color 0.35s var(--ease-soft),
-      -webkit-backdrop-filter 0.35s,
-      backdrop-filter 0.35s;
+  .inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: var(--container-page);
+    height: var(--spacing-header);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
   }
 
-  /*
-   * Scroll progress: a 2px bar along the header's top edge, scaled to the
-   * page's scroll position. Hidden where scroll timelines are unsupported.
-   */
+  .site-header:not([data-at-top]) .inner {
+    height: 3.75rem;
+  }
+
+  .edge {
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(var(--particle) / 0.35) 15%,
+      rgb(var(--particle) / 0.35) 85%,
+      transparent
+    );
+  }
+
+  .site-header[data-at-top] .edge {
+    opacity: 0;
+  }
+
   .progress {
     display: none;
     position: absolute;
-    inset: 0 0 auto;
+    inset: auto 0 0;
     height: 2px;
     background: linear-gradient(
       90deg,
-      var(--color-accent-cyan),
-      var(--color-accent-violet),
-      var(--color-accent-pink)
+      #8f6718,
+      #e3be5e 40%,
+      #fff1b8 75%,
+      #f2d17b
     );
-    box-shadow: 0 0 16px
-      color-mix(in srgb, var(--color-accent-cyan) 60%, transparent);
+    box-shadow: 0 0 12px rgb(var(--particle-gold) / 0.55);
     transform-origin: left;
   }
 
@@ -83,14 +143,14 @@ import ThemeToggle from "./ThemeToggle.astro";
     }
   }
 
-  .inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: var(--container-page);
-    height: var(--spacing-header);
-    margin-inline: auto;
-    padding-inline: 1.25rem;
+  /* motion.ts sets data-motion after the first state, so the state on load does not animate. */
+  .site-header[data-motion]::before,
+  .site-header[data-motion] .edge {
+    transition: opacity 0.45s var(--ease-soft);
+  }
+
+  .site-header[data-motion] .inner {
+    transition: height 0.45s var(--ease-soft);
   }
 
   .links {
@@ -99,16 +159,43 @@ import ThemeToggle from "./ThemeToggle.astro";
 
   .controls {
     display: flex;
+    flex: none;
     align-items: center;
-    gap: 0.75rem;
+    gap: 28px;
   }
 
-  /* --breakpoint-md: inline links replace the menu button. */
+  /*
+   * The header's contact button is slimmer than a compact button: 34px tall
+   * on a 2px wall, with a 24px cap.
+   */
+  .controls :global(.contact) {
+    --wall: 2px;
+    min-height: 34px;
+    gap: 9px;
+    padding-left: 16px;
+    font-size: 13px;
+  }
+
+  .controls :global(.contact .cap) {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* The contact button stands aside on narrow phones; the menu still links it. */
+  @media (width < 35rem) {
+    .controls :global(.contact) {
+      display: none;
+    }
+  }
+
   @media (width >= 47.5rem) {
     .inner {
       padding-inline: 1.75rem;
     }
+  }
 
+  /* From 980px the rail of section links replaces the menu button. */
+  @media (width >= 61.25rem) {
     .links {
       display: block;
     }

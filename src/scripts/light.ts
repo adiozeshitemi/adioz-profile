@@ -11,8 +11,8 @@
  * - Panels (.panel) glow at the pointer: --glow-x and --glow-y place the glow,
  *   --near sets its strength.
  * - A spun disc with data-rest also rotates so its icon (data-rest, degrees
- *   clockwise from 12 o'clock) points at the pointer while the pointer is within LIGHT_REACH
- *   px of it and off its control, and counter-turns its --light so the cross
+ *   clockwise from 12 o'clock) points at the pointer while the pointer is
+ *   within TURN_REACH px of its centre and off its control, and counter-turns its --light so the cross
  *   stays on the light.
  *
  * Each frame every value closes FOLLOW of the gap to its target; angles take
@@ -21,7 +21,8 @@
  * hidden.
  */
 
-export const LIGHT_REACH = 280;
+export const LIGHT_REACH = 160;
+export const TURN_REACH = 90;
 export const FOLLOW = 0.18;
 export const REST_LX = 70;
 export const REST_LIGHT = 45;
@@ -145,7 +146,7 @@ export function startLight(
       if (disc.icon === null) return;
       const facing =
         pointer !== null &&
-        Math.hypot(dx, dy) <= LIGHT_REACH &&
+        Math.hypot(dx, dy) <= TURN_REACH &&
         !disc.control?.matches(":hover");
       const turn = facing ? toward - disc.icon : 0;
       approach(disc, "turn", disc.turn + fold(turn - disc.turn, 360), 0.05);
@@ -182,7 +183,9 @@ export function startLight(
         `${(disc.cross - disc.turn).toFixed(2)}deg`,
       );
       if (disc.icon !== null) {
-        disc.el.style.transform = `rotate(${disc.turn.toFixed(2)}deg)`;
+        // Rounded to 0.01deg, with -0 written as 0.
+        const turn = Math.round(disc.turn * 100) / 100 || 0;
+        disc.el.style.transform = `rotate(${turn.toFixed(2)}deg)`;
       }
     }
     for (const panel of panels) {

@@ -160,12 +160,14 @@ const buttonAttrs = { type: "button" as const, ...attrs };
 
   /*
    * A machined button is a slab: a brushed face (streak noise over a highlight
-   * band at --lx over the metal), a 5px side wall stepped from --wall-1 (below
-   * the face) to --wall-5 (the floor) and slanted by --lean, an engraved label,
-   * and contact, cast and ambient shadows on the page. Hover lifts it 2px; press
-   * sinks it 3px, hiding most of the wall.
+   * band at --lx over the metal), a side wall --wall deep (5px unless set)
+   * stepped from --wall-1 (below the face) to --wall-5 (the floor) and slanted
+   * by --lean, an engraved label, and contact, cast and ambient shadows on
+   * the page. Hover lifts it 2px; press sinks it by three fifths of --wall,
+   * hiding most of the wall.
    */
   .machined {
+    --wall: 5px;
     position: relative;
     gap: 12px;
     min-height: 48px;
@@ -183,13 +185,20 @@ const buttonAttrs = { type: "button" as const, ...attrs };
       inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.9),
       inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.28),
       0 0 0 1px var(--metal-outline),
-      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--wall-1),
-      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--wall-2),
-      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 var(--wall-3),
-      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 var(--wall-4),
-      calc(var(--lean) * var(--slant) * 5px) 5px 0 0 var(--wall-5),
-      calc(var(--lean) * var(--slant) * 5px) 5px 0 1px var(--metal-outline),
-      calc(var(--lean) * var(--slant) * 7px) 7px 4px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.2))
+        calc(var(--wall) * 0.2) 0 0 var(--wall-1),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 0 var(--wall-2),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.6))
+        calc(var(--wall) * 0.6) 0 0 var(--wall-3),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.8))
+        calc(var(--wall) * 0.8) 0 0 var(--wall-4),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 0 var(--wall-5),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * (var(--wall) + 2px))
+        calc(var(--wall) + 2px) 4px 0 var(--metal-contact),
       calc(var(--lean) * var(--slant) * 11px) 11px 24px -6px var(--metal-drop),
       calc(var(--lean) * var(--slant) * 18px) 18px 44px -18px var(--metal-drop);
     user-select: none;
@@ -202,12 +211,18 @@ const buttonAttrs = { type: "button" as const, ...attrs };
       inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.95),
       inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.28),
       0 0 0 1px var(--metal-outline),
-      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--wall-1),
-      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--wall-2),
-      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 var(--wall-3),
-      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 var(--wall-4),
-      calc(var(--lean) * var(--slant) * 5px) 5px 0 0 var(--wall-5),
-      calc(var(--lean) * var(--slant) * 5px) 5px 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.2))
+        calc(var(--wall) * 0.2) 0 0 var(--wall-1),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 0 var(--wall-2),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.6))
+        calc(var(--wall) * 0.6) 0 0 var(--wall-3),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.8))
+        calc(var(--wall) * 0.8) 0 0 var(--wall-4),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 0 var(--wall-5),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 1))
+        calc(var(--wall) * 1) 0 1px var(--metal-outline),
       calc(var(--lean) * var(--slant) * 11px) 11px 12px -2px
         var(--metal-contact-lift),
       calc(var(--lean) * var(--slant) * 17px) 17px 30px -8px var(--metal-drop),
@@ -215,16 +230,23 @@ const buttonAttrs = { type: "button" as const, ...attrs };
   }
 
   .machined:active {
-    transform: translate(calc(var(--lean) * var(--slant) * 3px), 3px);
+    transform: translate(
+      calc(var(--lean) * var(--slant) * var(--wall) * 0.6),
+      calc(var(--wall) * 0.6)
+    );
     box-shadow:
       inset calc(var(--lean) * var(--slant) * 2px) 2px 5px rgb(0 0 0 / 0.38),
       inset calc(var(--lean) * var(--slant) * -1px) -1px 0
         rgb(255 255 255 / 0.35),
       0 0 0 1px var(--metal-outline),
-      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--wall-1),
-      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--wall-2),
-      calc(var(--lean) * var(--slant) * 2px) 2px 0 1px var(--metal-outline),
-      calc(var(--lean) * var(--slant) * 3px) 3px 2px 0 var(--metal-contact),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.2))
+        calc(var(--wall) * 0.2) 0 0 var(--wall-1),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 0 var(--wall-2),
+      calc(var(--lean) * var(--slant) * calc(var(--wall) * 0.4))
+        calc(var(--wall) * 0.4) 0 1px var(--metal-outline),
+      calc(var(--lean) * var(--slant) * (var(--wall) * 0.4 + 1px))
+        calc(var(--wall) * 0.4 + 1px) 2px 0 var(--metal-contact),
       calc(var(--lean) * var(--slant) * 6px) 6px 10px -4px var(--metal-drop),
       calc(var(--lean) * var(--slant) * 10px) 10px 18px -12px var(--metal-drop);
   }

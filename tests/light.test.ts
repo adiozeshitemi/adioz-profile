@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   LIGHT_REACH,
+  TURN_REACH,
   REST_LX,
   bearing,
   fold,
@@ -150,11 +151,20 @@ describe("startLight", () => {
 
   it("turns a capped icon toward the pointer and counter-turns its light cross", () => {
     stop = startLight();
-    move(410, 210);
+    move(410, 80);
     flush();
     const turn = document.querySelector<HTMLElement>(".turn")!;
     // The pointer is straight below (180deg); the icon rests at 90deg.
     expect(turn.style.transform).toBe("rotate(90.00deg)");
+    expect(turn.style.getPropertyValue("--light")).not.toBe("");
+  });
+
+  it("leaves a capped icon at rest while the pointer is beyond TURN_REACH", () => {
+    stop = startLight();
+    move(410, 10 + TURN_REACH + 20);
+    flush();
+    const turn = document.querySelector<HTMLElement>(".turn")!;
+    expect(turn.style.transform).toBe("rotate(0.00deg)");
     expect(turn.style.getPropertyValue("--light")).not.toBe("");
   });
 
@@ -169,7 +179,7 @@ describe("startLight", () => {
 
   it("returns every part to rest when the pointer leaves the page", () => {
     stop = startLight();
-    move(150, 50);
+    move(340, 40);
     flush();
     expect(
       document.querySelector<HTMLElement>(".turn")!.style.transform,

@@ -315,6 +315,42 @@
   --mark-gold-2: #e9c460;
   --mark-gold-3: #c4973a;
   --mark-gold-4: #8f6718;
+  /*
+   * The header and its rail. --nav-fill is the stuck header's frosted glass.
+   * The rail is clear glass lying flat: a tint (--gl-body) under a top gloss
+   * (--gl-gloss, --gl-spot) and a window reflection (--gl-sheen), with a 1px
+   * rim glint lit by --rim-hi and blurred by --gl-glint-blur, split into slots
+   * by seams (--rail-seam). A raised key's face (--cap-face) has a lit rim
+   * (--cap-rim), a wall stepped through --gl-wall-1 to --gl-wall-12, a shadow
+   * (--cap-drop), and leaves a recessed socket (--rail-socket).
+   */
+  --nav-fill: rgb(9 10 12 / 0.74);
+  --gl-body: transparent;
+  --gl-gloss: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.075),
+    rgb(255 255 255 / 0.02) 38%,
+    transparent 66%
+  );
+  --gl-spot: radial-gradient(
+    55% 34% at 26% 0%,
+    rgb(255 255 255 / 0.1),
+    transparent 75%
+  );
+  --gl-sheen: rgb(255 255 255 / 0.06);
+  --gl-glint-blur: 3px;
+  --rim-hi: rgb(255 255 255 / 0.3);
+  --gl-wall-1: #44515a;
+  --gl-wall-3: #44515a;
+  --gl-wall-5: #44515a;
+  --gl-wall-7: #44515a;
+  --gl-wall-9: #44515a;
+  --gl-wall-12: #44515a;
+  --rail-socket: rgb(0 0 0 / 0.85);
+  --rail-seam: rgb(255 255 255 / 0.09);
+  --cap-face: rgb(255 255 255 / 0.08);
+  --cap-rim: rgb(255 255 255 / 0.3);
+  --cap-drop: rgb(0 0 0 / 0.8);
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -443,6 +479,24 @@
   --mark-gold-2: #c27f42;
   --mark-gold-3: #8f5524;
   --mark-gold-4: #5e3812;
+  --nav-fill: rgb(238 240 244 / 0.78);
+  --gl-body: rgb(40 60 95 / 0.08);
+  --gl-gloss: linear-gradient(transparent, transparent);
+  --gl-spot: linear-gradient(transparent, transparent);
+  --gl-sheen: rgb(255 255 255 / 0.4);
+  --gl-glint-blur: 0.7px;
+  --rim-hi: #ffffff;
+  --gl-wall-1: #d2dae1;
+  --gl-wall-3: #ccd5dc;
+  --gl-wall-5: #c6d0d7;
+  --gl-wall-7: #c0cbd2;
+  --gl-wall-9: #bcc6ce;
+  --gl-wall-12: #b6c0c8;
+  --rail-socket: rgb(30 45 70 / 0.34);
+  --rail-seam: rgb(40 60 95 / 0.16);
+  --cap-face: rgb(255 255 255 / 0.6);
+  --cap-rim: #ffffff;
+  --cap-drop: rgb(25 35 50 / 0.38);
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;
