@@ -418,17 +418,29 @@ describe("TechStackSection", () => {
     });
   });
 
-  it("renders each tool category as a heading and chips", async () => {
+  it("renders each tool category as a heading over its tools as tags", async () => {
     const doc = await render(TechStackSection);
-    const clouds = [...doc.querySelectorAll(".cloud")];
-    expect(texts(clouds.map((cloud) => cloud.querySelector("h3")!))).toEqual(
+    const cats = [...doc.querySelectorAll(".kit .categories > .cat")];
+    expect(cats.map((cat) => text(cat.querySelector("h3")))).toEqual(
       techStack.categories.map((category) => category.name),
     );
-    clouds.forEach((cloud, index) => {
-      expect(texts(cloud.querySelectorAll(".chip"))).toEqual(
+    cats.forEach((cat, index) => {
+      expect(texts(cat.querySelectorAll("ul.tools > li.tag"))).toEqual(
         techStack.categories[index]!.tools,
       );
     });
+  });
+
+  it("sets the gauge cluster and the categories side by side in one kit", async () => {
+    const doc = await render(TechStackSection);
+    const kit = doc.querySelector(".kit");
+    expect(
+      [...(kit?.children ?? [])].map((child) =>
+        child.classList.contains("cluster")
+          ? "cluster"
+          : child.className.split(" ")[0],
+      ),
+    ).toEqual(["cluster", "categories"]);
   });
 });
 
