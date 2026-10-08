@@ -126,6 +126,10 @@
 :root {
   --slant: 0.4;
 
+  /* Display text: Montserrat (--font-sans) at --display-wght, tracked in by --track. */
+  --display-wght: 650;
+  --track: -0.035em;
+
   /* Brushed bronze: the light theme's --plate-metal. */
   --bronze-metal: linear-gradient(
     190deg,
@@ -199,6 +203,21 @@
     #b98d34 85%,
     #cfa654 100%
   );
+  /*
+   * A plate's side wall, from below its face (--plate-wall-1) to the floor
+   * (--plate-wall-5); --plate-lip lights the lip below text engraved into it.
+   * --plate-ink is that text, at 4.5:1 or more on every --plate-metal stop.
+   */
+  --plate-wall-1: #a8802a;
+  --plate-wall-2: #987326;
+  --plate-wall-3: #876622;
+  --plate-wall-4: #76591d;
+  --plate-wall-5: #644b18;
+  --plate-lip: rgb(255 240 200 / 0.6);
+  --plate-ink: #1a1102;
+  /* A metal part's 1px outline and the soft shadow it casts on the page. */
+  --metal-outline: rgb(0 0 0 / 0.6);
+  --metal-drop: rgb(0 0 0 / 0.9);
 
   /*
    * Slab tones, from the lit lip (--slab-1) down the darkening wall to the lit
@@ -250,6 +269,15 @@
   );
   /* Instrument plates: brushed bronze. */
   --plate-metal: var(--bronze-metal);
+  --plate-wall-1: #976234;
+  --plate-wall-2: #87572e;
+  --plate-wall-3: #774c28;
+  --plate-wall-4: #674122;
+  --plate-wall-5: #57371c;
+  --plate-lip: rgb(255 228 196 / 0.55);
+  --plate-ink: #1c1006;
+  --metal-outline: rgb(40 48 58 / 0.4);
+  --metal-drop: rgb(25 35 50 / 0.45);
 
   --slab-1: #ffffff;
   --slab-2: #e9ecf0;
