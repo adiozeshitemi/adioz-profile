@@ -104,7 +104,7 @@ adioz-dev/
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
-│   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro, with their sources and licenses
+│   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro (logo-* full-colour and lang-* single-colour language logos), with their sources and licenses
 │   │   ├── activity.svg
 │   │   ├── arrow-right.svg
 │   │   ├── arrow-up.svg
@@ -123,8 +123,12 @@ adioz-dev/
 │   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload, theme script
 │   ├── lib/                   # 🛠️ Build-time modules
 │   │   ├── activity.ts        # The build's GitHub activity, panel layout and formatting
+│   │   ├── activityCards.ts   # The activity as SVG cards for the GitHub profile README
 │   │   └── github.ts          # GitHub GraphQL reads, streaks, totals and languages
 │   ├── pages/                 # 📄 File-based routes
+│   │   ├── activity/          # SVG cards written at build time
+│   │   │   ├── contributions.svg.ts  # /activity/contributions.svg
+│   │   │   └── languages.svg.ts      # /activity/languages.svg
 │   │   └── index.astro        # Landing page (/)
 │   ├── scripts/               # 📜 Client scripts
 │   │   ├── copy.ts            # Contact copy knob: Clipboard API with a textarea fallback
@@ -133,6 +137,7 @@ adioz-dev/
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
 │   │   ├── motion.ts          # Header scroll state, stat counters
+│   │   ├── odometer.ts        # Activity counter wheels spinning to their digits on each view
 │   │   ├── pillars.ts         # About pillars: the .lit fallback and the swinging drawstrings
 │   │   ├── pipeline3d.ts      # 3D agent pipeline: Three.js parts, conduits, pulse and labels
 │   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
@@ -156,6 +161,7 @@ adioz-dev/
 │   ├── fixtures/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
 │   ├── activity.test.ts       # Activity panel layout, formatting and markup
+│   ├── activityCards.test.ts  # Activity SVG cards and their routes
 │   ├── brand.test.ts          # Brand files: sizes, favicon scheme switch, manifest
 │   ├── copy.test.ts           # Copy action, its fallback and the knob's notes
 │   ├── data.test.ts           # Data rules and load-time errors
@@ -165,6 +171,7 @@ adioz-dev/
 │   ├── github.test.ts         # GitHub activity reads, streaks, totals and the snapshot fallback
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── menu.test.ts           # Phone menu sheet states
+│   ├── odometer.test.ts       # Odometer reels and their spin
 │   ├── page.test.ts           # Assembled landing page
 │   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
 │   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
