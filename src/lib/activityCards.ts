@@ -17,8 +17,13 @@ import {
   yearColumns,
 } from "./activity";
 
-/** The path data of each src/icons/ SVG, keyed by file name without ".svg"; every icon is one `<path>` on a 24-unit square or a 16-unit one. */
-const ICON_PATHS: Record<string, { d: string; size: number }> =
+/**
+ * Each src/icons/ SVG split for nesting in a card, keyed by file name
+ * without ".svg": its viewBox, its root's paint attributes (`fill`, `style`)
+ * and its inner markup. A single-colour icon paints with `currentColor`,
+ * which the card sets through `color`.
+ */
+const ICONS: Record<string, { viewBox: string; paint: string; inner: string }> =
   Object.fromEntries(
     Object.entries(
       import.meta.glob<string>("../icons/*.svg", {
@@ -26,13 +31,26 @@ const ICON_PATHS: Record<string, { d: string; size: number }> =
         import: "default",
         eager: true,
       }),
-    ).map(([path, svg]) => [
-      path.slice(path.lastIndexOf("/") + 1, -".svg".length),
-      {
-        d: /<path d="([^"]+)"/.exec(svg)?.[1] ?? "",
-        size: Number(/viewBox="0 0 (\d+)/.exec(svg)?.[1] ?? 24),
-      },
-    ]),
+    ).map(([path, svg]) => {
+      const root = /<svg\b([^>]*)>/.exec(svg)!;
+      const attribute = (name: string) =>
+        new RegExp(`\\b${name}="([^"]*)"`).exec(root[1]!)?.[1];
+      const fill = attribute("fill");
+      const style = attribute("style");
+      return [
+        path.slice(path.lastIndexOf("/") + 1, -".svg".length),
+        {
+          viewBox: attribute("viewBox") ?? "0 0 24 24",
+          paint:
+            (fill ? ` fill="${fill}"` : "") +
+            (style ? ` style="${style}"` : ""),
+          inner: svg.slice(
+            root.index + root[0].length,
+            svg.lastIndexOf("</svg>"),
+          ),
+        },
+      ];
+    }),
   );
 
 /** Width and height of each card, in pixels; two fit side by side at GitHub's README width. */
@@ -221,9 +239,9 @@ export function languagesCard(
     labels.other,
   );
   const metal = (index: number) => metalIndex(index, segments[index]!.other);
-  const defs =
-    METALS.map((stops, index) => gradient(`metal-${index}`, stops)).join("") +
-    `<filter id="emboss" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="0" flood-color="#ffffff" flood-opacity="0.8"/><feDropShadow dx="0" dy="-0.5" stdDeviation="0" flood-color="#000000" flood-opacity="0.45"/></filter>`;
+  const defs = METALS.map((stops, index) =>
+    gradient(`metal-${index}`, stops),
+  ).join("");
   const barX = 20;
   const barWidth = CARD_WIDTH - 40;
   const gap = 2;
@@ -246,11 +264,11 @@ export function languagesCard(
     const left = 20 + column * (barWidth / 2 + 10);
     const right = left + barWidth / 2 - 10;
     const y = 132 + row * 23;
-    const icon = segment.logo && ICON_PATHS[segment.logo.icon];
+    const icon = ICONS[segment.logo.icon];
     return [
       `<rect x="${left}" y="${y - 7}" width="7" height="7" rx="1.5" fill="url(#metal-${metal(index)})" stroke="#000000" stroke-opacity="0.6"/>`,
       icon
-        ? `<svg x="${left + 12}" y="${y - 11}" width="13" height="13" viewBox="0 0 ${icon.size} ${icon.size}"><path d="${icon.d}" fill="${segment.logo!.color}" filter="url(#emboss)"/></svg>`
+        ? `<svg x="${left + 10}" y="${y - 13}" width="17" height="17" viewBox="${icon.viewBox}" color="${segment.logo.color}"${icon.paint}>${icon.inner}</svg>`
         : "",
       `<text x="${left + (icon ? 31 : 13)}" y="${y}" class="sans ink" font-size="12">${escapeXml(segment.name)}</text>`,
       `<text x="${right}" y="${y}" class="mono dim" font-size="10" text-anchor="end">${formatShare(segment.share)}</text>`,

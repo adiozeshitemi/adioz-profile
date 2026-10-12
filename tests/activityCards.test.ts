@@ -9,7 +9,7 @@ import {
   escapeXml,
   languagesCard,
 } from "../src/lib/activityCards";
-import { LANGUAGE_LOGOS } from "../src/lib/activity";
+import { LANGUAGE_LOGOS, OTHER_LOGO } from "../src/lib/activity";
 import { GET as contributionsRoute } from "../src/pages/activity/contributions.svg";
 import { GET as languagesRoute } from "../src/pages/activity/languages.svg";
 
@@ -95,19 +95,27 @@ describe("activity cards", () => {
     expect(all.some((text) => text.startsWith(`1${labels.day}`))).toBe(true);
   });
 
-  it("draws each mapped language's logo in its brand colour on brushed steel", () => {
+  it("draws each language's logo in its brand colour, OTHER_LOGO for the rest, on brushed steel", () => {
     const doc = parse(languagesCard(activity, labels));
-    const icons = [...doc.querySelectorAll("svg svg path")];
-    const mapped = activity.languages
-      .slice(0, 6)
-      .filter((language) => LANGUAGE_LOGOS[language.name]);
-    expect(icons.map((icon) => icon.getAttribute("fill"))).toEqual(
-      mapped.map((language) => LANGUAGE_LOGOS[language.name]!.color),
+    const logos = [...doc.documentElement.querySelectorAll(":scope > svg")];
+    const expected = [
+      ...activity.languages
+        .slice(0, 6)
+        .map((language) => LANGUAGE_LOGOS[language.name] ?? OTHER_LOGO),
+      OTHER_LOGO,
+    ];
+    expect(logos.map((logo) => logo.getAttribute("color"))).toEqual(
+      expected.map((logo) => logo.color),
     );
+    for (const logo of logos) {
+      expect(logo.querySelector("path")).not.toBeNull();
+    }
     expect(doc.querySelector("rect")?.getAttribute("fill")).toBe("url(#steel)");
     expect(
-      parse(languagesCard(FIXTURE, labels)).querySelector("svg svg"),
-    ).toBeNull();
+      parse(languagesCard(FIXTURE, labels))
+        .documentElement.querySelector(":scope > svg")
+        ?.getAttribute("color"),
+    ).toBe(OTHER_LOGO.color);
   });
 
   it("names each language with its share, escaping its name", () => {

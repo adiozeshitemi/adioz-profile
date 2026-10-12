@@ -90,20 +90,25 @@ export function metalIndex(index: number, isOther: boolean): number {
 
 /** A language's logo: its icon in src/icons/ and its brand colour. */
 export interface LanguageLogo {
-  /** File name in src/icons/ without ".svg", e.g. "lang-rust". */
+  /**
+   * File name in src/icons/ without ".svg": a full-colour `logo-*` mark, or
+   * a `lang-*` Simple Icons silhouette drawn in `color`, e.g. "lang-go".
+   */
   icon: string;
-  /** The brand colour Simple Icons gives the logo, as `#RRGGBB`. */
+  /** The language's brand colour as `#RRGGBB`; a `lang-*` silhouette is drawn in it. */
   color: string;
 }
 
 /**
- * The logo of each language name GitHub reports, from Simple Icons 16.30.0
- * with its brand colour; a language missing here shows its metal swatch
- * alone.
+ * The logo of each language name GitHub reports: a full-colour mark for the
+ * main languages (the Python snakes, Ferris for Rust, Duke for Java, the
+ * Jupyter and TypeScript marks, a metallic C), and otherwise its Simple Icons
+ * silhouette in its brand colour; a language missing here shows
+ * `OTHER_LOGO`.
  */
 export const LANGUAGE_LOGOS: Record<string, LanguageLogo> = {
   Astro: { icon: "lang-astro", color: "#BC52EE" },
-  C: { icon: "lang-c", color: "#A8B9CC" },
+  C: { icon: "logo-c", color: "#A8B9CC" },
   "C++": { icon: "lang-cplusplus", color: "#00599C" },
   CSS: { icon: "lang-css", color: "#663399" },
   Dart: { icon: "lang-dart", color: "#0175C2" },
@@ -111,20 +116,26 @@ export const LANGUAGE_LOGOS: Record<string, LanguageLogo> = {
   Go: { icon: "lang-go", color: "#00ADD8" },
   Groovy: { icon: "lang-groovy", color: "#4298B8" },
   HTML: { icon: "lang-html", color: "#E34F26" },
-  Java: { icon: "lang-java", color: "#000000" },
+  Java: { icon: "logo-java", color: "#000000" },
   JavaScript: { icon: "lang-javascript", color: "#F7DF1E" },
-  "Jupyter Notebook": { icon: "lang-jupyter", color: "#F37626" },
+  "Jupyter Notebook": { icon: "logo-jupyter", color: "#F37626" },
   Kotlin: { icon: "lang-kotlin", color: "#7F52FF" },
   PHP: { icon: "lang-php", color: "#777BB4" },
   PLpgSQL: { icon: "lang-postgresql", color: "#4169E1" },
-  Python: { icon: "lang-python", color: "#3776AB" },
+  Python: { icon: "logo-python", color: "#3776AB" },
   Ruby: { icon: "lang-ruby", color: "#CC342D" },
-  Rust: { icon: "lang-rust", color: "#000000" },
+  Rust: { icon: "logo-rust", color: "#000000" },
   SCSS: { icon: "lang-sass", color: "#CC6699" },
   Scala: { icon: "lang-scala", color: "#DC322F" },
   Shell: { icon: "lang-shell", color: "#4EAA25" },
   Swift: { icon: "lang-swift", color: "#F05138" },
-  TypeScript: { icon: "lang-typescript", color: "#3178C6" },
+  TypeScript: { icon: "logo-typescript", color: "#3178C6" },
+};
+
+/** The logo of `other` and of a language missing from `LANGUAGE_LOGOS`: a code mark in gunmetal. */
+export const OTHER_LOGO: LanguageLogo = {
+  icon: "code-slash",
+  color: "#2B3138",
 };
 
 /** One segment of the language bar. */
@@ -133,8 +144,8 @@ export interface LanguageSegment {
   name: string;
   /** Share of all bytes, 0 to 1. */
   share: number;
-  /** The language's logo; absent for `other` and for languages without one. */
-  logo?: LanguageLogo;
+  /** The language's logo, or `OTHER_LOGO` for `other` and for a language missing from `LANGUAGE_LOGOS`. */
+  logo: LanguageLogo;
   /** Whether the segment sums the languages after the first `limit`. */
   other: boolean;
 }
@@ -154,19 +165,23 @@ export function languageSegments(
   const segments: LanguageSegment[] = languages
     .slice(0, limit)
     .map((language) => {
-      const logo = LANGUAGE_LOGOS[language.name];
       return {
         name: language.name,
         share: language.bytes / total,
         other: false,
-        ...(logo && { logo }),
+        logo: LANGUAGE_LOGOS[language.name] ?? OTHER_LOGO,
       };
     });
   const rest = languages
     .slice(limit)
     .reduce((sum, language) => sum + language.bytes, 0);
   if (rest > 0) {
-    segments.push({ name: other, share: rest / total, other: true });
+    segments.push({
+      name: other,
+      share: rest / total,
+      other: true,
+      logo: OTHER_LOGO,
+    });
   }
   return segments;
 }
