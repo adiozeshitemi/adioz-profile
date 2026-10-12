@@ -4,10 +4,12 @@
  * views of the roles, picked by the view switch: the CareerTrace, and the
  * timeline, an ExperienceItem per role, most recent first, down a steel rail
  * that fills with gold as the page scrolls. Without the script only the
- * timeline shows.
+ * timeline shows. Under both views, the ActivityPanel shows the GitHub
+ * activity.
  */
 import { experience } from "../../data/index";
 import SectionTitle from "../UI/SectionTitle.astro";
+import ActivityPanel from "../Activity/ActivityPanel.astro";
 import CareerTrace from "./CareerTrace.astro";
 import ExperienceItem from "./ExperienceItem.astro";
 
@@ -41,6 +43,7 @@ const titleId = `${experience.id}-title`;
         <ExperienceItem item={item} ongoing={experience.ongoing} />
       ))}
     </ol>
+    <ActivityPanel />
   </div>
 </section>
 
@@ -159,6 +162,10 @@ const titleId = `${experience.id}-title`;
     height: calc(var(--fill, 1) * var(--rail-length, calc(100% - 38px)));
     background: linear-gradient(90deg, #9c7726, #fbe7a6 45%, #c4952f);
     box-shadow: 0 0 10px rgb(var(--particle-gold) / 0.45);
+  }
+
+  .inner > :global(.activity) {
+    margin-top: 44px;
   }
 
   @media (width <= 40rem) {

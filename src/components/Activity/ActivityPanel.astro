@@ -1,0 +1,615 @@
+---
+/*
+ * The GitHub activity panel: a gunmetal window, dark in both themes, like the
+ * career trace. Its title bar carries three steel studs, the engraved title
+ * and the day the activity was read. Under it: the all-time total and the
+ * current and longest streaks as engraved readouts; a column per year, the
+ * latest gold and the rest steel, a year without GitHub contributions
+ * marked as private Gitea and Bitbucket work; and the language split as one bar of
+ * brushed metals with a legend of names and shares. Every figure is text in
+ * the markup, so the panel reads the same without JavaScript, with motion
+ * reduced and to assistive technology, which skips the columns and the bar.
+ */
+import { experience } from "../../data/index";
+import type { ContributionStreak } from "../../data/types";
+import {
+  formatDay,
+  formatShare,
+  formatSpan,
+  getActivity,
+  languageSegments,
+  yearColumns,
+} from "../../lib/activity";
+
+/** Languages named in the bar before the rest are summed as `other`. */
+const LANGUAGE_LIMIT = 6;
+
+const labels = experience.activity;
+const activity = await getActivity();
+const columns = yearColumns(activity.years);
+const segments = languageSegments(
+  activity.languages,
+  LANGUAGE_LIMIT,
+  labels.other,
+);
+const count = (value: number) => value.toLocaleString("en-US");
+const span = ({ start, end }: ContributionStreak) => formatSpan(start!, end!);
+const streaks = [
+  { label: labels.currentStreak, streak: activity.currentStreak },
+  { label: labels.longestStreak, streak: activity.longestStreak },
+];
+---
+
+<div class="activity slab slab-dark" role="region" aria-label={labels.label}>
+  <div class="activity-bar">
+    <span class="studs" aria-hidden="true">
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <span class="engraved">{labels.title}</span>
+    <span class="activity-meta engraved">
+      {labels.read}
+      <time datetime={activity.fetchedAt}>{formatDay(activity.fetchedAt)}</time>
+    </span>
+  </div>
+  <div class="activity-body">
+    <dl class="readouts">
+      <div class="readout readout-total">
+        <dt>{labels.total}</dt>
+        <dd>
+          <b class="figure">{count(activity.total)}</b>
+          {activity.firstContribution && (
+            <small>
+              {labels.since}{" "}
+              <time datetime={activity.firstContribution}>
+                {formatDay(activity.firstContribution)}
+              </time>
+            </small>
+          )}
+        </dd>
+      </div>
+      {streaks.map(({ label, streak }) => (
+        <div class="readout">
+          <dt>{label}</dt>
+          <dd>
+            {streak.length === 0 ? (
+              <b class="figure figure-none">{labels.noStreak}</b>
+            ) : (
+              <>
+                <b class="figure">
+                  {count(streak.length)}
+                  <span class="unit">
+                    {streak.length === 1 ? labels.day : labels.days}
+                  </span>
+                </b>
+                <small>{span(streak)}</small>
+              </>
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+    <div class="charts">
+      <div class="chart">
+        <h3 class="chart-title">{labels.years}</h3>
+        <ol class="years">
+          {columns.map((column, index) => (
+            <li class:list={["year", { latest: index === columns.length - 1 }]}>
+              <span class="year-name">{column.year}</span>
+              <span class="year-total">{count(column.total)}</span>
+              <span class="year-column">
+                {column.total > 0 ? (
+                  <span
+                    class="year-fill"
+                    style={`--h: ${column.height.toFixed(4)}`}
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <span class="year-private">{labels.private}</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ol>
+        {columns.some((column) => column.total === 0) && (
+          <p class="chart-note">{labels.privateNote}</p>
+        )}
+      </div>
+      <div class="chart">
+        <h3 class="chart-title">{labels.languages}</h3>
+        <div class="lang-bar" aria-hidden="true">
+          {segments.map((segment, index) => (
+            <span
+              class={`lang-segment metal-${index < LANGUAGE_LIMIT ? index : "other"}`}
+              style={`--share: ${segment.share.toFixed(4)}`}
+            />
+          ))}
+        </div>
+        <ul class="lang-legend">
+          {segments.map((segment, index) => (
+            <li>
+              <span
+                class={`swatch metal-${index < LANGUAGE_LIMIT ? index : "other"}`}
+                aria-hidden="true"
+              />
+              <span class="lang-name">{segment.name}</span>
+              <span class="lang-share">{formatShare(segment.share)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /*
+   * The panel is smoked gunmetal in both themes, on the dark theme's slab
+   * wall (.slab-dark), with the career trace's title bar and studs.
+   */
+  .activity {
+    overflow: hidden;
+    border-radius: 18px;
+    background: linear-gradient(
+      190deg,
+      rgb(14 16 20 / 0.92),
+      rgb(8 9 11 / 0.96)
+    );
+    box-shadow:
+      0 0 0 1px rgb(214 222 232 / 0.08),
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.08),
+      var(--slab-wall),
+      var(--slab-drop);
+    color: #c9cfd7;
+  }
+
+  .activity-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background-image:
+      var(--brush-noise-soft), linear-gradient(180deg, #2b3138, #1b1f24);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      inset 0 -1px 0 rgb(0 0 0 / 0.6);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+
+  .studs {
+    display: flex;
+    gap: 6px;
+    margin-right: 6px;
+  }
+
+  .studs i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        var(--jewel) 0 2.2px,
+        transparent 2.6px
+      ),
+      conic-gradient(
+        from 40deg,
+        #f4f6f8,
+        #8c939d,
+        #e9ecef,
+        #5f6670,
+        #d9dde2,
+        #f4f6f8
+      );
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.6),
+      0 0 6px var(--jewel-glow);
+  }
+
+  .studs i:nth-child(1) {
+    --jewel: #f08a6a;
+    --jewel-glow: rgb(240 138 106 / 0.35);
+  }
+
+  .studs i:nth-child(2) {
+    --jewel: #f2c94c;
+    --jewel-glow: rgb(242 201 76 / 0.35);
+  }
+
+  .studs i:nth-child(3) {
+    --jewel: #9fb4cc;
+    --jewel-glow: rgb(159 180 204 / 0.3);
+  }
+
+  .activity-meta {
+    margin-left: auto;
+  }
+
+  .activity-body {
+    display: grid;
+    gap: 30px;
+    padding: 26px 26px 30px;
+  }
+
+  /*
+   * The readouts: each figure inlaid in gold over its label in mono
+   * capitals and its days, split by grooves cut into the window; three to a row from
+   * 760px, stacked below.
+   */
+  .readouts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .readout {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 22px;
+  }
+
+  .readout:first-child {
+    padding-left: 0;
+  }
+
+  .readout + .readout {
+    box-shadow:
+      inset 1px 0 0 rgb(0 0 0 / 0.55),
+      inset 2px 0 0 rgb(214 222 232 / 0.07);
+  }
+
+  .readout dt {
+    color: #8b94a0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* The figure shows above its label; the label comes first in the markup. */
+  .readout dd {
+    display: grid;
+    gap: 6px;
+    order: -1;
+    margin: 0;
+  }
+
+  .figure {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    background-image: var(--gold-brushed);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-size: clamp(30px, 4vw, 40px);
+    font-weight: var(--display-wght);
+    line-height: 1.05;
+    letter-spacing: var(--track);
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.7));
+  }
+
+  .readout-total .figure {
+    font-size: clamp(36px, 5vw, 52px);
+  }
+
+  .figure-none {
+    background-image: var(--steel-brushed);
+    font-size: clamp(22px, 2.6vw, 28px);
+  }
+
+  .unit {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .readout small {
+    color: #8b94a0;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+
+  .charts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 30px 40px;
+    padding-top: 26px;
+    box-shadow:
+      inset 0 1px 0 rgb(0 0 0 / 0.55),
+      inset 0 2px 0 rgb(214 222 232 / 0.07);
+  }
+
+  .chart-title {
+    margin: 0 0 18px;
+    color: #e6c56c;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * A year is its total over a column cut into the window, filled to --h of
+   * the busiest year with brushed steel (the latest year with gold), over
+   * the year engraved below. The year comes first in the markup, so a
+   * screen reader reads "2025, 5,828".
+   */
+  .years {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .year {
+    display: grid;
+    grid-template-rows: auto 132px auto;
+    justify-items: center;
+    gap: 7px;
+  }
+
+  .year-total {
+    grid-row: 1;
+    color: #aab3be;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+  }
+
+  .year-column {
+    grid-row: 2;
+    position: relative;
+    width: min(100%, 26px);
+    border-radius: 6px 6px 3px 3px;
+    background: rgb(0 0 0 / 0.35);
+    box-shadow:
+      inset 0 2px 3px rgb(0 0 0 / 0.75),
+      inset 0 -1px 0 rgb(214 222 232 / 0.08);
+  }
+
+  .year-fill {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    left: 3px;
+    height: max(3px, calc(var(--h) * (100% - 6px)));
+    border-radius: 4px 4px 2px 2px;
+    background-image: var(--brush-noise), var(--steel-brushed);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      0 0 0 1px rgb(0 0 0 / 0.55);
+  }
+
+  .year-name {
+    grid-row: 3;
+    color: #8b94a0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  /*
+   * A year without GitHub contributions engraves .year-private down its
+   * empty column, read bottom to top.
+   */
+  .year-private {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    color: #6f7883;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-shadow: 0 1px 0 rgb(0 0 0 / 0.8);
+  }
+
+  .chart-note {
+    margin: 16px 0 0;
+    color: #8b94a0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .latest .year-fill {
+    background-image: var(--brush-noise-soft), var(--gold-brushed);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      0 0 0 1px rgb(0 0 0 / 0.55),
+      0 0 14px -2px rgb(230 192 98 / 0.5);
+  }
+
+  .latest .year-name,
+  .latest .year-total {
+    color: #e6c56c;
+  }
+
+  /*
+   * The language bar: one segment per language, --share of the bar wide,
+   * each in its own brushed metal (.metal-0 to .metal-5, then .metal-other),
+   * the same metal as its legend swatch.
+   */
+  .lang-bar {
+    display: flex;
+    gap: 2px;
+    height: 16px;
+    padding: 3px;
+    border-radius: 9px;
+    background: rgb(0 0 0 / 0.35);
+    box-shadow:
+      inset 0 2px 3px rgb(0 0 0 / 0.75),
+      inset 0 -1px 0 rgb(214 222 232 / 0.08);
+  }
+
+  .lang-segment {
+    flex: var(--share) 1 0;
+    min-width: 3px;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55);
+  }
+
+  .lang-segment:first-child {
+    border-radius: 6px 3px 3px 6px;
+  }
+
+  .lang-segment:last-child {
+    border-radius: 3px 6px 6px 3px;
+  }
+
+  .lang-legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 18px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13.5px;
+  }
+
+  .lang-legend li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .swatch {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.55),
+      0 0 0 1px rgb(0 0 0 / 0.6);
+  }
+
+  .lang-name {
+    color: #eef1f4;
+  }
+
+  .lang-share {
+    margin-left: auto;
+    color: #8b94a0;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+
+  .metal-0,
+  .metal-1,
+  .metal-2,
+  .metal-3,
+  .metal-4,
+  .metal-5,
+  .metal-other {
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+  }
+
+  .metal-0 {
+    background-image: var(--brush-noise-soft), var(--gold-brushed);
+  }
+
+  .metal-1 {
+    background-image: var(--brush-noise), var(--steel-brushed);
+  }
+
+  .metal-2 {
+    background-image: var(--brush-noise-soft), var(--bronze-metal);
+  }
+
+  .metal-3 {
+    background-image:
+      var(--brush-noise-soft),
+      linear-gradient(180deg, #f0b08c 0%, #b8643e 52%, #d98a63 100%);
+  }
+
+  .metal-4 {
+    background-image:
+      var(--brush-noise),
+      linear-gradient(180deg, #8f98a3 0%, #5a616b 52%, #7d8590 100%);
+  }
+
+  .metal-5 {
+    background-image:
+      var(--brush-noise-soft),
+      linear-gradient(180deg, #f7efcf 0%, #c9b47a 52%, #e6d8a6 100%);
+  }
+
+  .metal-other {
+    background-image:
+      var(--brush-noise),
+      linear-gradient(180deg, #4a515a 0%, #2b3138 52%, #3a4048 100%);
+  }
+
+  @media (width < 62.5rem) {
+    .charts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 47.5rem) {
+    .activity-body {
+      padding: 22px 16px 26px;
+    }
+
+    .readouts {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .readout,
+    .readout:first-child {
+      padding: 0;
+    }
+
+    .readout + .readout {
+      padding-top: 18px;
+      box-shadow:
+        inset 0 1px 0 rgb(0 0 0 / 0.55),
+        inset 0 2px 0 rgb(214 222 232 / 0.07);
+    }
+
+    .years {
+      gap: 4px;
+    }
+
+    .year {
+      grid-template-rows: auto 104px auto;
+    }
+
+    .year-total,
+    .year-name {
+      font-size: 9.5px;
+    }
+
+    .year-private {
+      font-size: 8.5px;
+      letter-spacing: 0.06em;
+    }
+
+    .lang-legend {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
