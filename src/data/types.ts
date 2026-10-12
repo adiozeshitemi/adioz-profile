@@ -304,3 +304,51 @@ export interface PipelineContent {
   label: string;
   parts: Record<PipelinePartName, PipelinePart>;
 }
+
+/** A run of consecutive days, each with at least one contribution. */
+export interface ContributionStreak {
+  /** Days in the run; 0 when there is no run. */
+  length: number;
+  /** First day of the run as `YYYY-MM-DD`, or null when `length` is 0. */
+  start: string | null;
+  /** Last day of the run as `YYYY-MM-DD`, or null when `length` is 0. */
+  end: string | null;
+}
+
+/** The contributions counted in one calendar year. */
+export interface ContributionYear {
+  /** Calendar year, e.g. 2025. */
+  year: number;
+  /** Contributions on the year's days, up to the day the activity was read. */
+  total: number;
+}
+
+/** One language's share of the code across the owner's repositories. */
+export interface LanguageShare {
+  /** Language name as GitHub reports it, e.g. "Rust". */
+  name: string;
+  /** GitHub's colour for the language as `#rrggbb`, or null when it has none. */
+  color: string | null;
+  /** Bytes of code in the language across the owner's non-fork repositories. */
+  bytes: number;
+}
+
+/** The GitHub activity of the token's owner, private contributions included. */
+export interface GitHubActivity {
+  /** GitHub login of the token's owner, e.g. "adiozeshitemi". */
+  login: string;
+  /** Day the activity was read, as `YYYY-MM-DD` in UTC. */
+  fetchedAt: string;
+  /** Day of the first contribution as `YYYY-MM-DD`, or null before any. */
+  firstContribution: string | null;
+  /** Sum of `years[].total`. */
+  total: number;
+  /** One entry per year with contributions on GitHub, earliest first. */
+  years: ContributionYear[];
+  /** The run that reaches the read day, or the day before it when the read day has none yet. */
+  currentStreak: ContributionStreak;
+  /** The longest run; the latest one when runs tie. */
+  longestStreak: ContributionStreak;
+  /** Languages by bytes, most first. */
+  languages: LanguageShare[];
+}
