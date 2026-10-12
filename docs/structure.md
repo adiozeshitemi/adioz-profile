@@ -52,7 +52,7 @@ adioz-dev/
 │   │   │   ├── CareerTrace.astro
 │   │   │   ├── ExperienceItem.astro
 │   │   │   └── ExperienceSection.astro
-│   │   ├── Footer/            # Site footer: gunmetal strip with mark, copyright and back-to-top knob
+│   │   ├── Footer/            # Site footer: gunmetal strip with mark, copyright, résumé and back-to-top knobs
 │   │   │   └── Footer.astro
 │   │   ├── Header/            # Fixed header: brand mark, rail of section links, theme knob, contact button, phone menu
 │   │   │   ├── BrandLogo.astro
