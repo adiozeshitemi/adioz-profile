@@ -7,7 +7,7 @@ adioz-dev/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml             # Quality gate: format check, unit tests, type check and build
-│       └── deploy.yml         # Production deploy on every push to main
+│       └── deploy.yml         # Production deploy on every push to main, then the profile README
 │
 ├── .vscode/
 │   ├── extensions.json        # Recommended editor extensions (Astro)
@@ -35,7 +35,8 @@ adioz-dev/
 │   └── site.webmanifest       # Web app manifest: name and icons
 │
 ├── scripts/                   # 🔧 Node scripts
-│   └── activity-snapshot.ts   # Writes src/data/activity.json from the GitHub API
+│   ├── activity-snapshot.ts   # Writes src/data/activity.json from the GitHub API
+│   └── profile-readme.ts      # Writes the GitHub profile README from src/data
 │
 ├── src/
 │   ├── components/            # 🧩 UI components
@@ -99,7 +100,7 @@ adioz-dev/
 │   │   ├── pipeline.json      # Agent pipeline figure label and each part's title and detail
 │   │   ├── profile.json       # Name, role, hero copy, calls to action, resume and email
 │   │   ├── projects.json      # Projects section: id, label, headline, new-tab words and projects, from public/resume.pdf
-│   │   ├── site.json          # Page title, descriptions, link preview image and alt, new-tab words
+│   │   ├── site.json          # Site URL, page title, descriptions, link preview image and alt, new-tab words
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
@@ -124,7 +125,8 @@ adioz-dev/
 │   ├── lib/                   # 🛠️ Build-time modules
 │   │   ├── activity.ts        # The build's GitHub activity, panel layout and formatting
 │   │   ├── activityCards.ts   # The activity as SVG cards for the GitHub profile README
-│   │   └── github.ts          # GitHub GraphQL reads, streaks, totals and languages
+│   │   ├── github.ts          # GitHub GraphQL reads, streaks, totals and languages
+│   │   └── profileReadme.ts   # The GitHub profile README rendered from src/data
 │   ├── pages/                 # 📄 File-based routes
 │   │   ├── activity/          # SVG cards written at build time
 │   │   │   ├── contributions.svg.ts  # /activity/contributions.svg
@@ -175,6 +177,7 @@ adioz-dev/
 │   ├── page.test.ts           # Assembled landing page
 │   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
 │   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
+│   ├── profileReadme.test.ts  # GitHub profile README rendering
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer

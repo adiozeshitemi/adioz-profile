@@ -70,6 +70,8 @@ export interface Navigation {
 
 /** Site-wide copy: the page head's title, description and link preview, and the new-tab note. */
 export interface SiteMeta {
+  /** The site's production origin, e.g. "https://adioz.dev"; `astro.config.mjs` sets `site` from it. */
+  url: string;
   /** Default page title, e.g. "Adioz D Eshitemi · Full-stack AI engineer"; also the link preview's title. */
   title: string;
   /** Default meta description, for search results. */

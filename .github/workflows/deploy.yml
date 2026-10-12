@@ -34,8 +34,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The build reads the GitHub activity live with GITHUB_ACTIVITY_TOKEN;
+      # without it, or when the API fails, it uses src/data/activity.json.
       - name: Build
         run: npm run build
+        env:
+          GITHUB_ACTIVITY_TOKEN: ${{ secrets.GITHUB_ACTIVITY_TOKEN }}
 
       - name: Deploy to production
         id: deploy
@@ -58,3 +62,43 @@ jobs:
           fi
           host="${DEPLOYMENT_URL%% *}"
           echo "**Production:** https://${host#https://}" >> "$GITHUB_STEP_SUMMARY"
+
+  profile-readme:
+    name: Update the GitHub profile README
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js from .nvmrc
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      # PROFILE_README_TOKEN is a fine-grained token with Contents: Read and
+      # write on adiozeshitemi/adiozeshitemi only.
+      - name: Check out the profile repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: adiozeshitemi/adiozeshitemi
+          token: ${{ secrets.PROFILE_README_TOKEN }}
+          path: profile
+
+      - name: Render the README
+        run: node scripts/profile-readme.ts profile/README.md
+
+      - name: Push the README when it changed
+        working-directory: profile
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "The profile README is unchanged." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update the profile README from adioz.dev ${GITHUB_SHA::7}"
+          git push
+          echo "**Profile README:** updated." >> "$GITHUB_STEP_SUMMARY"

@@ -7,6 +7,7 @@ Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24. The `package.json` sc
 - `npm run preview`: serves the `dist/` build locally.
 - `npm run format:check`: checks formatting with Prettier; `npm run format` rewrites files to fix it.
 - `npm test`: runs the Vitest unit tests in `tests/` once; `npm run test:watch` re-runs them on each change.
+- `npm run profile:readme -- <path>`: writes the GitHub profile README, rendered from `src/data`, to `<path>`; the deploy workflow pushes it to `adiozeshitemi/adiozeshitemi`.
 - `npm run activity:snapshot`: rewrites `src/data/activity.json`, the GitHub activity builds use without a token, from the GitHub GraphQL API with `GITHUB_ACTIVITY_TOKEN` in `.env`. A build with `GITHUB_ACTIVITY_TOKEN` set reads the activity live; without it, it uses the snapshot.
 
 Run `npm run format:check`, `npm test` and `npm run build` before committing. CI (`.github/workflows/ci.yml`) runs the same three commands on pull requests into `main` and before every deployment.
