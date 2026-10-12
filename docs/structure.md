@@ -104,7 +104,7 @@ adioz-dev/
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
 │   │   └── types.ts           # TypeScript interfaces for the portfolio content
-│   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro (lang-* are language logos), with their sources and licenses
+│   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro (logo-* full-colour and lang-* single-colour language logos), with their sources and licenses
 │   │   ├── activity.svg
 │   │   ├── arrow-right.svg
 │   │   ├── arrow-up.svg
@@ -137,7 +137,7 @@ adioz-dev/
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
 │   │   ├── motion.ts          # Header scroll state, stat counters
-│   │   ├── odometer.ts        # Activity counters rolling up from zeros once in view
+│   │   ├── odometer.ts        # Activity counter wheels spinning to their digits on each view
 │   │   ├── pillars.ts         # About pillars: the .lit fallback and the swinging drawstrings
 │   │   ├── pipeline3d.ts      # 3D agent pipeline: Three.js parts, conduits, pulse and labels
 │   │   ├── rail.ts            # Header scroll spy and the rail's sliding gold plate
@@ -171,7 +171,7 @@ adioz-dev/
 │   ├── github.test.ts         # GitHub activity reads, streaks, totals and the snapshot fallback
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── menu.test.ts           # Phone menu sheet states
-│   ├── odometer.test.ts       # Odometer digits, easing and the roll
+│   ├── odometer.test.ts       # Odometer reels and their spin
 │   ├── page.test.ts           # Assembled landing page
 │   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
 │   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback

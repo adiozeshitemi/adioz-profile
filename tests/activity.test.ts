@@ -12,8 +12,10 @@ import {
   languageSegments,
   METALS,
   metalIndex,
+  OTHER_LOGO,
   yearColumns,
 } from "../src/lib/activity";
+import { reelIndex } from "../src/scripts/odometer";
 import { render, text } from "./render";
 
 describe("activity layout", () => {
@@ -40,7 +42,7 @@ describe("activity layout", () => {
         name: "Rust",
         share: 0.5,
         other: false,
-        logo: { icon: "lang-rust", color: "#000000" },
+        logo: { icon: "logo-rust", color: "#000000" },
       },
       {
         name: "Go",
@@ -48,13 +50,13 @@ describe("activity layout", () => {
         other: false,
         logo: { icon: "lang-go", color: "#00ADD8" },
       },
-      { name: "Other", share: 0.2, other: true },
+      { name: "Other", share: 0.2, other: true, logo: OTHER_LOGO },
     ]);
     expect(languageSegments(languages, 4, "Other")).toHaveLength(4);
     expect(languageSegments([], 6, "Other")).toEqual([]);
   });
 
-  it("has an icon file and a brand colour for every mapped language, and no logo for an unmapped one", () => {
+  it("has an icon file and a brand colour for every mapped language, and OTHER_LOGO for an unmapped one", () => {
     for (const { icon, color } of Object.values(LANGUAGE_LOGOS)) {
       expect(existsSync(`src/icons/${icon}.svg`)).toBe(true);
       expect(color).toMatch(/^#[0-9A-F]{6}$/);
@@ -64,7 +66,12 @@ describe("activity layout", () => {
       6,
       "Other",
     );
-    expect(segment).toEqual({ name: "Brainfuck", share: 1, other: false });
+    expect(segment).toEqual({
+      name: "Brainfuck",
+      share: 1,
+      other: false,
+      logo: OTHER_LOGO,
+    });
   });
 
   it("gives the first six segments their own metal and the rest gunmetal", () => {
@@ -116,8 +123,15 @@ describe("ActivityPanel", () => {
     expect(text(counters[0]!.querySelector(".sr-only"))).toBe(total);
     const drums = counters[0]!.querySelector(".window");
     expect(drums?.getAttribute("aria-hidden")).toBe("true");
-    expect(drums?.getAttribute("data-odometer")).toBe(String(activity.total));
-    expect(text(drums)).toBe(total);
+    expect(
+      [...drums!.querySelectorAll(".drum")]
+        .map((drum) => drum.getAttribute("data-digit") ?? ",")
+        .join(""),
+    ).toBe(total);
+    for (const reel of drums!.querySelectorAll(".reel")) {
+      const digit = Number(reel.parentElement!.getAttribute("data-digit"));
+      expect(reel.getAttribute("style")).toBe(`--at: ${reelIndex(digit)}`);
+    }
     const longest = counters[2]!;
     expect(text(longest.querySelector(".sr-only"))).toBe(
       String(activity.longestStreak.length),
@@ -153,7 +167,7 @@ describe("ActivityPanel", () => {
     expect(text(doc.querySelector(".chart-note"))).toBe(labels.privateNote);
   });
 
-  it("leads each language with its metal pip and its logo in its brand colour", async () => {
+  it("leads each language with its logo in its brand colour", async () => {
     const doc = await render(ActivityPanel);
     const langs = [...doc.querySelectorAll(".langs li")];
     expect(doc.querySelectorAll(".lang-segment")).toHaveLength(langs.length);
@@ -162,15 +176,13 @@ describe("ActivityPanel", () => {
     );
     const first = activity.languages[0]!;
     expect(text(langs[0]!.querySelector(".lang-name"))).toBe(first.name);
-    expect(langs[0]!.querySelector(".pip")?.className).toContain("metal-0");
     expect(langs[0]!.querySelector(".lang-icon svg")).not.toBeNull();
     expect(
       langs[0]!.querySelector(".lang-icon > span")?.getAttribute("style"),
     ).toBe(`color: ${LANGUAGE_LOGOS[first.name]!.color}`);
-    expect(langs.at(-1)?.querySelector(".pip")?.className).toContain(
-      "metal-other",
-    );
-    expect(langs.at(-1)?.querySelector(".lang-icon svg")).toBeNull();
+    expect(
+      langs.at(-1)?.querySelector(".lang-icon > span")?.getAttribute("style"),
+    ).toBe(`color: ${OTHER_LOGO.color}`);
   });
 
   it("sits in the experience section under both views", async () => {

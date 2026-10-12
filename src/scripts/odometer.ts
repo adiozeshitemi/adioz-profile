@@ -1,82 +1,62 @@
 /*
- * The activity panel's odometer counters. Each `[data-odometer]` window
- * holds one `.drum` per digit (and `.comma` separators) showing its final
- * value; once a third of the window is in view, its drums roll from all
- * zeros up to that value, easing out. Without this script, or under reduced
- * motion, the drums keep their final value.
+ * The activity panel's odometer counters, wheels like a combination lock's.
+ * Each `.drum` holds a `.reel`: the digits 0 to 9 repeated `REEL_TURNS`
+ * times, set on its `data-digit` in the last turn through `--at`. Each time a
+ * counter comes into view, its reels snap back to 0 and spin forward to
+ * their digits, the drums one after another from the left. Without this
+ * script, or under reduced motion, the reels stay on their digits.
  */
 
-/** Milliseconds a counter takes to reach its value. */
-export const ROLL_MS = 1600;
+/** Turns of 0 to 9 on each reel; a spin runs from the first turn's 0 to the last turn's digit. */
+export const REEL_TURNS = 3;
 
-/**
- * The digits `drums` drums show for `value`: its whole part, padded with
- * leading zeros to `drums` digits; a value longer than `drums` keeps all its
- * digits.
- */
-export function drumDigits(value: number, drums: number): string[] {
-  return [...String(Math.max(0, Math.round(value))).padStart(drums, "0")];
+/** Milliseconds between one drum starting to spin and the next. */
+export const DRUM_STAGGER_MS = 90;
+
+/** The reel cell a drum rests on to show `digit`: the digit in the last turn. */
+export function reelIndex(digit: number): number {
+  return (REEL_TURNS - 1) * 10 + digit;
 }
 
-/** The share of the roll done at `progress` (0 to 1): an ease-out cubic. */
-export function rollEase(progress: number): number {
-  const clamped = Math.min(1, Math.max(0, progress));
-  return 1 - (1 - clamped) ** 3;
+/** The reel cells, top to bottom: 0 to 9, `REEL_TURNS` times. */
+export function reelDigits(): number[] {
+  return Array.from({ length: REEL_TURNS * 10 }, (_, index) => index % 10);
 }
 
-/** Writes `digits` into `drums`, the last digit into the last drum. */
-function show(drums: HTMLElement[], digits: string[]) {
-  const offset = digits.length - drums.length;
-  drums.forEach((drum, index) => {
-    drum.textContent = digits[index + offset] ?? "0";
+/** Sets every reel in `counter` to cell 0 at once, then spins each to its digit, staggered from the left. */
+function spin(counter: Element) {
+  const reels = [...counter.querySelectorAll<HTMLElement>(".reel")];
+  for (const reel of reels) {
+    reel.style.transition = "none";
+    reel.style.setProperty("--at", "0");
+  }
+  // Reading layout commits the reset, so the spin below transitions from 0.
+  void counter.getBoundingClientRect();
+  reels.forEach((reel, index) => {
+    const digit = Number(reel.parentElement?.dataset.digit ?? 0);
+    reel.style.transition = "";
+    reel.style.transitionDelay = `${index * DRUM_STAGGER_MS}ms`;
+    reel.style.setProperty("--at", String(reelIndex(digit)));
   });
 }
 
 /**
- * Starts the odometers in `windows`: sets each to zeros, then rolls it to
- * its `data-odometer` value the first time it comes into view. Returns a
- * function that stops observing and cancels any roll.
+ * Spins the counters in `counters` each time one comes into view (a third of
+ * it showing). Returns a function that stops watching them.
  */
 export function startOdometers(
-  windows: HTMLElement[],
+  counters: HTMLElement[],
   reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches,
 ): () => void {
-  if (reduceMotion || windows.length === 0) return () => {};
-  const frames = new Set<number>();
-  const drumsOf = (element: Element) => [
-    ...element.querySelectorAll<HTMLElement>(".drum:not(.comma)"),
-  ];
-
-  const roll = (element: HTMLElement) => {
-    const drums = drumsOf(element);
-    const target = Number(element.dataset.odometer);
-    const start = performance.now();
-    const frame = (now: number) => {
-      const progress = (now - start) / ROLL_MS;
-      show(drums, drumDigits(target * rollEase(progress), drums.length));
-      if (progress < 1) frames.add(requestAnimationFrame(frame));
-    };
-    frames.add(requestAnimationFrame(frame));
-  };
-
-  for (const element of windows) {
-    const drums = drumsOf(element);
-    show(drums, drumDigits(0, drums.length));
-  }
+  if (reduceMotion || counters.length === 0) return () => {};
   const view = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        view.unobserve(entry.target);
-        roll(entry.target as HTMLElement);
+        if (entry.isIntersecting) spin(entry.target);
       }
     },
     { threshold: 0.33 },
   );
-  for (const element of windows) view.observe(element);
-
-  return () => {
-    view.disconnect();
-    for (const id of frames) cancelAnimationFrame(id);
-  };
+  for (const counter of counters) view.observe(counter);
+  return () => view.disconnect();
 }

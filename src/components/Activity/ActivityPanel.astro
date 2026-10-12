@@ -3,16 +3,17 @@
  * The GitHub activity as an instrument Plate, brushed gold on the dark theme
  * and bronze on the light one, screwed down at its corners like the gauge
  * cluster. On it: the all-time total and the current and longest streaks as
- * odometer counters (white enamel digit drums in a recessed window), which
- * src/scripts/odometer.ts rolls up from zeros once they are in view; a slot
+ * odometer counters (white enamel digit wheels in a recessed window), which
+ * src/scripts/odometer.ts spins from zeros to their digits each time they
+ * come into view; a slot
  * per year cut into the plate, filled with steel to its share of the
  * busiest year (the latest gold), a year without GitHub contributions marked
  * as private Gitea and Bitbucket work; and the language split as one slot of
- * brushed-metal segments over each language's metal pip and its logo
- * straight on the plate in its brand colour. Every figure is text in the
+ * brushed-metal segments over each language's logo straight on the plate
+ * in its brand colour. Every figure is text in the
  * markup, so the panel reads the same without JavaScript, with motion
  * reduced and to assistive technology, which skips the drums, the slots'
- * fills, the pips and the logos.
+ * fills and the logos.
  */
 import { experience } from "../../data/index";
 import type { ContributionStreak } from "../../data/types";
@@ -28,6 +29,7 @@ import {
 } from "../../lib/activity";
 import Icon from "../UI/Icon.astro";
 import Plate from "../UI/Plate.astro";
+import { reelDigits, reelIndex } from "../../scripts/odometer";
 
 /** Languages named in the bar before the rest are summed as `other`. */
 const LANGUAGE_LIMIT = 6;
@@ -49,6 +51,7 @@ const metalClass = (index: number) => {
   return metal === METALS.length - 1 ? "metal-other" : `metal-${metal}`;
 };
 const count = (value: number) => value.toLocaleString("en-US");
+const reel = reelDigits();
 const span = ({ start, end }: ContributionStreak) => formatSpan(start!, end!);
 const streaks = [
   { label: labels.currentStreak, streak: activity.currentStreak },
@@ -68,10 +71,20 @@ const streaks = [
     <div class="counter counter-total">
       <dt class="cut caps">{labels.total}</dt>
       <dd>
-        <span class="window" data-odometer={activity.total} aria-hidden="true">
-          {[...count(activity.total)].map((char) => (
-            <span class:list={["drum", { comma: char === "," }]}>{char}</span>
-          ))}
+        <span class="window" aria-hidden="true">
+          {[...count(activity.total)].map((char) =>
+            char === "," ? (
+              <span class="drum comma">,</span>
+            ) : (
+              <span class="drum" data-digit={char}>
+                <span class="reel" style={`--at: ${reelIndex(Number(char))}`}>
+                  {reel.map((digit) => (
+                    <span>{digit}</span>
+                  ))}
+                </span>
+              </span>
+            ),
+          )}
         </span>
         <span class="sr-only">{count(activity.total)}</span>
         {activity.firstContribution && (
@@ -89,14 +102,19 @@ const streaks = [
         <dt class="cut caps">{label}</dt>
         <dd>
           <span class="reading">
-            <span
-              class="window"
-              data-odometer={streak.length}
-              aria-hidden="true"
-            >
+            <span class="window" aria-hidden="true">
               {[...String(streak.length).padStart(STREAK_DRUMS, "0")].map(
                 (digit) => (
-                  <span class="drum">{digit}</span>
+                  <span class="drum" data-digit={digit}>
+                    <span
+                      class="reel"
+                      style={`--at: ${reelIndex(Number(digit))}`}
+                    >
+                      {reel.map((cell) => (
+                        <span>{cell}</span>
+                      ))}
+                    </span>
+                  </span>
                 ),
               )}
             </span>
@@ -149,15 +167,16 @@ const streaks = [
         ))}
       </div>
       <ul class="langs">
-        {segments.map((segment, index) => (
+        {segments.map((segment) => (
           <li>
-            <span class={`pip ${metalClass(index)}`} aria-hidden="true" />
-            <span class="lang-icon" aria-hidden="true">
-              {segment.logo && (
-                <span style={`color: ${segment.logo.color}`}>
-                  <Icon name={segment.logo.icon} size={22} />
-                </span>
-              )}
+            <span
+              class="lang-icon"
+              data-logo={segment.logo.icon}
+              aria-hidden="true"
+            >
+              <span style={`color: ${segment.logo.color}`}>
+                <Icon name={segment.logo.icon} size={32} />
+              </span>
             </span>
             <span class="cut lang-name">{segment.name}</span>
             <span class="cut lang-share">{formatShare(segment.share)}</span>
@@ -172,7 +191,7 @@ const streaks = [
   import { startOdometers } from "../../scripts/odometer";
 
   startOdometers([
-    ...document.querySelectorAll<HTMLElement>(".activity [data-odometer]"),
+    ...document.querySelectorAll<HTMLElement>(".activity .window"),
   ]);
 </script>
 
@@ -296,21 +315,20 @@ const streaks = [
       0 2px 0 3px var(--plate-lip);
   }
 
+  /*
+   * A drum is a wheel seen through its window: a .reel of the digits 0 to 9
+   * (repeated, from src/scripts/odometer.ts) slid by --at to put that cell
+   * at the middle, the cells above and below it showing at the edges and
+   * shaded as the wheel curves away. A reel eases to a new --at, spinning
+   * through the cells between.
+   */
   .drum {
-    display: grid;
-    place-items: center;
+    position: relative;
     width: 0.78em;
-    height: 1.3em;
+    height: 1.7em;
+    overflow: hidden;
     border-radius: 4px;
-    background:
-      linear-gradient(
-        180deg,
-        rgb(0 0 0 / 0.38) 0%,
-        transparent 30%,
-        transparent 70%,
-        rgb(0 0 0 / 0.38) 100%
-      ),
-      var(--enamel);
+    background: var(--enamel);
     color: #16181b;
     font-family: var(--font-mono);
     font-size: 26px;
@@ -318,10 +336,41 @@ const streaks = [
     line-height: 1;
   }
 
+  .drum::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(0 0 0 / 0.62) 0%,
+      rgb(0 0 0 / 0.12) 28%,
+      transparent 40%,
+      transparent 60%,
+      rgb(0 0 0 / 0.12) 72%,
+      rgb(0 0 0 / 0.62) 100%
+    );
+    pointer-events: none;
+  }
+
+  .reel {
+    display: grid;
+    grid-auto-rows: 1em;
+    justify-items: center;
+    transform: translateY(calc(0.35em - var(--at) * 1em));
+    transition: transform 1.5s cubic-bezier(0.18, 0.7, 0.2, 1);
+  }
+
   .drum.comma {
+    display: grid;
+    place-items: end center;
     width: 0.32em;
+    padding-bottom: 0.38em;
     background: none;
     color: #c3c8ce;
+  }
+
+  .drum.comma::after {
+    content: none;
   }
 
   .counter-total .drum {
@@ -339,6 +388,15 @@ const streaks = [
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     gap: 32px 52px;
     padding: 28px 18px 0;
+  }
+
+  /*
+   * The two charts share a row, so each is a column the row's height: the
+   * language list grows to fill what the years leave below it.
+   */
+  .chart {
+    display: flex;
+    flex-direction: column;
   }
 
   .chart-title {
@@ -443,21 +501,30 @@ const streaks = [
   }
 
   /*
-   * The language bar: a slot of segments, each --share of it wide, in its
-   * language's metal (.metal-0 to .metal-5, then .metal-other).
+   * The language bar: a slot with a near-black floor, holding a segment per
+   * language, each --share of the slot wide, in its language's metal
+   * (.metal-0 to .metal-5, then .metal-other).
    */
   .lang-bar {
     display: flex;
-    gap: 2px;
-    height: 18px;
-    padding: 3px;
+    gap: 3px;
+    height: 22px;
+    padding: 4px;
+    background: linear-gradient(180deg, #0d0f12, #22262c);
   }
 
+  /*
+   * Each segment stands out of the slot's dark floor: a lit top edge, a
+   * shaded lower edge and a dark outline against its neighbours.
+   */
   .lang-segment {
     flex: var(--share) 1 0;
-    min-width: 3px;
+    min-width: 4px;
     border-radius: 3px;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      inset 0 -2px 0 rgb(0 0 0 / 0.28),
+      0 0 0 1px rgb(0 0 0 / 0.65);
   }
 
   .lang-segment:first-child {
@@ -469,15 +536,17 @@ const streaks = [
   }
 
   /*
-   * Each language is its metal's pip, its logo straight on the plate in its
-   * brand colour (seated by a lit lower lip and a dark upper edge, an empty
-   * space for a language without one), then its name and share cut into
-   * the plate.
+   * Each language is its logo straight on the plate, in a 38 by 32 box
+   * (seated by a lit lower lip and a dark upper edge; OTHER_LOGO for `other`
+   * and for a language without one), then its name and share cut into the
+   * plate.
    */
   .langs {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 30px;
+    flex: 1;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-content: space-evenly;
+    gap: 18px 30px;
     margin: 22px 0 0;
     padding: 0;
     list-style: none;
@@ -486,27 +555,87 @@ const streaks = [
   .langs li {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
-  }
-
-  .pip {
-    flex: none;
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.55),
-      0 0 0 1px rgb(0 0 0 / 0.55);
   }
 
   .lang-icon {
     display: grid;
     flex: none;
-    width: 22px;
-    height: 22px;
+    place-items: center;
+    width: 38px;
+    height: 32px;
     filter: drop-shadow(0 1px 0 var(--plate-lip))
       drop-shadow(0 -1px 0 rgb(0 0 0 / 0.3));
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .lang-icon > span,
+  .lang-icon :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /*
+   * A hovered language's logo pops up off the plate. The mascots move at
+   * rest: Ferris (logo-rust) scuttles side to side and Duke (logo-java)
+   * waves, rocking on his base.
+   */
+  .langs li:hover .lang-icon {
+    transform: translateY(-3px) scale(1.14);
+  }
+
+  .lang-icon[data-logo="logo-rust"] > span {
+    animation: scuttle 3.6s ease-in-out infinite;
+  }
+
+  .lang-icon[data-logo="logo-java"] > span {
+    transform-origin: 50% 100%;
+    animation: wave 3.2s ease-in-out infinite;
+  }
+
+  @keyframes scuttle {
+    0%,
+    40%,
+    100% {
+      transform: translateX(0);
+    }
+
+    10%,
+    20% {
+      transform: translateX(-3px) rotate(-3deg);
+    }
+
+    15%,
+    25% {
+      transform: translateX(3px) rotate(3deg);
+    }
+  }
+
+  @keyframes wave {
+    0%,
+    55%,
+    100% {
+      transform: rotate(0);
+    }
+
+    65%,
+    85% {
+      transform: rotate(-7deg);
+    }
+
+    75% {
+      transform: rotate(6deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lang-icon,
+    .lang-icon > span {
+      transition: none;
+      animation: none !important;
+    }
   }
 
   .lang-name {
