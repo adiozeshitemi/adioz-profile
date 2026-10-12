@@ -15,6 +15,23 @@
     "live": "live"
   },
   "ongoing": "Present",
+  "activity": {
+    "title": "adioz — github.activity",
+    "label": "GitHub activity",
+    "read": "read",
+    "total": "Contributions",
+    "since": "since",
+    "currentStreak": "Current streak",
+    "longestStreak": "Longest streak",
+    "days": "days",
+    "day": "day",
+    "noStreak": "No streak",
+    "years": "Contributions per year",
+    "private": "Gitea · Bitbucket",
+    "privateNote": "Years at 0 went to client work in private, confidential Gitea and Bitbucket repositories, which GitHub does not count.",
+    "languages": "Languages across owned repositories",
+    "other": "Other"
+  },
   "roles": [
     {
       "role": "Lead Engineer (AI & Backend)",

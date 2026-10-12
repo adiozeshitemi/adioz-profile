@@ -209,8 +209,40 @@ export interface ExperienceContent {
   trace: { title: string; rolesLabel: string; now: string; live: string };
   /** Text in place of the end year of an ongoing role, e.g. "Present". */
   ongoing: string;
+  activity: ActivityLabels;
   /** Roles in display order, most recent first. */
   roles: ExperienceItem[];
+}
+
+/** The text of the GitHub activity panel under the experience views. */
+export interface ActivityLabels {
+  /** Title engraved in the panel's title bar, e.g. "adioz — github.activity". */
+  title: string;
+  /** Accessible name of the panel. */
+  label: string;
+  /** Word before the day the activity was read, e.g. "read". */
+  read: string;
+  /** Label of the all-time total, e.g. "Contributions". */
+  total: string;
+  /** Word before the first contribution's day, e.g. "since". */
+  since: string;
+  currentStreak: string;
+  longestStreak: string;
+  /** Unit after a streak's length: plural, e.g. "days", and singular, e.g. "day". */
+  days: string;
+  day: string;
+  /** Shown in place of a streak's length when it is 0, e.g. "No streak". */
+  noStreak: string;
+  /** Heading of the per-year columns. */
+  years: string;
+  /** Engraved down the column of a year without GitHub contributions, e.g. "Gitea · Bitbucket". */
+  private: string;
+  /** Note under the columns, shown when a year has no GitHub contributions, saying where that year's work went. */
+  privateNote: string;
+  /** Heading of the language bar. */
+  languages: string;
+  /** Name of the share that sums the languages after the first few, e.g. "Other". */
+  other: string;
 }
 
 /** One role in the experience timeline. */
@@ -343,7 +375,7 @@ export interface GitHubActivity {
   firstContribution: string | null;
   /** Sum of `years[].total`. */
   total: number;
-  /** One entry per year with contributions on GitHub, earliest first. */
+  /** One entry per year from the first contribution's year to `fetchedAt`'s, earliest first. */
   years: ContributionYear[];
   /** The run that reaches the read day, or the day before it when the read day has none yet. */
   currentStreak: ContributionStreak;

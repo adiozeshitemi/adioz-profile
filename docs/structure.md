@@ -34,8 +34,13 @@ adioz-dev/
 │   ├── resume.pdf             # Downloadable resume; source of the experience and projects data
 │   └── site.webmanifest       # Web app manifest: name and icons
 │
+├── scripts/                   # 🔧 Node scripts
+│   └── activity-snapshot.ts   # Writes src/data/activity.json from the GitHub API
+│
 ├── src/
 │   ├── components/            # 🧩 UI components
+│   │   ├── Activity/          # GitHub activity panel: total, streaks, years, languages
+│   │   │   └── ActivityPanel.astro
 │   │   ├── About/             # Core Engineering Focus: portrait and pillars on a plate, service record
 │   │   │   ├── AboutPortrait.astro
 │   │   │   ├── AboutSection.astro
@@ -85,8 +90,9 @@ adioz-dev/
 │   │       └── Tag.astro
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: id, label, headline, bio, portrait, pillars with icons, service record
+│   │   ├── activity.json      # GitHub activity snapshot (npm run activity:snapshot)
 │   │   ├── contact.json       # Contact section: id, label, headline, lead, copy notes, link ports, résumé label
-│   │   ├── experience.json    # Experience section: id, label, headline, view and trace labels, roles, from public/resume.pdf
+│   │   ├── experience.json    # Experience section: id, label, headline, view, trace and activity labels, roles, from public/resume.pdf
 │   │   ├── footer.json        # Copyright holder and back-to-top link
 │   │   ├── index.ts           # Typed exports of every JSON file (checked by astro check)
 │   │   ├── navigation.json    # Header section links, contact link and menu labels
@@ -115,6 +121,9 @@ adioz-dev/
 │   │   └── send.svg
 │   ├── layouts/               # 🏗️ Page shells
 │   │   └── Layout.astro       # HTML shell: SEO and Open Graph tags, theme-color, font preload, theme script
+│   ├── lib/                   # 🛠️ Build-time modules
+│   │   ├── activity.ts        # The build's GitHub activity, panel layout and formatting
+│   │   └── github.ts          # GitHub GraphQL reads, streaks, totals and languages
 │   ├── pages/                 # 📄 File-based routes
 │   │   └── index.astro        # Landing page (/)
 │   ├── scripts/               # 📜 Client scripts
@@ -134,6 +143,7 @@ adioz-dev/
 │   │   ├── timeline.ts        # Experience rail: span and gold fill as the page scrolls
 │   │   ├── trace.ts           # Career trace: scale, tabs, span draw-in, view switch
 │   │   └── view.ts            # View turn: raised parts lean away from the pointer
+│   ├── env.d.ts               # Types of the environment variables the build reads
 │   └── styles/                # 🎨 Global styling
 │       ├── animations.css     # Reduced-motion override
 │       ├── engraving.css      # Main design engraved, carved and inlaid text
@@ -145,12 +155,14 @@ adioz-dev/
 ├── tests/                     # 🧪 Vitest unit tests (npm test)
 │   ├── fixtures/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
+│   ├── activity.test.ts       # Activity panel layout, formatting and markup
 │   ├── brand.test.ts          # Brand files: sizes, favicon scheme switch, manifest
 │   ├── copy.test.ts           # Copy action, its fallback and the knob's notes
 │   ├── data.test.ts           # Data rules and load-time errors
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── field.test.ts          # Particle field helpers and drawing
 │   ├── gauges.test.ts         # Gauge scale, needle springs, sweep and drag
+│   ├── github.test.ts         # GitHub activity reads, streaks, totals and the snapshot fallback
 │   ├── light.test.ts          # Pointer light helpers and frames
 │   ├── menu.test.ts           # Phone menu sheet states
 │   ├── page.test.ts           # Assembled landing page
