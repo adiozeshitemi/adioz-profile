@@ -61,8 +61,7 @@ export function longestStreak(days: ContributionDay[]): ContributionStreak {
   let start = "";
   active.forEach((date, index) => {
     if (index === 0 || addDays(active[index - 1], 1) !== date) start = date;
-    const length =
-      (Date.parse(date) - Date.parse(start)) / DAY_MS + 1;
+    const length = (Date.parse(date) - Date.parse(start)) / DAY_MS + 1;
     if (length >= best.length) best = { length, start, end: date };
   });
   return best;
@@ -99,16 +98,27 @@ export function firstContribution(days: ContributionDay[]): string | null {
   );
 }
 
-/** The contributions of each year in `days`, earliest year first. */
-export function yearTotals(days: ContributionDay[]): ContributionYear[] {
+/**
+ * The contributions of every year from the first contribution's year to
+ * `lastYear`, earliest first; a year without contributions totals 0. Empty
+ * when `days` has no contribution.
+ */
+export function yearTotals(
+  days: ContributionDay[],
+  lastYear: number,
+): ContributionYear[] {
+  const first = firstContribution(days);
+  if (first === null) return [];
   const totals = new Map<number, number>();
   for (const day of days) {
     const year = Number(day.date.slice(0, 4));
     totals.set(year, (totals.get(year) ?? 0) + day.count);
   }
-  return [...totals]
-    .sort(([a], [b]) => a - b)
-    .map(([year, total]) => ({ year, total }));
+  const years: ContributionYear[] = [];
+  for (let year = Number(first.slice(0, 4)); year <= lastYear; year++) {
+    years.push({ year, total: totals.get(year) ?? 0 });
+  }
+  return years;
 }
 
 /** The bytes of each language summed across `repositories`, most bytes first, ties by name. */
@@ -139,7 +149,7 @@ export function summarizeActivity(
   today: string,
 ): GitHubActivity {
   const past = days.filter((day) => day.date <= today);
-  const years = yearTotals(past);
+  const years = yearTotals(past, Number(today.slice(0, 4)));
   return {
     login,
     fetchedAt: today,
@@ -208,14 +218,19 @@ const LANGUAGES_QUERY = `query($after: String) {
 }`;
 
 interface YearsData {
-  viewer: { login: string; contributionsCollection: { contributionYears: number[] } };
+  viewer: {
+    login: string;
+    contributionsCollection: { contributionYears: number[] };
+  };
 }
 
 interface CalendarData {
   viewer: {
     contributionsCollection: {
       contributionCalendar: {
-        weeks: { contributionDays: { date: string; contributionCount: number }[] }[];
+        weeks: {
+          contributionDays: { date: string; contributionCount: number }[];
+        }[];
       };
     };
   };
@@ -284,7 +299,12 @@ export async function fetchActivity(
     ),
   );
   const languages = mergeLanguages(await repositoryLanguages(fetcher, token));
-  return summarizeActivity(viewer.login, calendars.flat(), languages, utcDay(now));
+  return summarizeActivity(
+    viewer.login,
+    calendars.flat(),
+    languages,
+    utcDay(now),
+  );
 }
 
 /** What `loadActivity` reads the activity with. */

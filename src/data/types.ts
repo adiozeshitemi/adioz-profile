@@ -343,7 +343,7 @@ export interface GitHubActivity {
   firstContribution: string | null;
   /** Sum of `years[].total`. */
   total: number;
-  /** One entry per year with contributions on GitHub, earliest first. */
+  /** One entry per year from the first contribution's year to `fetchedAt`'s, earliest first. */
   years: ContributionYear[];
   /** The run that reaches the read day, or the day before it when the read day has none yet. */
   currentStreak: ContributionStreak;

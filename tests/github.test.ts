@@ -160,10 +160,17 @@ describe("contribution calculations", () => {
 
   it("totals each year and finds the first contribution", () => {
     const days = calendar("2024-12-30", [0, 3, 4, 1]);
-    expect(yearTotals(days)).toEqual([
+    expect(yearTotals(days, 2025)).toEqual([
       { year: 2024, total: 3 },
       { year: 2025, total: 5 },
     ]);
+    expect(yearTotals(calendar("2022-06-01", [2]), 2025)).toEqual([
+      { year: 2022, total: 2 },
+      { year: 2023, total: 0 },
+      { year: 2024, total: 0 },
+      { year: 2025, total: 0 },
+    ]);
+    expect(yearTotals(calendar("2025-01-01", [0]), 2025)).toEqual([]);
     expect(firstContribution(days)).toBe("2024-12-31");
     expect(firstContribution(calendar("2025-01-01", [0]))).toBeNull();
   });
@@ -207,7 +214,11 @@ describe("fetchActivity", () => {
 
   it("reads every contribution year and every page of languages", async () => {
     const api = fakeApi(days);
-    const activity = await fetchActivity("t0ken", api, new Date("2025-03-03T12:00:00Z"));
+    const activity = await fetchActivity(
+      "t0ken",
+      api,
+      new Date("2025-03-03T12:00:00Z"),
+    );
     expect(activity).toEqual({
       login: "octo",
       fetchedAt: "2025-03-03",
