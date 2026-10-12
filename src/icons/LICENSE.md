@@ -1,10 +1,11 @@
 # Icon sources
 
-| Icons                                                                                                                                                                           | Source                                                    | License |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------- |
-| `activity`, `arrow-right`, `arrow-up`, `box`, `code-slash`, `copy`, `download`, `email` (envelope-fill), `file-text` (file-earmark-text), `github`, `globe`, `linkedin`, `send` | [Bootstrap Icons](https://icons.getbootstrap.com/) 1.13.1 | MIT     |
+| Icons                                                                                                                                                                                                                                                                                                                                                                               | Source                                                    | License |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------- |
+| `activity`, `arrow-right`, `arrow-up`, `box`, `code-slash`, `copy`, `download`, `email` (envelope-fill), `file-text` (file-earmark-text), `github`, `globe`, `linkedin`, `send`                                                                                                                                                                                                     | [Bootstrap Icons](https://icons.getbootstrap.com/) 1.13.1 | MIT     |
+| `lang-astro`, `lang-c`, `lang-cplusplus`, `lang-css`, `lang-dart`, `lang-docker`, `lang-go`, `lang-groovy` (apachegroovy), `lang-html` (html5), `lang-java` (openjdk), `lang-javascript`, `lang-jupyter`, `lang-kotlin`, `lang-php`, `lang-postgresql`, `lang-python`, `lang-ruby`, `lang-rust`, `lang-sass`, `lang-scala`, `lang-shell` (gnubash), `lang-swift`, `lang-typescript` | [Simple Icons](https://simpleicons.org/) 16.30.0          | CC0 1.0 |
 
-Each SVG keeps only its path data, merged into one `<path>`, with `fill="currentColor"` on the root element.
+Each SVG keeps only its path data, merged into one `<path>`, with `fill="currentColor"` on the root element. Simple Icons are dedicated to the public domain under CC0 1.0; the logos remain trademarks of their owners and identify the languages they name.
 
 ## Bootstrap Icons license
 
