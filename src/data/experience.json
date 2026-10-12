@@ -30,7 +30,11 @@
     "private": "Gitea · Bitbucket",
     "privateNote": "Years at 0 went to client work in private, confidential Gitea and Bitbucket repositories, which GitHub does not count.",
     "languages": "Languages across owned repositories",
-    "other": "Other"
+    "other": "Other",
+    "cards": {
+      "contributions": "Adioz's GitHub contributions: the all-time total, the current and longest streaks, and contributions per year",
+      "languages": "Adioz's languages across owned GitHub repositories, by share of code"
+    }
   },
   "roles": [
     {

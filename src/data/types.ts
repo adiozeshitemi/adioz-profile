@@ -243,6 +243,8 @@ export interface ActivityLabels {
   languages: string;
   /** Name of the share that sums the languages after the first few, e.g. "Other". */
   other: string;
+  /** Text alternatives of the SVG cards at `/activity/contributions.svg` and `/activity/languages.svg`, for their titles and the README's alt text. */
+  cards: { contributions: string; languages: string };
 }
 
 /** One role in the experience timeline. */
