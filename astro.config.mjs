@@ -2,10 +2,11 @@
 import { defineConfig } from "astro/config";
 
 import tailwindcss from "@tailwindcss/vite";
+import site from "./src/data/site.json" with { type: "json" };
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://adioz.dev",
+  site: site.url,
   vite: {
     plugins: [tailwindcss()],
     // The 3D pipeline's chunk (src/scripts/pipeline3d.ts with Three.js, about 600 kB) loads after first paint.

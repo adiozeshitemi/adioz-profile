@@ -70,6 +70,8 @@ export interface Navigation {
 
 /** Site-wide copy: the page head's title, description and link preview, and the new-tab note. */
 export interface SiteMeta {
+  /** The site's production origin, e.g. "https://adioz.dev"; `astro.config.mjs` sets `site` from it. */
+  url: string;
   /** Default page title, e.g. "Adioz D Eshitemi · Full-stack AI engineer"; also the link preview's title. */
   title: string;
   /** Default meta description, for search results. */
@@ -209,8 +211,42 @@ export interface ExperienceContent {
   trace: { title: string; rolesLabel: string; now: string; live: string };
   /** Text in place of the end year of an ongoing role, e.g. "Present". */
   ongoing: string;
+  activity: ActivityLabels;
   /** Roles in display order, most recent first. */
   roles: ExperienceItem[];
+}
+
+/** The text of the GitHub activity panel under the experience views. */
+export interface ActivityLabels {
+  /** Title engraved in the panel's title bar, e.g. "adioz — github.activity". */
+  title: string;
+  /** Accessible name of the panel. */
+  label: string;
+  /** Word before the day the activity was read, e.g. "read". */
+  read: string;
+  /** Label of the all-time total, e.g. "Contributions". */
+  total: string;
+  /** Word before the first contribution's day, e.g. "since". */
+  since: string;
+  currentStreak: string;
+  longestStreak: string;
+  /** Unit after a streak's length: plural, e.g. "days", and singular, e.g. "day". */
+  days: string;
+  day: string;
+  /** Shown in place of a streak's length when it is 0, e.g. "No streak". */
+  noStreak: string;
+  /** Heading of the per-year columns. */
+  years: string;
+  /** Engraved down the column of a year without GitHub contributions, e.g. "Gitea · Bitbucket". */
+  private: string;
+  /** Note under the columns, shown when a year has no GitHub contributions, saying where that year's work went. */
+  privateNote: string;
+  /** Heading of the language bar. */
+  languages: string;
+  /** Name of the share that sums the languages after the first few, e.g. "Other". */
+  other: string;
+  /** Text alternatives of the SVG cards at `/activity/contributions.svg` and `/activity/languages.svg`, for their titles and the README's alt text. */
+  cards: { contributions: string; languages: string };
 }
 
 /** One role in the experience timeline. */
@@ -303,4 +339,52 @@ export interface PipelineContent {
   /** Accessible name of the pipeline figure, describing what it shows. */
   label: string;
   parts: Record<PipelinePartName, PipelinePart>;
+}
+
+/** A run of consecutive days, each with at least one contribution. */
+export interface ContributionStreak {
+  /** Days in the run; 0 when there is no run. */
+  length: number;
+  /** First day of the run as `YYYY-MM-DD`, or null when `length` is 0. */
+  start: string | null;
+  /** Last day of the run as `YYYY-MM-DD`, or null when `length` is 0. */
+  end: string | null;
+}
+
+/** The contributions counted in one calendar year. */
+export interface ContributionYear {
+  /** Calendar year, e.g. 2025. */
+  year: number;
+  /** Contributions on the year's days, up to the day the activity was read. */
+  total: number;
+}
+
+/** One language's share of the code across the owner's repositories. */
+export interface LanguageShare {
+  /** Language name as GitHub reports it, e.g. "Rust". */
+  name: string;
+  /** GitHub's colour for the language as `#rrggbb`, or null when it has none. */
+  color: string | null;
+  /** Bytes of code in the language across the owner's non-fork repositories. */
+  bytes: number;
+}
+
+/** The GitHub activity of the token's owner, private contributions included. */
+export interface GitHubActivity {
+  /** GitHub login of the token's owner, e.g. "adiozeshitemi". */
+  login: string;
+  /** Day the activity was read, as `YYYY-MM-DD` in UTC. */
+  fetchedAt: string;
+  /** Day of the first contribution as `YYYY-MM-DD`, or null before any. */
+  firstContribution: string | null;
+  /** Sum of `years[].total`. */
+  total: number;
+  /** One entry per year from the first contribution's year to `fetchedAt`'s, earliest first. */
+  years: ContributionYear[];
+  /** The run that reaches the read day, or the day before it when the read day has none yet. */
+  currentStreak: ContributionStreak;
+  /** The longest run; the latest one when runs tie. */
+  longestStreak: ContributionStreak;
+  /** Languages by bytes, most first. */
+  languages: LanguageShare[];
 }

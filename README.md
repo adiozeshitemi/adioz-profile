@@ -27,7 +27,8 @@ Full-stack AI engineer with a background in backend systems and web applications
 - **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
 - **Unit Tests**: Vitest renders the components through the Astro Container API and checks the data rules, the UI primitives, every section and the assembled page (`npm test`).
 - **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, runs the unit tests, type-checks and builds on pull requests into `main` and before every deployment.
-- **Continuous Deployment**: `.github/workflows/deploy.yml` deploys every push to `main` to Cloudflare Workers at `adioz.dev` once the quality gate passes.
+- **GitHub Activity**: the build reads the owner's GitHub activity (contributions per year, streaks and language bytes, private contributions included) from the GitHub GraphQL API with `GITHUB_ACTIVITY_TOKEN`, falling back to the committed `src/data/activity.json`. The experience section shows it on an instrument plate whose odometer wheels spin to their figures as it comes into view, and `/activity/contributions.svg` and `/activity/languages.svg` serve it as SVG cards for the GitHub profile README.
+- **Continuous Deployment**: `.github/workflows/deploy.yml` deploys every push to `main` to Cloudflare Workers at `adioz.dev` once the quality gate passes, then regenerates the GitHub profile README from `src/data` (`scripts/profile-readme.ts`) and pushes it to `adiozeshitemi/adiozeshitemi` when it changed.
 
 ## 📚 Documentation
 

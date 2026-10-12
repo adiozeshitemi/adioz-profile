@@ -1,0 +1,171 @@
+{
+  "login": "adiozeshitemi",
+  "fetchedAt": "2026-10-12",
+  "firstContribution": "2018-08-26",
+  "total": 14794,
+  "years": [
+    {
+      "year": 2018,
+      "total": 1
+    },
+    {
+      "year": 2019,
+      "total": 0
+    },
+    {
+      "year": 2020,
+      "total": 0
+    },
+    {
+      "year": 2021,
+      "total": 0
+    },
+    {
+      "year": 2022,
+      "total": 540
+    },
+    {
+      "year": 2023,
+      "total": 440
+    },
+    {
+      "year": 2024,
+      "total": 2678
+    },
+    {
+      "year": 2025,
+      "total": 5828
+    },
+    {
+      "year": 2026,
+      "total": 5307
+    }
+  ],
+  "currentStreak": {
+    "length": 2,
+    "start": "2026-10-11",
+    "end": "2026-10-12"
+  },
+  "longestStreak": {
+    "length": 29,
+    "start": "2026-09-04",
+    "end": "2026-10-02"
+  },
+  "languages": [
+    {
+      "name": "Rust",
+      "color": "#dea584",
+      "bytes": 1808762
+    },
+    {
+      "name": "Python",
+      "color": "#3572A5",
+      "bytes": 731017
+    },
+    {
+      "name": "Jupyter Notebook",
+      "color": "#DA5B0B",
+      "bytes": 551065
+    },
+    {
+      "name": "Java",
+      "color": "#b07219",
+      "bytes": 534398
+    },
+    {
+      "name": "TypeScript",
+      "color": "#3178c6",
+      "bytes": 439267
+    },
+    {
+      "name": "C",
+      "color": "#555555",
+      "bytes": 362859
+    },
+    {
+      "name": "HTML",
+      "color": "#e34c26",
+      "bytes": 305967
+    },
+    {
+      "name": "Go",
+      "color": "#00ADD8",
+      "bytes": 170462
+    },
+    {
+      "name": "Astro",
+      "color": "#ff5a03",
+      "bytes": 169403
+    },
+    {
+      "name": "CSS",
+      "color": "#663399",
+      "bytes": 120395
+    },
+    {
+      "name": "JavaScript",
+      "color": "#f1e05a",
+      "bytes": 106936
+    },
+    {
+      "name": "Shell",
+      "color": "#89e051",
+      "bytes": 68022
+    },
+    {
+      "name": "SCSS",
+      "color": "#c6538c",
+      "bytes": 52780
+    },
+    {
+      "name": "Smarty",
+      "color": "#f0c040",
+      "bytes": 34234
+    },
+    {
+      "name": "Dockerfile",
+      "color": "#384d54",
+      "bytes": 9353
+    },
+    {
+      "name": "PLpgSQL",
+      "color": "#336790",
+      "bytes": 6935
+    },
+    {
+      "name": "Groovy",
+      "color": "#4298b8",
+      "bytes": 6893
+    },
+    {
+      "name": "Puppet",
+      "color": "#302B6D",
+      "bytes": 4958
+    },
+    {
+      "name": "Scala",
+      "color": "#c22d40",
+      "bytes": 4699
+    },
+    {
+      "name": "Brainfuck",
+      "color": "#2F2530",
+      "bytes": 2610
+    },
+    {
+      "name": "Assembly",
+      "color": "#6E4C13",
+      "bytes": 2187
+    },
+    {
+      "name": "Makefile",
+      "color": "#427819",
+      "bytes": 1310
+    },
+    {
+      "name": "Ruby",
+      "color": "#701516",
+      "bytes": 523
+    }
+  ]
+}

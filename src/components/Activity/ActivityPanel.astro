@@ -1,0 +1,748 @@
+---
+/*
+ * The GitHub activity as an instrument Plate, brushed gold on the dark theme
+ * and bronze on the light one, screwed down at its corners like the gauge
+ * cluster. On it: the all-time total and the current and longest streaks as
+ * odometer counters (white enamel digit wheels in a recessed window), which
+ * src/scripts/odometer.ts spins from zeros to their digits each time they
+ * come into view; a slot
+ * per year cut into the plate, filled with steel to its share of the
+ * busiest year (the latest gold), a year without GitHub contributions marked
+ * as private Gitea and Bitbucket work; and the language split as one slot of
+ * brushed-metal segments over each language's logo straight on the plate
+ * in its brand colour. Every figure is text in the
+ * markup, so the panel reads the same without JavaScript, with motion
+ * reduced and to assistive technology, which skips the drums, the slots'
+ * fills and the logos.
+ */
+import { experience } from "../../data/index";
+import type { ContributionStreak } from "../../data/types";
+import {
+  formatDay,
+  formatShare,
+  formatSpan,
+  getActivity,
+  languageSegments,
+  METALS,
+  metalIndex,
+  yearColumns,
+} from "../../lib/activity";
+import Icon from "../UI/Icon.astro";
+import Plate from "../UI/Plate.astro";
+import { reelDigits, reelIndex } from "../../scripts/odometer";
+
+/** Languages named in the bar before the rest are summed as `other`. */
+const LANGUAGE_LIMIT = 6;
+
+/** Drums on each streak counter; a longer streak adds drums. */
+const STREAK_DRUMS = 3;
+
+const labels = experience.activity;
+const activity = await getActivity();
+const columns = yearColumns(activity.years);
+const segments = languageSegments(
+  activity.languages,
+  LANGUAGE_LIMIT,
+  labels.other,
+);
+/** The class of the CSS metal painting the segment at `index`. */
+const metalClass = (index: number) => {
+  const metal = metalIndex(index, segments[index]!.other);
+  return metal === METALS.length - 1 ? "metal-other" : `metal-${metal}`;
+};
+const count = (value: number) => value.toLocaleString("en-US");
+const reel = reelDigits();
+const span = ({ start, end }: ContributionStreak) => formatSpan(start!, end!);
+const streaks = [
+  { label: labels.currentStreak, streak: activity.currentStreak },
+  { label: labels.longestStreak, streak: activity.longestStreak },
+];
+---
+
+<Plate class="activity" role="region" aria-label={labels.label}>
+  <div class="activity-head">
+    <span class="cut caps">{labels.label}</span>
+    <span class="cut caps">
+      {labels.read}
+      <time datetime={activity.fetchedAt}>{formatDay(activity.fetchedAt)}</time>
+    </span>
+  </div>
+  <dl class="counters">
+    <div class="counter counter-total">
+      <dt class="cut caps">{labels.total}</dt>
+      <dd>
+        <span class="window" aria-hidden="true">
+          {[...count(activity.total)].map((char) =>
+            char === "," ? (
+              <span class="drum comma">,</span>
+            ) : (
+              <span class="drum" data-digit={char}>
+                <span class="reel" style={`--at: ${reelIndex(Number(char))}`}>
+                  {reel.map((digit) => (
+                    <span>{digit}</span>
+                  ))}
+                </span>
+              </span>
+            ),
+          )}
+        </span>
+        <span class="sr-only">{count(activity.total)}</span>
+        {activity.firstContribution && (
+          <span class="cut note">
+            {labels.since}{" "}
+            <time datetime={activity.firstContribution}>
+              {formatDay(activity.firstContribution)}
+            </time>
+          </span>
+        )}
+      </dd>
+    </div>
+    {streaks.map(({ label, streak }) => (
+      <div class="counter">
+        <dt class="cut caps">{label}</dt>
+        <dd>
+          <span class="reading">
+            <span class="window" aria-hidden="true">
+              {[...String(streak.length).padStart(STREAK_DRUMS, "0")].map(
+                (digit) => (
+                  <span class="drum" data-digit={digit}>
+                    <span
+                      class="reel"
+                      style={`--at: ${reelIndex(Number(digit))}`}
+                    >
+                      {reel.map((cell) => (
+                        <span>{cell}</span>
+                      ))}
+                    </span>
+                  </span>
+                ),
+              )}
+            </span>
+            <span class="sr-only">{count(streak.length)}</span>
+            <span class="cut unit">
+              {streak.length === 1 ? labels.day : labels.days}
+            </span>
+          </span>
+          <span class="cut note">
+            {streak.length === 0 ? labels.noStreak : span(streak)}
+          </span>
+        </dd>
+      </div>
+    ))}
+  </dl>
+  <div class="charts">
+    <div class="chart">
+      <h3 class="cut caps chart-title">{labels.years}</h3>
+      <ol class="years">
+        {columns.map((column, index) => (
+          <li class:list={["year", { latest: index === columns.length - 1 }]}>
+            <span class="cut year-name">{column.year}</span>
+            <span class="slot">
+              {column.total > 0 ? (
+                <span
+                  class="year-fill"
+                  style={`--h: ${column.height.toFixed(4)}`}
+                  aria-hidden="true"
+                />
+              ) : (
+                <span class="year-private">{labels.private}</span>
+              )}
+            </span>
+            <span class="cut year-total">{count(column.total)}</span>
+          </li>
+        ))}
+      </ol>
+      {columns.some((column) => column.total === 0) && (
+        <p class="cut note chart-note">{labels.privateNote}</p>
+      )}
+    </div>
+    <div class="chart">
+      <h3 class="cut caps chart-title">{labels.languages}</h3>
+      <div class="slot lang-bar" aria-hidden="true">
+        {segments.map((segment, index) => (
+          <span
+            class={`lang-segment ${metalClass(index)}`}
+            style={`--share: ${segment.share.toFixed(4)}`}
+          />
+        ))}
+      </div>
+      <ul class="langs">
+        {segments.map((segment) => (
+          <li>
+            <span
+              class="lang-icon"
+              data-logo={segment.logo.icon}
+              aria-hidden="true"
+            >
+              <span style={`color: ${segment.logo.color}`}>
+                <Icon name={segment.logo.icon} size={32} />
+              </span>
+            </span>
+            <span class="cut lang-name">{segment.name}</span>
+            <span class="cut lang-share">{formatShare(segment.share)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</Plate>
+
+<script>
+  import { startOdometers } from "../../scripts/odometer";
+
+  startOdometers([
+    ...document.querySelectorAll<HTMLElement>(".activity .window"),
+  ]);
+</script>
+
+<style>
+  /*
+   * The panel is a Plate: --plate-metal under brushing streaks, a slanted
+   * wall and corner screws, so it follows the theme like the gauge cluster.
+   */
+  :global(.plate.activity) {
+    --enamel: radial-gradient(
+      circle at 50% 35%,
+      #ffffff 0%,
+      #f6f7f9 55%,
+      #e2e6ea 100%
+    );
+    padding: 34px 44px 40px;
+  }
+
+  /*
+   * .cut is text cut into the plate, as the gauge labels are: a floor of the
+   * plate's own metal in deep shadow, a lit lower lip (--plate-lip) and a
+   * dark upper edge. .caps sets it in tracked mono capitals.
+   */
+  .cut {
+    background-image:
+      linear-gradient(180deg, rgb(20 9 2 / 0.9), rgb(24 11 3 / 0.9)),
+      var(--brush-noise-soft), var(--plate-metal);
+    background-size:
+      100% 100%,
+      320px 140px,
+      100% 100%;
+    background-blend-mode: normal, overlay, normal;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(
+        calc(var(--lean) * var(--slant) * 1px) 1px 0 var(--plate-lip)
+      )
+      drop-shadow(
+        calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.25)
+      );
+  }
+
+  .caps {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .note {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .activity-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px 18px;
+    padding: 0 18px 22px;
+  }
+
+  /*
+   * The counters: each an odometer window (a steel-rimmed recess) of enamel
+   * digit drums, shaded top and bottom as cylinders, over its note; three to
+   * a row, split by grooves cut into the plate.
+   */
+  .counters {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    margin: 0;
+    padding: 24px 0 28px;
+    box-shadow:
+      inset 0 1px 0 rgb(0 0 0 / 0.28),
+      inset 0 2px 0 var(--plate-lip),
+      inset 0 -1px 0 var(--plate-lip),
+      inset 0 -2px 0 rgb(0 0 0 / 0.28);
+  }
+
+  .counter {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 22px;
+  }
+
+  .counter + .counter {
+    box-shadow:
+      inset 1px 0 0 rgb(0 0 0 / 0.28),
+      inset 2px 0 0 var(--plate-lip);
+  }
+
+  .counter dd {
+    display: grid;
+    justify-items: start;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .reading {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .window {
+    display: inline-flex;
+    gap: 3px;
+    padding: 5px;
+    border-radius: 9px;
+    background: linear-gradient(180deg, #121417, #2a2e34);
+    box-shadow:
+      inset 0 2px 4px rgb(0 0 0 / 0.8),
+      0 0 0 1px rgb(0 0 0 / 0.55),
+      0 0 0 3px #c3c8ce,
+      0 0 0 4px rgb(0 0 0 / 0.45),
+      0 2px 0 3px var(--plate-lip);
+  }
+
+  /*
+   * A drum is a wheel seen through its window: a .reel of the digits 0 to 9
+   * (repeated, from src/scripts/odometer.ts) slid by --at to put that cell
+   * at the middle, the cells above and below it showing at the edges and
+   * shaded as the wheel curves away. A reel eases to a new --at, spinning
+   * through the cells between.
+   */
+  .drum {
+    position: relative;
+    width: 0.78em;
+    height: 1.7em;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--enamel);
+    color: #16181b;
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .drum::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(0 0 0 / 0.62) 0%,
+      rgb(0 0 0 / 0.12) 28%,
+      transparent 40%,
+      transparent 60%,
+      rgb(0 0 0 / 0.12) 72%,
+      rgb(0 0 0 / 0.62) 100%
+    );
+    pointer-events: none;
+  }
+
+  .reel {
+    display: grid;
+    grid-auto-rows: 1em;
+    justify-items: center;
+    transform: translateY(calc(0.35em - var(--at) * 1em));
+    transition: transform 1.5s cubic-bezier(0.18, 0.7, 0.2, 1);
+  }
+
+  .drum.comma {
+    display: grid;
+    place-items: end center;
+    width: 0.32em;
+    padding-bottom: 0.38em;
+    background: none;
+    color: #c3c8ce;
+  }
+
+  .drum.comma::after {
+    content: none;
+  }
+
+  .counter-total .drum {
+    font-size: 38px;
+  }
+
+  .unit {
+    padding-bottom: 6px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .charts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 32px 52px;
+    padding: 28px 18px 0;
+  }
+
+  /*
+   * The two charts share a row, so each is a column the row's height: the
+   * language list grows to fill what the years leave below it.
+   */
+  .chart {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-title {
+    display: block;
+    margin: 0 0 18px;
+  }
+
+  /*
+   * A slot is a groove cut into the plate: a dark floor under its upper
+   * wall, with the plate's lit lip along its lower edge.
+   */
+  .slot {
+    position: relative;
+    display: block;
+    height: 16px;
+    border-radius: 8px;
+    background: linear-gradient(
+      180deg,
+      rgb(18 10 3 / 0.62),
+      rgb(36 20 6 / 0.42)
+    );
+    box-shadow:
+      inset 0 2px 3px rgb(0 0 0 / 0.6),
+      0 1px 0 var(--plate-lip);
+  }
+
+  /*
+   * A year is its name, its slot filled with brushed steel to --h of the
+   * busiest year (gold for the latest year), and its total; a year without
+   * GitHub contributions shows .year-private in its empty slot.
+   */
+  .years {
+    display: grid;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .year {
+    display: grid;
+    grid-template-columns: 4ch minmax(0, 1fr) 6ch;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .year-name,
+  .year-total {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  .year-total {
+    text-align: right;
+  }
+
+  .year-fill {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: max(6px, calc(var(--h) * (100% - 6px)));
+    border-radius: 5px;
+    background-image: var(--brush-noise), var(--steel-brushed);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.75),
+      0 0 0 1px rgb(0 0 0 / 0.5);
+  }
+
+  .latest .year-fill {
+    background-image: var(--brush-noise-soft), var(--gold-brushed);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.75),
+      0 0 0 1px rgb(0 0 0 / 0.5),
+      0 0 10px -1px rgb(230 192 98 / 0.6);
+  }
+
+  .year-private {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    color: rgb(255 238 205 / 0.72);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .chart-note {
+    margin: 18px 0 0;
+    font-size: 11.5px;
+    line-height: 1.55;
+  }
+
+  /*
+   * The language bar: a slot with a near-black floor, holding a segment per
+   * language, each --share of the slot wide, in its language's metal
+   * (.metal-0 to .metal-5, then .metal-other).
+   */
+  .lang-bar {
+    display: flex;
+    gap: 3px;
+    height: 22px;
+    padding: 4px;
+    background: linear-gradient(180deg, #0d0f12, #22262c);
+  }
+
+  /*
+   * Each segment stands out of the slot's dark floor: a lit top edge, a
+   * shaded lower edge and a dark outline against its neighbours.
+   */
+  .lang-segment {
+    flex: var(--share) 1 0;
+    min-width: 4px;
+    border-radius: 3px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      inset 0 -2px 0 rgb(0 0 0 / 0.28),
+      0 0 0 1px rgb(0 0 0 / 0.65);
+  }
+
+  .lang-segment:first-child {
+    border-radius: 6px 3px 3px 6px;
+  }
+
+  .lang-segment:last-child {
+    border-radius: 3px 6px 6px 3px;
+  }
+
+  /*
+   * Each language is its logo straight on the plate, in a 38 by 32 box
+   * (seated by a lit lower lip and a dark upper edge; OTHER_LOGO for `other`
+   * and for a language without one), then its name and share cut into the
+   * plate.
+   */
+  .langs {
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-content: space-evenly;
+    gap: 18px 30px;
+    margin: 22px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .langs li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .lang-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 38px;
+    height: 32px;
+    filter: drop-shadow(0 1px 0 var(--plate-lip))
+      drop-shadow(0 -1px 0 rgb(0 0 0 / 0.3));
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .lang-icon > span,
+  .lang-icon :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /*
+   * A hovered language's logo pops up off the plate. The mascots move at
+   * rest: Ferris (logo-rust) scuttles side to side and Duke (logo-java)
+   * waves, rocking on his base.
+   */
+  .langs li:hover .lang-icon {
+    transform: translateY(-3px) scale(1.14);
+  }
+
+  .lang-icon[data-logo="logo-rust"] > span {
+    animation: scuttle 3.6s ease-in-out infinite;
+  }
+
+  .lang-icon[data-logo="logo-java"] > span {
+    transform-origin: 50% 100%;
+    animation: wave 3.2s ease-in-out infinite;
+  }
+
+  @keyframes scuttle {
+    0%,
+    40%,
+    100% {
+      transform: translateX(0);
+    }
+
+    10%,
+    20% {
+      transform: translateX(-3px) rotate(-3deg);
+    }
+
+    15%,
+    25% {
+      transform: translateX(3px) rotate(3deg);
+    }
+  }
+
+  @keyframes wave {
+    0%,
+    55%,
+    100% {
+      transform: rotate(0);
+    }
+
+    65%,
+    85% {
+      transform: rotate(-7deg);
+    }
+
+    75% {
+      transform: rotate(6deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lang-icon,
+    .lang-icon > span {
+      transition: none;
+      animation: none !important;
+    }
+  }
+
+  .lang-name {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lang-share {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .metal-0,
+  .metal-1,
+  .metal-2,
+  .metal-3,
+  .metal-4,
+  .metal-5,
+  .metal-other {
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+  }
+
+  .metal-0 {
+    background-image: var(--brush-noise-soft), var(--gold-brushed);
+  }
+
+  .metal-1 {
+    background-image: var(--brush-noise), var(--steel-brushed);
+  }
+
+  .metal-2 {
+    background-image: var(--brush-noise-soft), var(--bronze-metal);
+  }
+
+  .metal-3 {
+    background-image:
+      var(--brush-noise-soft),
+      linear-gradient(180deg, #f0b08c 0%, #b8643e 52%, #d98a63 100%);
+  }
+
+  .metal-4 {
+    background-image:
+      var(--brush-noise),
+      linear-gradient(180deg, #8f98a3 0%, #5a616b 52%, #7d8590 100%);
+  }
+
+  .metal-5 {
+    background-image:
+      var(--brush-noise-soft),
+      linear-gradient(180deg, #f7efcf 0%, #c9b47a 52%, #e6d8a6 100%);
+  }
+
+  .metal-other {
+    background-image:
+      var(--brush-noise),
+      linear-gradient(180deg, #4a515a 0%, #2b3138 52%, #3a4048 100%);
+  }
+
+  @media (width < 62.5rem) {
+    .charts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 47.5rem) {
+    :global(.plate.activity) {
+      padding: 30px 18px 32px;
+    }
+
+    .activity-head {
+      padding: 0 10px 18px;
+    }
+
+    .counters {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .counter,
+    .counter + .counter {
+      padding: 0 10px;
+      box-shadow: none;
+    }
+
+    .counter-total .drum {
+      font-size: 30px;
+    }
+
+    .charts {
+      padding: 24px 10px 0;
+    }
+
+    .year {
+      gap: 10px;
+    }
+
+    .langs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
