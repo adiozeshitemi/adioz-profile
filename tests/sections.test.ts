@@ -694,15 +694,20 @@ describe("Footer", () => {
     );
   });
 
-  it("links the back-to-top knob to the top of the page, named for assistive technology", async () => {
+  it("downloads the résumé and links back to the top through two knobs, each named for assistive technology", async () => {
     const doc = await render(Footer);
-    const anchors = [...doc.querySelectorAll("footer a")];
-    expect(anchors).toHaveLength(1);
-    const knob = anchors[0]!;
-    expect(knob.classList.contains("knob")).toBe(true);
-    expect(knob.getAttribute("href")).toBe("#top");
-    expect(knob.getAttribute("href")).toBe(footer.top.url);
-    expect(knob.getAttribute("aria-label")).toBe(footer.top.title);
-    expect(knob.querySelector("svg")).not.toBeNull();
+    const anchors = [...doc.querySelectorAll("footer .footer-knobs a")];
+    expect(anchors).toHaveLength(2);
+    const [resume, top] = anchors as [Element, Element];
+    expect(resume.classList.contains("knob")).toBe(true);
+    expect(resume.getAttribute("href")).toBe(profile.resume.url);
+    expect(resume.getAttribute("download")).toBe(profile.resume.file);
+    expect(resume.getAttribute("aria-label")).toBe(profile.resume.label);
+    expect(resume.querySelector("svg")).not.toBeNull();
+    expect(top.classList.contains("knob")).toBe(true);
+    expect(top.getAttribute("href")).toBe("#top");
+    expect(top.getAttribute("href")).toBe(footer.top.url);
+    expect(top.getAttribute("aria-label")).toBe(footer.top.title);
+    expect(top.querySelector("svg")).not.toBeNull();
   });
 });

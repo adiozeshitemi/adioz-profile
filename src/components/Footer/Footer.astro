@@ -2,9 +2,10 @@
 /*
  * The site footer from footer.json: a brushed gunmetal strip, dark in both
  * themes, holding the Dividers mark, "© <build year>" and the rights holder
- * engraved into the strip, and the compact back-to-top Knob.
+ * engraved into the strip, and two compact Knobs: one downloading the
+ * résumé (profile.json's `resume`) and back-to-top.
  */
-import { footer } from "../../data/index";
+import { footer, profile } from "../../data/index";
 import BrandMark from "../UI/BrandMark.astro";
 import Knob from "../UI/Knob.astro";
 
@@ -18,13 +19,23 @@ const year = new Date().getFullYear();
       <p class="copyright">
         © {year} {footer.copyright}
       </p>
-      <Knob
-        compact
-        href={footer.top.url}
-        icon={footer.top.icon}
-        label={footer.top.title}
-        class="to-top"
-      />
+      <div class="footer-knobs">
+        <Knob
+          compact
+          href={profile.resume.url}
+          icon={profile.resume.icon}
+          label={profile.resume.label}
+          download={profile.resume.file}
+          class="resume"
+        />
+        <Knob
+          compact
+          href={footer.top.url}
+          icon={footer.top.icon}
+          label={footer.top.title}
+          class="to-top"
+        />
+      </div>
     </div>
   </div>
 </footer>
@@ -92,7 +103,10 @@ const year = new Date().getFullYear();
       drop-shadow(0 1px 0 rgb(255 255 255 / 0.3));
   }
 
-  .footer-bar :global(.to-top) {
+  /* The knobs sit together at the strip's right end. */
+  .footer-knobs {
+    display: flex;
+    gap: 12px;
     margin-left: auto;
   }
 
