@@ -6,6 +6,7 @@
  * `string`) and each skill's percent, an integer from 0 to 100.
  */
 import aboutJson from "./about.json";
+import activityJson from "./activity.json";
 import contactJson from "./contact.json";
 import experienceJson from "./experience.json";
 import footerJson from "./footer.json";
@@ -19,6 +20,7 @@ import techStackJson from "./techStack.json";
 import terminalJson from "./terminal.json";
 import type {
   AboutContent,
+  GitHubActivity,
   ContactContent,
   ExperienceContent,
   FooterContent,
@@ -73,6 +75,8 @@ function toSkillItem(skill: SkillItem): SkillItem {
 }
 
 export const about: AboutContent = aboutJson;
+/** The GitHub activity snapshot builds use without a token; `src/lib/activity.ts` reads the live activity. */
+export const activity: GitHubActivity = activityJson;
 export const contact: ContactContent = contactJson;
 export const experience: ExperienceContent = experienceJson;
 export const footer: FooterContent = footerJson;
