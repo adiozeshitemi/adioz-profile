@@ -126,6 +126,7 @@ adioz-dev/
 │   │   ├── activity.ts        # The build's GitHub activity, panel layout and formatting
 │   │   ├── activityCards.ts   # The activity as SVG cards for the GitHub profile README
 │   │   ├── github.ts          # GitHub GraphQL reads, streaks, totals and languages
+│   │   ├── period.ts          # Role periods as text, <time> values and fractional years
 │   │   └── profileReadme.ts   # The GitHub profile README rendered from src/data
 │   ├── pages/                 # 📄 File-based routes
 │   │   ├── activity/          # SVG cards written at build time
@@ -177,6 +178,7 @@ adioz-dev/
 │   ├── page.test.ts           # Assembled landing page
 │   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
 │   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
+│   ├── period.test.ts         # Role period labels and bounds
 │   ├── profileReadme.test.ts  # GitHub profile README rendering
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing
