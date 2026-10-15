@@ -296,6 +296,8 @@ export interface ProjectItem {
   tags: string[];
   /** Source repository and public site links in display order, e.g. a "Source" link with the "github" icon. */
   links: LinkItem[];
+  /** The project's system workflow page, shown as a port after `links`; omitted until the page exists. */
+  caseStudy?: LinkItem;
   /** Whether the project is listed under Featured Projects. */
   featured: boolean;
   /** One-line outcome shown under the tags beside a lamp; text inside `**` pairs renders as strong emphasis. */

@@ -2,7 +2,7 @@
 /*
  * One projects.json project on a machined Panel that tilts toward the
  * pointer (data-tilt): its name carved into a screwed Nameplate, its links
- * as Ports, its description, its tags and its result line beside a lamp.
+ * as Ports (then its case study, when it has one), its description, its tags and its result line beside a lamp.
  * The description grows, so the tags and result lines of cards in a row
  * line up.
  */
@@ -29,6 +29,11 @@ const { project } = Astro.props;
         <Port link={link} />
       </li>
     ))}
+    {project.caseStudy && (
+      <li>
+        <Port link={project.caseStudy} />
+      </li>
+    )}
   </ul>
   <p class="desc">{project.description}</p>
   <ul class="tags">
@@ -117,6 +122,12 @@ const { project } = Astro.props;
   @media (width <= 40rem) {
     :global(.panel).project {
       padding: 26px 20px 22px;
+    }
+
+    /* A long project name, e.g. "Baze (Safaricom platform)", takes two balanced lines at most. */
+    .project :global(.project-plate .name) {
+      font-size: 21px;
+      text-wrap: balance;
     }
   }
 </style>
