@@ -1,0 +1,141 @@
+{
+  "title": "The MLOps loop",
+  "summary": "A model is built, checked, released in stages and watched in production. When the live data drifts away from what it was trained on, an alert starts the loop again.",
+  "author": {
+    "name": "Ruchita Singla",
+    "url": "https://github.com/ruchitasingla"
+  },
+  "problem": "Without a loop, a model is trained once, shipped and forgotten. Nobody can reproduce it, nobody checked who it works badly for, and nobody notices when real-world data changes and its predictions quietly get worse.",
+  "nodes": [
+    {
+      "id": "features",
+      "label": "Feature engineering",
+      "detail": "Versioned features"
+    },
+    {
+      "id": "distill",
+      "label": "Distillation",
+      "detail": "Small student model"
+    },
+    {
+      "id": "tune",
+      "label": "Hyperparameter search",
+      "detail": "Searched settings"
+    },
+    {
+      "id": "track",
+      "label": "Experiment tracking",
+      "detail": "Reproducible runs"
+    },
+    { "id": "evaluate", "label": "Evaluation", "detail": "Accuracy and F1" },
+    {
+      "id": "fairness",
+      "label": "Fairness checks",
+      "detail": "Per-group results"
+    },
+    {
+      "id": "registry",
+      "label": "Model registry",
+      "detail": "Versioned models"
+    },
+    {
+      "id": "release",
+      "label": "Signed release",
+      "detail": "Verified artifact"
+    },
+    { "id": "abtest", "label": "A/B testing", "detail": "Small traffic share" },
+    {
+      "id": "inference",
+      "label": "Inference",
+      "detail": "Serving predictions"
+    },
+    {
+      "id": "monitor",
+      "label": "Drift and latency monitoring",
+      "detail": "Live health checks"
+    },
+    { "id": "alert", "label": "Drift alert", "detail": "Starts the next loop" }
+  ],
+  "edges": [
+    { "from": "features", "to": "distill", "label": "training data" },
+    { "from": "distill", "to": "tune", "label": "student model" },
+    { "from": "tune", "to": "track", "label": "best settings" },
+    { "from": "track", "to": "evaluate", "label": "candidate" },
+    { "from": "evaluate", "to": "fairness", "label": "metrics" },
+    { "from": "fairness", "to": "registry", "label": "approved" },
+    { "from": "registry", "to": "release", "label": "version" },
+    { "from": "release", "to": "abtest", "label": "signed model" },
+    { "from": "abtest", "to": "inference", "label": "winner" },
+    { "from": "inference", "to": "monitor", "label": "request logs" },
+    { "from": "monitor", "to": "alert", "label": "threshold crossed" },
+    { "from": "alert", "to": "features", "label": "retrain" }
+  ],
+  "steps": [
+    {
+      "title": "Prepare the features",
+      "text": "Raw data is cleaned and turned into features. The feature definitions are versioned and shared, so the model sees the same inputs in training and in production.",
+      "lights": ["features"],
+      "failure": "If training and serving compute a feature differently, the model looks good offline and misbehaves live."
+    },
+    {
+      "title": "Shrink the model",
+      "text": "A large model is used as a teacher, and a smaller student learns to imitate its outputs. The student is cheaper to run and fast enough for a tight response-time budget.",
+      "lights": ["distill"],
+      "failure": "The student can lose accuracy on rare cases the teacher handled well."
+    },
+    {
+      "title": "Search for good settings",
+      "text": "Instead of guessing, an automated search tries many combinations of training settings and keeps the ones that score best on validation data.",
+      "lights": ["tune"],
+      "failure": "Searching too long against one validation set can overfit to it."
+    },
+    {
+      "title": "Record every experiment",
+      "text": "Each run stores its code version, data version, settings, metrics and output. Anyone can later explain why a model behaves the way it does and reproduce it.",
+      "lights": ["track"],
+      "failure": "Untracked runs make a good result impossible to repeat."
+    },
+    {
+      "title": "Evaluate on held-out data",
+      "text": "The candidate is scored on data it never saw, using accuracy and F1, and compared with the model currently in production. It only moves on if it is at least as good.",
+      "lights": ["evaluate"],
+      "failure": "A single average score can hide weak spots, so evaluation alone is not enough."
+    },
+    {
+      "title": "Check fairness",
+      "text": "Results are split by group to see whether errors fall unevenly on some people. A large gap between groups blocks the release and sends the work back to the data.",
+      "lights": ["fairness"],
+      "failure": "Groups with very little data give noisy numbers, so small gaps can be missed or exaggerated."
+    },
+    {
+      "title": "Register and sign the release",
+      "text": "The approved model is stored in a registry with its metrics and history, then signed. Deployment only accepts signed, registered versions, so every model in production has a known origin.",
+      "lights": ["registry", "release"],
+      "failure": "Skipping the signature lets an unverified or tampered file reach production."
+    },
+    {
+      "title": "Test it on a slice of real traffic",
+      "text": "A small share of live requests goes to the new model while the rest stays on the old one. If the new model wins without making responses slower, it takes over.",
+      "lights": ["abtest"],
+      "failure": "Ending the test too early can crown a model that only got lucky."
+    },
+    {
+      "title": "Serve predictions and watch them",
+      "text": "The model answers requests while monitoring tracks how the incoming data and the predictions compare with the training data, and how long each response takes.",
+      "lights": ["inference", "monitor"],
+      "failure": "Latency can be fine while the model's quality silently decays, so both must be watched."
+    },
+    {
+      "title": "Raise the drift alert",
+      "text": "When the live data moves past an agreed limit for long enough, an alert fires and starts retraining on fresh data. This returns the loop to the first step.",
+      "lights": ["alert", "features"],
+      "failure": "A threshold set too low causes alert fatigue; set too high, drift is noticed late."
+    }
+  ],
+  "tradeoffs": [
+    "Distillation lowers cost and latency, but the smaller model gives up some accuracy.",
+    "Strict fairness and evaluation gates slow releases, but they catch problems before users do.",
+    "Automatic retraining on drift keeps the model current, but it needs a human check so a bad data change does not train a bad model."
+  ],
+  "stack": ["PyTorch", "Optuna", "MLflow", "Prometheus"]
+}
