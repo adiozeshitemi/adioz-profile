@@ -3,7 +3,7 @@
   "label": "Core Engineering Focus",
   "headline": "AI as efficient as it is intelligent.",
   "bio": [
-    "I take AI into production for enterprise clients and own each system from design to support: agents that act within guardrails, and models sized to the latency budget and hardware they run on."
+    "I build backend systems and take AI into production, and own each system from design to support: payments that never double-charge, agents that act within guardrails, and models sized to the latency budget and hardware they run on."
   ],
   "portrait": {
     "src": "/images/profile_pic.svg",
@@ -29,10 +29,10 @@
       ]
     },
     {
-      "title": "Backend & Web Systems",
+      "title": "Backend Systems",
       "icon": "box",
-      "description": "The services and web applications AI features run inside, built with Rust and Java and owned from API design to production support.",
-      "tags": ["Rust", "Axum", "Spring Boot", "Kafka", "PostgreSQL"]
+      "description": "Java and Spring Boot services that charge exactly once, split revenue with a full audit trail and stream events into analytics, owned from API design to production support.",
+      "tags": ["Java 21", "Spring Boot 4", "WebFlux", "Kafka", "ClickHouse"]
     }
   ],
   "record": {

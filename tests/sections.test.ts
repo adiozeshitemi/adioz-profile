@@ -147,10 +147,11 @@ describe("Header", () => {
 });
 
 describe("Hero", () => {
-  it("renders the availability pill, gold headline and lede from profile.json", async () => {
+  it("renders the availability pill with the location, gold headline and lede from profile.json", async () => {
     const doc = await render(Hero);
     const pill = doc.querySelector("p.pill.panel.gold");
-    expect(text(pill)).toBe(profile.availability);
+    expect(text(pill)).toBe(`${profile.availability} ${profile.location}`);
+    expect(text(pill?.querySelector(".where") ?? null)).toBe(profile.location);
     expect(pill?.querySelector(".lamp.status")).not.toBeNull();
     const title = doc.querySelector("h1.display");
     expect(title?.id).toBe("hero-title");
