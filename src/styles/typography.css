@@ -13,10 +13,12 @@
   letter-spacing: var(--track);
 }
 
+/* The hero title balances its lines, so no word is left alone on the last one. */
 .display {
   margin: 0 0 26px;
   font-size: clamp(40px, 5.5vw, 74px);
   line-height: 1.03;
+  text-wrap: balance;
 }
 
 .h2 {

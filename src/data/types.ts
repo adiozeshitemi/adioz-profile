@@ -38,8 +38,10 @@ export interface Profile {
   headline: string;
   /** Hero summary paragraph; text inside `**` pairs renders as strong emphasis. */
   summary: string;
-  /** Availability badge text, e.g. "Available for Senior/Staff Engineering Roles". */
+  /** Availability badge text, e.g. "Open to Principal, Staff & leadership roles". */
   availability: string;
+  /** Where the owner works from, shown in the availability badge, e.g. "Nairobi, Kenya (Remote)". */
+  location: string;
   /** Hero call-to-action buttons in display order. */
   actions: LinkItem[];
   /** The résumé in public/, downloaded from the knob after the hero's call-to-action buttons. */
