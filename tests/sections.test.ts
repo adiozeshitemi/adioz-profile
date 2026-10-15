@@ -5,6 +5,7 @@ import ExperienceSection from "../src/components/Experience/ExperienceSection.as
 import Footer from "../src/components/Footer/Footer.astro";
 import Header from "../src/components/Header/Header.astro";
 import Hero from "../src/components/Hero/Hero.astro";
+import ProjectCard from "../src/components/Projects/ProjectCard.astro";
 import ProjectsSection from "../src/components/Projects/ProjectsSection.astro";
 import TechStackSection from "../src/components/TechStack/TechStackSection.astro";
 import {
@@ -591,9 +592,9 @@ describe("ProjectsSection", () => {
         project.metric.replaceAll("**", ""),
       );
     });
-    expect(text(cards[0]!.querySelector(".metric strong"))).toBe(
-      "Baze streaming platform",
-    );
+    expect(
+      cards.map((card) => text(card.querySelector(".nameplate h3"))),
+    ).toEqual(["Baze (Safaricom platform)", "VybStreamz", "BBRaiN", "Hisiya"]);
   });
 
   it("links each port in a new tab, saying so to assistive technology", async () => {
@@ -606,8 +607,14 @@ describe("ProjectsSection", () => {
           text(port.querySelector(".port-label")),
           port.getAttribute("href"),
         ]),
-      ).toEqual(featured[index]!.links.map((link) => [link.title, link.url]));
-      for (const port of ports) {
+      ).toEqual(
+        [...featured[index]!.links, featured[index]!.caseStudy ?? []]
+          .flat()
+          .map((link) => [link.title, link.url]),
+      );
+      for (const port of ports.filter((port) =>
+        port.getAttribute("href")?.startsWith("https:"),
+      )) {
         expect(port.getAttribute("target")).toBe("_blank");
         expect(port.getAttribute("rel")).toBe("noopener noreferrer");
         expect(text(port.querySelector(".sr-only"))).toBe(site.newTab);
@@ -617,6 +624,33 @@ describe("ProjectsSection", () => {
         expect(port.querySelector(".port-disc svg")).not.toBeNull();
       }
     });
+  });
+});
+
+describe("ProjectCard", () => {
+  const project = {
+    ...projects.projects[0]!,
+    caseStudy: {
+      title: "Case study",
+      url: "/workflows/payments-rail",
+      icon: "arrow-right",
+    },
+  };
+
+  it("adds the case study as a port after the links, opening in the same tab", async () => {
+    const doc = await render(ProjectCard, { props: { project } });
+    const ports = [...doc.querySelectorAll("a.port")];
+    expect(ports).toHaveLength(project.links.length + 1);
+    const study = ports.at(-1)!;
+    expect(text(study.querySelector(".port-label"))).toBe("Case study");
+    expect(study.getAttribute("href")).toBe("/workflows/payments-rail");
+    expect(study.hasAttribute("target")).toBe(false);
+  });
+
+  it("shows only the links while the project has no case study", async () => {
+    const { caseStudy: _, ...plain } = project;
+    const doc = await render(ProjectCard, { props: { project: plain } });
+    expect(doc.querySelectorAll("a.port")).toHaveLength(project.links.length);
   });
 });
 
