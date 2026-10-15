@@ -38,63 +38,105 @@
   },
   "roles": [
     {
-      "role": "Lead Engineer (AI & Backend)",
+      "role": "Chief Technology Officer",
       "company": "BBR (Big Bold Red Agency)",
-      "period": { "start": 2025, "end": null },
+      "location": "Nairobi, Kenya",
+      "period": {
+        "start": 2026,
+        "startMonth": 4,
+        "end": null
+      },
       "highlights": [
-        "**End-to-end ownership:** Own BBRaiN across its Rust inference service, vendor hub, admin console and GPU training pipeline; deployed inside each client's own cloud (VPC).",
-        "**Agentic AI in production:** Built an admin assistant agent that turns plain-language requests into audited configuration changes through typed write tools.",
-        "**AI in the binary:** Serve vision, embedding and ranking models from a single Rust service on CPU, with no GPU runtime, within a tight latency budget.",
-        "**Guardrails and licensing:** Built fail-closed content safety controls, per-feature licensing, and custom security validation tooling in Rust (Offensive Rust methodologies) to prevent adversarial manipulation and unauthorized feature execution."
+        "**Engineering leadership:** Set the architecture and review designs across Baze (Safaricom platform) and BBRaiN; plan and assign technical work to engineers; own all technical communications.",
+        "**Platform modernisation:** Led the upgrade of Baze's Spring services to Java 21 and Spring Boot 4, resolving breaking changes across every service; now leading the move to Java 25.",
+        "**Operational excellence:** Own runbooks, deployment change requests and incident response, with root-cause analyses.",
+        "**Quality gates:** Maintain the performance, smoke and end-to-end test suites, SonarQube checks and CI/CD pipelines that every release passes."
+      ],
+      "technologies": [
+        "Java 21",
+        "Spring Boot 4",
+        "Rust",
+        "SonarQube",
+        "Snyk",
+        "Trivy",
+        "Terraform",
+        "CI/CD"
+      ]
+    },
+    {
+      "role": "Lead Engineer (AI and Backend)",
+      "company": "BBR (Big Bold Red Agency)",
+      "location": "Nairobi, Kenya",
+      "period": {
+        "start": 2025,
+        "end": 2026,
+        "endMonth": 4
+      },
+      "highlights": [
+        "**Sole engineer on BBRaiN:** Designed and built the Rust AI engine behind search, recommendations and personalisation on Baze (Safaricom platform), deployed inside each client's own cloud (VPC).",
+        "**AI in the binary:** Serve vision, embedding and ranking models from one Rust service on CPU, with no GPU runtime, within a tight latency budget.",
+        "**Payments and revenue:** Built Baze's revenue-sharing engine from scratch, with an auditable payout workflow, and contributed to its payment, catalog and auth services in Java and Spring Boot.",
+        "**Analytics and playback:** Built Baze's analytics service for event ingestion and campaign attribution, and the playback events that flow through Kafka into ClickHouse and on to recommendations."
       ],
       "technologies": [
         "Rust",
         "Axum",
         "Burn",
         "PyTorch",
-        "CLIP",
-        "Tantivy",
-        "Rhai",
-        "safetensors",
-        "Postman",
-        "Docker"
+        "Java",
+        "Spring WebFlux",
+        "R2DBC",
+        "Kafka",
+        "ClickHouse",
+        "Redis"
       ]
     },
     {
       "role": "Junior AI Engineer",
-      "company": "Berrijam",
-      "period": { "start": 2023, "end": 2025 },
+      "company": "Zone01 (Berrijam AI projects)",
+      "period": {
+        "start": 2023,
+        "end": 2025
+      },
       "highlights": [
-        "**AI integration:** Integrated ML models and LLM APIs into Go, Java and Python microservices over REST and gRPC.",
+        "**AI integration:** Integrated ML models and LLM APIs into Go, Java and Python microservices.",
         "**LLM features:** Built prompt, retrieval (RAG) and structured-output features for client-facing tools.",
         "**Data preparation:** Cleaned, transformed and validated client datasets for modelling and analytics.",
-        "**Prototype to production:** Turned validated AI prototypes into services with Docker, CI pipelines and monitoring.",
-        "**Evaluation and docs:** Tested model outputs against baselines and documented APIs."
+        "**Prototype to production:** Turned validated AI prototypes into services with MLOps pipelines.",
+        "**Evaluation and documentation:** Tested model outputs against baselines and documented APIs."
       ],
-      "technologies": ["Golang", "Java", "Python", "gRPC", "Docker"]
+      "technologies": ["Go", "Java", "Python", "gRPC", "Docker"]
     },
     {
-      "role": "Fullstack Engineer (Java & Go)",
+      "role": "Fullstack Engineer (Java and Go)",
       "company": "Zone01",
-      "period": { "start": 2023, "end": 2025 },
+      "location": "Kisumu, Kenya",
+      "period": {
+        "start": 2023,
+        "end": 2025
+      },
       "highlights": [
-        "**Service performance:** Cut inter-service overhead by 30% by moving services to Golang and gRPC.",
+        "**Service performance:** Cut inter-service overhead by 30% by moving services to Go and gRPC.",
         "**Streaming pipelines:** Ran Kafka pipelines with sub-second ingestion for real-time monitoring.",
-        "**Team standards:** Set code-quality and DevSecOps standards and mentored engineers."
+        "**Team standards and mentoring:** Set code-quality and DevSecOps standards, reviewed code, and mentored apprentice engineering teams."
       ],
-      "technologies": ["Java", "Golang", "gRPC", "Kafka"]
+      "technologies": ["Java", "Go", "gRPC", "Kafka"]
     },
     {
-      "role": "Backend Engineer (Golang & Java)",
+      "role": "Backend Engineer (Go and Java)",
       "company": "Upwork",
-      "period": { "start": 2018, "end": 2024 },
+      "location": "Remote, international clients",
+      "period": {
+        "start": 2018,
+        "end": 2024
+      },
       "highlights": [
-        "**Real-time systems:** Built Golang (REST, WebSockets) and Java Spring Boot backends for international startups.",
-        "**Full-stack delivery:** Integrated Angular frontends with Go and Java backends through well-documented APIs.",
-        "**Reliability:** Deployed Dockerized services with auto-scaling and monitoring, holding 99% uptime."
+        "**Real-time systems:** Built Go (REST, WebSockets) and Java Spring Boot backends for startups.",
+        "**Full-stack delivery:** Integrated Angular frontends with Go and Java backends.",
+        "**Reliability:** Deployed Dockerized services with auto-scaling and monitoring, holding 99% uptime, and resolved production incidents for clients."
       ],
       "technologies": [
-        "Golang",
+        "Go",
         "Java",
         "Spring Boot",
         "WebSockets",

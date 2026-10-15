@@ -255,19 +255,23 @@ export interface ExperienceItem {
   company: string;
   /** Work location, e.g. "Nairobi / Remote"; omitted when not stated. */
   location?: string;
-  period: YearRange;
+  period: RolePeriod;
   /** Description bullet points; text inside `**` pairs renders as strong emphasis. */
   highlights: string[];
   /** Technologies used in the role. */
   technologies: string[];
 }
 
-/** An inclusive span of calendar years. */
-export interface YearRange {
+/** An inclusive span of a role's years, each optionally narrowed to a month. */
+export interface RolePeriod {
   /** First year, e.g. 2021. */
   start: number;
+  /** Month of `start`, 1 to 12; omitted when only the year is given. */
+  startMonth?: number;
   /** Last year, or null while the role is ongoing. */
   end: number | null;
+  /** Month of `end`, 1 to 12; omitted when only the year is given or the role is ongoing. */
+  endMonth?: number;
 }
 
 /** Content of the featured projects section. */

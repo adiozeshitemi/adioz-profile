@@ -20,6 +20,7 @@ import {
   techStack,
   terminal,
 } from "../src/data/index";
+import { periodFrom, periodLabel, periodPoints } from "../src/lib/period";
 import { traceOrder, yearOf } from "../src/scripts/trace";
 import { render, text } from "./render";
 
@@ -513,11 +514,11 @@ describe("ExperienceSection", () => {
     expect(stops.map((stop) => text(stop.querySelector("h3")))).toEqual(
       experience.roles.map((role) => role.role),
     );
-    const starts = experience.roles.map((role) => role.period.start);
+    const starts = experience.roles.map((role) => periodFrom(role.period));
     expect(starts).toEqual([...starts].sort((a, b) => b - a));
   });
 
-  it("gives each role a rivet and a machined card with its years, company, tags and highlights", async () => {
+  it("gives each role a rivet and a machined card with its dates, company, tags and highlights", async () => {
     const doc = await render(ExperienceSection);
     const stops = [...doc.querySelectorAll("li.stop")];
     stops.forEach((stop, index) => {
@@ -528,18 +529,21 @@ describe("ExperienceSection", () => {
       expect(rivet?.getAttribute("aria-hidden")).toBe("true");
       expect(rivet?.classList.contains("spun")).toBe(!live);
       const card = stop.querySelector("article.panel.stop-card");
-      const years = [...(card?.querySelectorAll(".when time") ?? [])].map(
+      const { start, end } = periodPoints(item.period);
+      const dates = [...(card?.querySelectorAll(".when time") ?? [])].map(
         (time) => time.getAttribute("datetime"),
       );
-      expect(years[0]).toBe(String(item.period.start));
-      if (live) {
-        expect(text(card?.querySelector(".when") ?? null)).toBe(
-          `${item.period.start} — ${experience.ongoing}`,
-        );
-      } else {
-        expect(years[1]).toBe(String(item.period.end));
-      }
-      expect(text(card?.querySelector(".company") ?? null)).toBe(item.company);
+      expect(dates).toEqual(
+        end ? [start.datetime, end.datetime] : [start.datetime],
+      );
+      expect(text(card?.querySelector(".when") ?? null)).toBe(
+        periodLabel(item.period, experience.ongoing),
+      );
+      const company = card?.querySelector(".company");
+      expect(company?.firstChild?.textContent?.trim()).toBe(item.company);
+      expect(text(company?.querySelector(".location") ?? null)).toBe(
+        item.location ?? "",
+      );
       expect(texts(card?.querySelectorAll(".tags li.tag") ?? [])).toEqual(
         item.technologies,
       );
