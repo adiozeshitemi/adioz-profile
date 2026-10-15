@@ -95,6 +95,10 @@ Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24.
    npm test
    ```
 
+## 🤝 Contributors
+
+- [Ruchita Singla](https://github.com/ruchitasingla): the peer MLOps loop workflow, `src/data/workflows/peers/ruchitasingla-mlops-loop.json`.
+
 ## 📝 License
 
 © 2026 Adioz. All rights reserved.

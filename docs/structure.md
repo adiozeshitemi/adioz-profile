@@ -104,7 +104,11 @@ adioz-dev/
 │   │   ├── stats.json         # Headline metrics (the only place their values live)
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
-│   │   └── types.ts           # TypeScript interfaces for the portfolio content
+│   │   ├── types.ts           # TypeScript interfaces for the portfolio content
+│   │   └── workflows/         # System workflows: nodes, edges and steps, one file each
+│   │       ├── mlops-loop.json
+│   │       └── peers/         # Workflows by other engineers, each with its author
+│   │           └── ruchitasingla-mlops-loop.json
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro (logo-* full-colour and lang-* single-colour language logos), with their sources and licenses
 │   │   ├── activity.svg
 │   │   ├── arrow-right.svg
