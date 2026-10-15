@@ -17,7 +17,11 @@
       "label": "Distillation",
       "detail": "Small student model"
     },
-    { "id": "tune", "label": "Hyperparameter search", "detail": "Searched settings" },
+    {
+      "id": "tune",
+      "label": "Hyperparameter search",
+      "detail": "Searched settings"
+    },
     {
       "id": "track",
       "label": "Experiment tracking",
