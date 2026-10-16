@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import Header from "../src/components/Header/Header.astro";
-import { navigation, workflows } from "../src/data/index";
+import { navigation, sectionNumber, workflows } from "../src/data/index";
 import type { Workflow } from "../src/data/types";
 import { ownWorkflows, peerWorkflows } from "../src/lib/workflows";
 import { stepHops } from "../src/scripts/flow";
@@ -21,6 +21,8 @@ const pages = [
   ...ownWorkflows.map((workflow) => ({ workflow, Page: OwnPage })),
   ...peerWorkflows.map((workflow) => ({ workflow, Page: PeerPage })),
 ];
+
+const pad = (value: number) => String(value).padStart(2, "0");
 
 const renderPage = (workflow: Workflow, Page: typeof OwnPage) =>
   render(Page, {
@@ -58,8 +60,11 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     expect(layout.dataset.previewDescription).toBe(workflow.summary);
   });
 
-  it("has one h1, the landmarks, and a single element per id", async () => {
+  it("has the section's eyebrow, one h1, the landmarks, and a single element per id", async () => {
     const doc = await renderPage(workflow, Page);
+    expect(text(doc.querySelector(".head .eyebrow"))).toBe(
+      `${pad(sectionNumber(workflows.id))} ${workflows.label}`,
+    );
     expect(text(doc.querySelector("h1"))).toBe(workflow.title);
     expect(doc.querySelectorAll("h1")).toHaveLength(1);
     expect(doc.querySelectorAll("body > header")).toHaveLength(1);

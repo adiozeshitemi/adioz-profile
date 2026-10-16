@@ -546,6 +546,9 @@ describe("ExperienceSection", () => {
       );
       const company = card?.querySelector(".company");
       expect(company?.firstChild?.textContent?.trim()).toBe(item.company);
+      expect(text(company ?? null)).toBe(
+        [item.company, item.location].filter(Boolean).join(" "),
+      );
       expect(text(company?.querySelector(".location") ?? null)).toBe(
         item.location ?? "",
       );
@@ -762,6 +765,12 @@ describe("WorkflowsSection", () => {
     const cards = [...section.querySelectorAll("article.workflow-card")];
     expect(cards.map((card) => text(card.querySelector("h3")))).toEqual(
       [...ownWorkflows, ...peerWorkflows].map((w) => w.title),
+    );
+    expect(cards.map((card) => text(card.querySelector(".counts")))).toEqual(
+      [...ownWorkflows, ...peerWorkflows].map(
+        (w) =>
+          `${w.nodes.length} ${workflows.counts.nodes} · ${w.steps.length} ${workflows.counts.steps}`,
+      ),
     );
     expect(
       cards.map((card) => card.querySelector(".open a")?.getAttribute("href")),

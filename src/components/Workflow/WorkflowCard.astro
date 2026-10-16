@@ -17,14 +17,11 @@ interface Props {
 
 const { workflow } = Astro.props;
 const { counts } = workflows;
+const tally = `${workflow.nodes.length} ${counts.nodes} · ${workflow.steps.length} ${counts.steps}`;
 ---
 
 <Panel as="article" class="workflow-card">
-  <p class="counts">
-    {workflow.nodes.length}
-    {counts.nodes} · {workflow.steps.length}
-    {counts.steps}
-  </p>
+  <p class="counts">{tally}</p>
   <h3>{workflow.title}</h3>
   <p class="summary">
     <Emphasis text={workflow.summary} />
