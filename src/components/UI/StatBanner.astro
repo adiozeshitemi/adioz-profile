@@ -11,11 +11,13 @@ interface Props {
 }
 
 const { stats = allStats, class: className } = Astro.props;
+// More than three stats sit two to a row up to 640px (.pairs).
+const pairs = stats.length > 3;
 ---
 
 <Panel
   as="dl"
-  class:list={["stats", className]}
+  class:list={["stats", { pairs }, className]}
   style={`--stat-count: ${stats.length}`}
 >
   {stats.map((stat) => (
@@ -34,5 +36,20 @@ const { stats = allStats, class: className } = Astro.props;
 
   .stats > :global(.stat + .stat) {
     border-left: 1px solid var(--line);
+  }
+
+  /* Up to 640px a panel of more than three stats (.pairs) sets them two to a row, each row after the first under a --line rule. */
+  @media (width <= 40rem) {
+    .panel.stats.pairs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stats.pairs > :global(.stat:nth-child(odd)) {
+      border-left: 0;
+    }
+
+    .stats.pairs > :global(.stat:nth-child(n + 3)) {
+      border-top: 1px solid var(--line);
+    }
   }
 </style>
