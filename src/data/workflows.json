@@ -8,7 +8,6 @@
   "open": "Step through it",
   "counts": {
     "nodes": "parts",
-    "hops": "hops",
     "steps": "steps"
   },
   "page": {
@@ -35,7 +34,6 @@
       "previous": "Previous step",
       "next": "Next step"
     },
-    "diagram": "Diagram of the workflow's parts and the hops between them",
-    "live": "live"
+    "diagram": "Diagram of the workflow's parts and the hops between them"
   }
 }

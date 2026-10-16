@@ -346,8 +346,8 @@ export interface WorkflowsContent {
   contributedBy: string;
   /** Label of each card's link to its workflow page, e.g. "Step through it". */
   open: string;
-  /** Words after a workflow's node, edge and step counts, e.g. "parts", "hops" and "steps". */
-  counts: { nodes: string; hops: string; steps: string };
+  /** Words after a workflow's node count and step count on its card, e.g. "parts" and "steps". */
+  counts: { nodes: string; steps: string };
   /** Headings and labels of a workflow page. */
   page: WorkflowPageLabels;
 }
@@ -374,10 +374,8 @@ export interface WorkflowPageLabels {
   back: LinkItem;
   /** The step dial: its accessible name, the words between step number and count, and the step knobs' names. */
   dial: { label: string; of: string; previous: string; next: string };
-  /** The diagram window's accessible name, e.g. "Diagram of the workflow's parts and hops". */
+  /** The diagram's (figure.flow) accessible name, e.g. "Diagram of the workflow's parts and the hops between them". */
   diagram: string;
-  /** The word beside the diagram window's live lamp, e.g. "live". */
-  live: string;
 }
 
 /** A part of a workflow, drawn as a box in the cell at `col` and `row` of the diagram's grid. */

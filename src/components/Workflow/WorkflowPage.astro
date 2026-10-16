@@ -7,8 +7,8 @@
  * compensations when the workflow names any, the trade-offs and the stack,
  * then a port back to the home page's workflows section.
  *
- * The step-through ([data-workflow-steps]) holds the diagram window and its
- * step dial beside the captions, an ordered list of every step with its
+ * The step-through ([data-workflow-steps]) holds the gold-inlay diagram and
+ * its step dial beside the captions, an ordered list of every step with its
  * text, its lit hops and its failure mode. Without JavaScript only the list
  * shows, in one column; src/scripts/flow.ts sets data-flow, which shows the
  * diagram, sticky beside the list from 1080px on screens at least 760px
@@ -29,7 +29,7 @@ interface Props {
 }
 
 const { workflow } = Astro.props;
-const { page, counts } = workflows;
+const { page } = workflows;
 const number = String(sectionNumber(workflows.id)).padStart(2, "0");
 const hops = stepHops(workflow.steps, workflow.edges);
 const labelOf = (id: string) =>
@@ -83,10 +83,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
     <div class="step-through">
       <div class="flow-visual">
         <FlowDiagram
-          name={`adioz — ${workflow.slug}.flow`}
-          meta={`${workflow.nodes.length} ${counts.nodes} · ${workflow.edges.length} ${counts.hops}`}
           label={page.diagram}
-          live={page.live}
           nodes={workflow.nodes}
           edges={workflow.edges}
         />

@@ -224,8 +224,13 @@ describe("startFlow", () => {
           <figure class="flow">
             <div class="flow-stage">
               <svg class="flow-wires">
-                <g class="wire" data-from="a" data-to="b"><path class="wire-line"></path><path class="wire-head"></path></g>
-                <g class="wire" data-from="b" data-to="c"><path class="wire-line"></path><path class="wire-head"></path></g>
+                <g class="wire" data-from="a" data-to="b">
+                  <path data-shape="line"></path><path data-shape="line"></path>
+                  <path data-shape="head"></path><path data-shape="head"></path>
+                </g>
+                <g class="wire" data-from="b" data-to="c">
+                  <path data-shape="line"></path><path data-shape="head"></path>
+                </g>
               </svg>
               <div class="flow-node" data-node="a" data-col="0" data-row="0"></div>
               <div class="flow-node" data-node="b" data-col="1" data-row="0"></div>
@@ -284,13 +289,22 @@ describe("startFlow", () => {
       item.hasAttribute("aria-current"),
     );
 
-  it("draws every wire from the boxes' places", () => {
+  it("draws every wire's line and head paths from the boxes' places, with the line's length as --len", () => {
+    vi.spyOn(SVGPathElement.prototype, "getTotalLength").mockReturnValue(42.04);
     stop = startFlow(root(), false);
-    for (const line of document.querySelectorAll(".wire-line")) {
-      expect(line.getAttribute("d")).toMatch(/^M/);
-    }
-    for (const head of document.querySelectorAll(".wire-head")) {
-      expect(head.getAttribute("d")).toMatch(/Z$/);
+    for (const wire of document.querySelectorAll(".wire")) {
+      const lines = [
+        ...wire.querySelectorAll<SVGPathElement>("[data-shape=line]"),
+      ];
+      const heads = [...wire.querySelectorAll("[data-shape=head]")];
+      expect(lines[0]!.getAttribute("d")).toMatch(/^M/);
+      for (const line of lines) {
+        expect(line.getAttribute("d")).toBe(lines[0]!.getAttribute("d"));
+        expect(line.style.getPropertyValue("--len")).toBe("42px");
+      }
+      for (const head of heads) {
+        expect(head.getAttribute("d")).toMatch(/Z$/);
+      }
     }
   });
 

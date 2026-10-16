@@ -54,7 +54,7 @@ interface Plan {
 }
 
 /** Pixels between wires that share a gutter. */
-export const LANE_SPACING = 7;
+const LANE_SPACING = 7;
 
 /**
  * The plans a wire from cell `a` to cell `b` can take: the side it leaves,
@@ -471,10 +471,12 @@ export function dialTarget(key: string, current: number, count: number) {
 /**
  * Runs the step-through in `root`, a [data-workflow-steps] section holding
  * the diagram (.flow: its .flow-stage of [data-node] boxes and its
- * .flow-wires of [data-from][data-to] wires), the step dial (.step-dial) and
- * the captions (ol.steps > li, each with data-lights and data-hops). It
- * draws the wires and redraws them whenever the stage or a box changes
- * size. Under reduced motion it sets data-flow="all" and lights every node
+ * .flow-wires of .wire[data-from][data-to] groups, each holding
+ * [data-shape="line"] and [data-shape="head"] paths), the step dial
+ * (.step-dial) and the captions (ol.steps > li, each with data-lights and
+ * data-hops). It draws every wire, setting each line path's --len to its
+ * length in px, and redraws them whenever the stage or a box changes size.
+ * Under reduced motion it sets data-flow="all" and lights every node
  * and hop at once; otherwise it sets data-flow="step", shows the dial, and
  * lights the current step's nodes and hops (.lit), the earlier steps'
  * (.passed) and the caption crossing the middle of the viewport
@@ -492,7 +494,9 @@ export function startFlow(
   if (!stage || !flow || items.length === 0) return () => {};
   const boxes = [...stage.querySelectorAll<HTMLElement>("[data-node]")];
   const wires = [
-    ...root.querySelectorAll<SVGGElement>(".flow-wires [data-from]"),
+    ...root.querySelectorAll<SVGGElement>(
+      ".flow-wires .wire[data-from][data-to]",
+    ),
   ];
   const ids = boxes.map((box) => box.dataset.node ?? "");
   const lights = items.map((item) => (item.dataset.lights ?? "").split(" "));
@@ -523,11 +527,22 @@ export function startFlow(
     const routes = routeWires(placed, edges, pad());
     wires.forEach((wire, index) => {
       const points = routes[index]!;
-      wire.querySelector(".wire-line")?.setAttribute("d", wirePath(points));
-      wire.querySelector(".wire-head")?.setAttribute("d", arrowHead(points));
+      const line = wirePath(points);
+      const head = arrowHead(points);
+      const lines = [
+        ...wire.querySelectorAll<SVGPathElement>('[data-shape="line"]'),
+      ];
+      for (const path of lines) path.setAttribute("d", line);
+      const length = `${round(lines[0]?.getTotalLength() ?? 0)}px`;
+      for (const path of lines) path.style.setProperty("--len", length);
+      for (const path of wire.querySelectorAll('[data-shape="head"]')) {
+        path.setAttribute("d", head);
+      }
     });
   }
 
+  // data-flow shows .flow-visual, so the first draw measures the shown boxes.
+  root.dataset.flow = reduceMotion ? "all" : "step";
   draw();
   const resize = new ResizeObserver(() => draw());
   resize.observe(stage);
@@ -535,7 +550,6 @@ export function startFlow(
   void document.fonts?.ready.then(() => draw());
 
   if (reduceMotion) {
-    root.dataset.flow = "all";
     for (const box of boxes) box.classList.add("lit");
     for (const wire of wires) wire.classList.add("lit");
     return () => resize.disconnect();
@@ -600,7 +614,6 @@ export function startFlow(
     items[target]!.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  root.dataset.flow = "step";
   show(0);
   if (dial) dial.hidden = false;
 

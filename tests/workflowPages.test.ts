@@ -98,12 +98,14 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     });
   });
 
-  it("draws each node in its cell and each edge as a wire, the window named for assistive technology", async () => {
+  it("draws each node in its cell and each edge as a channel of line and head paths, the figure named for assistive technology", async () => {
     const doc = await renderPage(workflow, Page);
     const flow = doc.querySelector("figure.flow")!;
     expect(flow.getAttribute("role")).toBe("img");
     expect(flow.getAttribute("aria-label")).toBe(workflows.page.diagram);
-    const nodes = [...flow.querySelectorAll<HTMLElement>("[data-node]")];
+    const nodes = [
+      ...flow.querySelectorAll<HTMLElement>(".flow-stage > [data-node]"),
+    ];
     expect(nodes.map((node) => node.dataset.node)).toEqual(
       workflow.nodes.map((node) => node.id),
     );
@@ -113,12 +115,18 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
         `grid-column: ${col + 1}; grid-row: ${row + 1}`,
       );
     });
-    expect(
-      [...flow.querySelectorAll<SVGGElement>(".wire")].map((wire) => [
-        wire.dataset.from,
-        wire.dataset.to,
-      ]),
-    ).toEqual(workflow.edges.map((edge) => [edge.from, edge.to]));
+    const wires = [...flow.querySelectorAll<SVGGElement>(".flow-wires .wire")];
+    expect(wires.map((wire) => [wire.dataset.from, wire.dataset.to])).toEqual(
+      workflow.edges.map((edge) => [edge.from, edge.to]),
+    );
+    for (const wire of wires) {
+      expect(
+        wire.querySelectorAll('path[data-shape="line"]').length,
+      ).toBeGreaterThan(0);
+      expect(
+        wire.querySelectorAll('path[data-shape="head"]').length,
+      ).toBeGreaterThan(0);
+    }
   });
 
   it("pairs each weak point with its compensation, when the workflow names any", async () => {
