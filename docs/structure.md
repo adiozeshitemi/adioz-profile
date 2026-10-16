@@ -198,7 +198,8 @@ adioz-dev/
 │   ├── odometer.test.ts       # Odometer reels and their spin
 │   ├── page.test.ts           # Assembled landing page
 │   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
-│   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
+│   ├── pipeline.test.ts       # Agent pipeline runs and WebGL fallback
+│   ├── pipelineMarkup.test.ts # Agent pipeline markup
 │   ├── period.test.ts         # Role period labels and bounds
 │   ├── profileReadme.test.ts  # GitHub profile README rendering
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate

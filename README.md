@@ -47,7 +47,7 @@ For a detailed breakdown of the project's layout and design philosophy, please r
 
 ## 🔧 Getting Started
 
-Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24.
+Requires Node.js 22.22 or newer; `.nvmrc` pins Node.js 24.
 
 1. **Clone the repository**
 

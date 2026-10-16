@@ -40,8 +40,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
 <article class="workflow">
   <header class="head">
     <p class="eyebrow">
-      <span class="eyebrow-no">{number}</span>
-      {workflows.label}
+      <span class="eyebrow-no">{number}</span> {workflows.label}
     </p>
     <h1 class="h2">
       <span class="gilt">{workflow.title}</span>
@@ -113,7 +112,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
             </p>
             {hops[index]!.length > 0 && (
               <p class="step-hops">
-                <span class="step-key">{page.hops}</span>
+                <span class="step-key">{page.hops}</span>{" "}
                 {hops[index]!.map((edgeIndex, position) => {
                   const edge = workflow.edges[edgeIndex]!;
                   return (
@@ -127,7 +126,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
             )}
             {step.failure && (
               <p class="step-failure">
-                <span class="step-key">{page.failure}</span>
+                <span class="step-key">{page.failure}</span>{" "}
                 <Emphasis text={step.failure} />
               </p>
             )}
@@ -150,12 +149,12 @@ const pad = (value: number) => String(value).padStart(2, "0");
         {workflow.compensations.map((item) => (
           <li>
             <p class="weakness">
-              <span class="comp-key">{page.compensations.weakness}</span>
+              <span class="comp-key">{page.compensations.weakness}</span>{" "}
               <Emphasis text={item.weakness} />
             </p>
             <span class="comp-arrow" aria-hidden="true"></span>
             <p class="compensation">
-              <span class="comp-key">{page.compensations.compensation}</span>
+              <span class="comp-key">{page.compensations.compensation}</span>{" "}
               <Emphasis text={item.compensation} />
             </p>
           </li>
