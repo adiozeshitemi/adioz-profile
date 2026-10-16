@@ -10,11 +10,14 @@
  * The step-through ([data-workflow-steps]) holds the diagram's column
  * (.flow-visual) beside the captions, an ordered list of every step with its
  * text and its failure mode, each item carrying the parts and edges its step
- * lights in data-lights and data-hops. The column holds the gold-inlay
- * diagram (figure.flow) over the step bar. Without JavaScript only the list
- * shows, in one column; src/scripts/flow.ts sets data-flow, which shows the
- * column, sticky beside the list from 1080px on screens at least 760px tall,
- * and above it otherwise.
+ * lights in data-lights and data-hops. The column stacks the 2D
+ * gold-inlay diagram (figure.flow) and the 3D board (.board3d) in one grid
+ * cell, over the step bar. Without JavaScript only the list shows, in one
+ * column; src/scripts/flow.ts sets data-flow, which shows the column, sticky
+ * beside the list from 1080px on screens at least 760px tall, and above it
+ * otherwise. The 2D diagram shows until the board has drawn its first frame
+ * (.board3d[data-ready]); then the board takes the cell and fades in while
+ * the diagram fades out, so without WebGL the 2D diagram stays.
  */
 import { sectionNumber, workflows } from "../../data/index";
 import type { Workflow } from "../../data/types";
@@ -23,6 +26,7 @@ import Emphasis from "../UI/Emphasis.astro";
 import Panel from "../UI/Panel.astro";
 import Port from "../UI/Port.astro";
 import Tag from "../UI/Tag.astro";
+import Board3D from "./Board3D.astro";
 import FlowDiagram from "./FlowDiagram.astro";
 import StepBar from "./StepBar.astro";
 
@@ -87,6 +91,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
           nodes={workflow.nodes}
           edges={workflow.edges}
         />
+        <Board3D workflow={workflow} />
         <StepBar workflow={workflow} labels={page.bar} />
       </div>
       <ol class="steps">
@@ -287,6 +292,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
   }
 
   .flow-visual {
+    position: relative;
     display: none;
   }
 
@@ -294,6 +300,54 @@ const pad = (value: number) => String(value).padStart(2, "0");
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     row-gap: 14px;
+  }
+
+  /*
+   * The 2D diagram and the 3D board share the column's first cell, over the
+   * step bar in the second row. Until the board has drawn its first frame
+   * (data-ready) the diagram sizes the cell and the board, still invisible
+   * (Board3D.astro), lies over its top at the board's own aspect ratio. Once
+   * the board is ready it sizes the cell and fades in, and the diagram lies
+   * under it, clipped to the board's box, fading out, clear of the pointer
+   * and with every animation paused (!important outranks FlowDiagram.astro's
+   * more specific data-flow="step" animation rules). Each grid-area names its
+   * end lines, since an absolutely positioned item's auto end line is the
+   * column's padding edge.
+   */
+  .flow-visual > :global(.flow),
+  .flow-visual > :global(.board3d) {
+    grid-area: 1 / 1 / 2 / 2;
+    min-width: 0;
+  }
+
+  .flow-visual > :global(.board3d:not([data-ready])) {
+    position: absolute;
+    inset: 0 0 auto;
+  }
+
+  .flow-visual > :global(.flow) {
+    transition: opacity 0.6s var(--ease-soft);
+  }
+
+  .flow-visual:has(> :global(.board3d[data-ready])) > :global(.flow) {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .flow-visual:has(> :global(.board3d[data-ready])) > :global(.flow) :global(*),
+  .flow-visual:has(> :global(.board3d[data-ready]))
+    > :global(.flow)
+    :global(*)::before,
+  .flow-visual:has(> :global(.board3d[data-ready]))
+    > :global(.flow)
+    :global(*)::after {
+    animation-play-state: paused !important;
+  }
+
+  .flow-visual > :global(.step-bar) {
+    grid-area: 2 / 1 / 3 / 2;
   }
 
   @media (width >= 67.5rem) {
@@ -543,7 +597,8 @@ const pad = (value: number) => String(value).padStart(2, "0");
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .steps li {
+    .steps li,
+    .flow-visual > :global(.flow) {
       transition: none;
     }
   }

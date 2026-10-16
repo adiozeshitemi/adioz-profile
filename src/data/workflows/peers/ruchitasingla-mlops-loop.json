@@ -18,84 +18,96 @@
       "label": "Feature engineering",
       "detail": "Versioned features",
       "col": 0,
-      "row": 0
+      "row": 0,
+      "kind": "qfp"
     },
     {
       "id": "distill",
       "label": "Distillation",
       "detail": "Small student model",
       "col": 1,
-      "row": 0
+      "row": 0,
+      "kind": "die"
     },
     {
       "id": "tune",
       "label": "Hyperparameter search",
       "detail": "Searched settings",
       "col": 2,
-      "row": 0
+      "row": 0,
+      "kind": "trimmer"
     },
     {
       "id": "alert",
       "label": "Drift alert",
       "detail": "Starts the next loop",
       "col": 0,
-      "row": 1
+      "row": 1,
+      "kind": "beacon"
     },
     {
       "id": "track",
       "label": "Experiment tracking",
       "detail": "Reproducible runs",
       "col": 2,
-      "row": 1
+      "row": 1,
+      "kind": "bga"
     },
     {
       "id": "monitor",
       "label": "Drift and latency monitoring",
       "detail": "Live health checks",
       "col": 0,
-      "row": 2
+      "row": 2,
+      "kind": "gauge"
     },
     {
       "id": "evaluate",
       "label": "Evaluation",
       "detail": "Accuracy and F1",
       "col": 2,
-      "row": 2
+      "row": 2,
+      "kind": "socket"
     },
     {
       "id": "inference",
       "label": "Inference",
       "detail": "Serving predictions",
       "col": 0,
-      "row": 3
+      "row": 3,
+      "kind": "cpu"
     },
     {
       "id": "fairness",
       "label": "Fairness checks",
       "detail": "Per-group results",
       "col": 2,
-      "row": 3
+      "row": 3,
+      "kind": "gauge"
     },
     {
       "id": "abtest",
       "label": "A/B testing",
       "detail": "Small traffic share",
       "col": 0,
-      "row": 4
+      "row": 4,
+      "kind": "toggle"
     },
     {
       "id": "release",
       "label": "Signed release",
       "detail": "Verified artifact",
       "col": 1,
-      "row": 4
+      "row": 4,
+      "kind": "secure"
     },
     {
       "id": "registry",
       "label": "Model registry",
       "detail": "Versioned models",
       "col": 2,
-      "row": 4
+      "row": 4,
+      "kind": "memory"
     }
   ],
   "edges": [

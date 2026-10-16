@@ -386,6 +386,23 @@ export interface WorkflowPageLabels {
   diagram: string;
 }
 
+/** The kinds of component a workflow part is built as on the 3D board. */
+export type WorkflowPartKind =
+  | "qfp"
+  | "bga"
+  | "socket"
+  | "memory"
+  | "gpu"
+  | "trimmer"
+  | "die"
+  | "rj45"
+  | "radio"
+  | "secure"
+  | "toggle"
+  | "cpu"
+  | "gauge"
+  | "beacon";
+
 /** A part of a workflow, drawn as a box in the cell at `col` and `row` of the diagram's grid. */
 export interface WorkflowNode {
   /** Unique within the workflow; edges and steps name the node by it, e.g. "features". */
@@ -398,6 +415,8 @@ export interface WorkflowNode {
   col: number;
   /** Grid row, from 0 at the top. */
   row: number;
+  /** The component the 3D board builds for the part, e.g. "gpu"; "qfp" (a chip) when omitted. */
+  kind?: WorkflowPartKind;
 }
 
 /** A hop between two nodes, drawn as an arrow from `from` to `to`. */

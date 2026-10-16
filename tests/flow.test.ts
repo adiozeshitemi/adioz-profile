@@ -10,6 +10,7 @@ import {
   wirePath,
   wrapStep,
   type Box,
+  type FlowStepDetail,
   type PlacedNode,
   type Point,
 } from "../src/scripts/flow";
@@ -203,6 +204,7 @@ class FakeObserver {
 
 describe("startFlow", () => {
   let stop: () => void = () => {};
+  let events: FlowStepDetail[] = [];
 
   beforeEach(() => {
     FakeObserver.all = [];
@@ -233,6 +235,7 @@ describe("startFlow", () => {
               <div class="flow-node" data-node="c" data-col="1" data-row="1"></div>
             </div>
           </figure>
+          <div class="board3d" data-board3d></div>
           <div class="step-bar" hidden>
             <button class="knob bar-prev"></button>
             <p class="readout"><b>01</b></p>
@@ -273,6 +276,10 @@ describe("startFlow", () => {
       } as DOMRect);
     }
     for (const item of captions()) item.scrollIntoView = vi.fn();
+    events = [];
+    root().addEventListener("flowstep", (event) => {
+      events.push((event as CustomEvent<FlowStepDetail>).detail);
+    });
   });
 
   afterEach(() => {
@@ -336,17 +343,20 @@ describe("startFlow", () => {
     }
   });
 
-  it("lights every node and wire under reduced motion and leaves the step bar hidden", () => {
+  it("lights every node and wire under reduced motion, leaves the step bar hidden and reports every step lit", () => {
     stop = startFlow(root(), true);
     expect(root().dataset.flow).toBe("all");
+    expect(root().dataset.step).toBe("-1");
     expect(lit()).toEqual(["a", "b", "c"]);
     expect(document.querySelectorAll(".wire.lit")).toHaveLength(2);
     expect(bar().hidden).toBe(true);
+    expect(events).toEqual([{ step: -1, all: true }]);
   });
 
-  it("starts on the first step and shows the step bar on it", () => {
+  it("starts on the first step, shows the step bar on it and reports it", () => {
     stop = startFlow(root(), false);
     expect(root().dataset.flow).toBe("step");
+    expect(root().dataset.step).toBe("0");
     expect(lit()).toEqual(["a"]);
     expect(current()).toBe(0);
     expect(bar().hidden).toBe(false);
@@ -357,6 +367,7 @@ describe("startFlow", () => {
       ),
     ).toEqual([false, true, true]);
     expect(keys()[0]!.getAttribute("aria-current")).toBe("step");
+    expect(events).toEqual([{ step: 0, all: false }]);
   });
 
   it("lights the step whose caption crosses the middle, the earlier steps' as passed, and moves the step bar to it", () => {
@@ -365,6 +376,7 @@ describe("startFlow", () => {
     scrollTo(2);
     expect(lit()).toEqual(["c"]);
     expect(current()).toBe(2);
+    expect(root().dataset.step).toBe("2");
     expect(
       [...document.querySelectorAll<HTMLElement>(".flow-node.passed")].map(
         (node) => node.dataset.node,
@@ -391,6 +403,16 @@ describe("startFlow", () => {
       [true, null],
       [false, "step"],
     ]);
+    expect(events.at(-1)).toEqual({ step: 2, all: false });
+  });
+
+  it("reports each change of step once", () => {
+    stop = startFlow(root(), false);
+    settle();
+    scrollTo(1);
+    scrollTo(1);
+    click(".bar-next");
+    expect(events.map((event) => event.step)).toEqual([0, 1, 2]);
   });
 
   it("moves with its knobs, which wrap round, and its keys, which stop at the ends", () => {
@@ -464,6 +486,7 @@ describe("startFlow", () => {
       expect(current()).toBe(2);
       vi.advanceTimersByTime(AUTO_STEP_MS);
       expect(current()).toBe(0);
+      expect(events.map((event) => event.step)).toEqual([0, 1, 2, 0]);
       for (const item of captions()) {
         expect(item.scrollIntoView).not.toHaveBeenCalled();
       }
@@ -560,9 +583,9 @@ describe("startFlow", () => {
     it("never runs under reduced motion", () => {
       stop = startFlow(root(), true);
       vi.advanceTimersByTime(AUTO_STEP_MS * 3);
-      expect(lit()).toEqual(["a", "b", "c"]);
-      expect(current()).toBe(-1);
+      expect(root().dataset.step).toBe("-1");
       expect(autoKey().getAttribute("aria-pressed")).toBe("false");
+      expect(events).toHaveLength(1);
     });
 
     it("stops with the runner", () => {

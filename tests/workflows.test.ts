@@ -70,6 +70,17 @@ describe("toWorkflow", () => {
       'node "server" needs a col from 0 to 3 and a row from 0',
     ],
     [
+      "a node of an unknown kind",
+      (w) => ({
+        ...w,
+        nodes: [
+          w.nodes[0]!,
+          { ...w.nodes[1]!, kind: "lamp" as unknown as "qfp" },
+        ],
+      }),
+      'node "server" has unknown kind "lamp"',
+    ],
+    [
       "two nodes in one cell",
       (w) => ({ ...w, nodes: [w.nodes[0]!, { ...w.nodes[1]!, col: 0 }] }),
       'node "server" shares cell 0,0',

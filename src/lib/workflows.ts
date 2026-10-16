@@ -6,10 +6,33 @@
  * "workflows/mlops-loop.json: edge 3 leaves unknown node \"cach\"", which
  * fails the build. Each list is sorted by slug.
  */
-import type { Workflow, WorkflowContent, WorkflowNode } from "../data/types";
+import type {
+  Workflow,
+  WorkflowContent,
+  WorkflowNode,
+  WorkflowPartKind,
+} from "../data/types";
 
 /** The diagram's grid has at most this many columns. */
 export const MAX_COLUMNS = 4;
+
+/** Every WorkflowPartKind, the components the 3D board can build. */
+export const PART_KINDS: readonly WorkflowPartKind[] = [
+  "qfp",
+  "bga",
+  "socket",
+  "memory",
+  "gpu",
+  "trimmer",
+  "die",
+  "rj45",
+  "radio",
+  "secure",
+  "toggle",
+  "cpu",
+  "gauge",
+  "beacon",
+];
 
 const ownFiles = import.meta.glob<WorkflowContent>("../data/workflows/*.json", {
   eager: true,
@@ -32,8 +55,9 @@ const isCell = (value: unknown, max = Infinity): value is number =>
  * e.g. "peers/ruchitasingla-mlops-loop.json"). Throws unless:
  * - `title`, `summary` and `problem` are non-empty text, and `tradeoffs` and
  *   `stack` lists of it;
- * - every node has a unique id, a label, a detail and its own grid cell, in a
- *   grid of at most MAX_COLUMNS columns with no empty row or column;
+ * - every node has a unique id, a label, a detail, its own grid cell (in a
+ *   grid of at most MAX_COLUMNS columns with no empty row or column) and, if
+ *   given, a kind from PART_KINDS;
  * - every edge joins two different known nodes, at most once each way;
  * - every step has a title and text and lights known nodes, and every node
  *   is lit by a step;
@@ -73,6 +97,9 @@ export function toWorkflow(file: string, content: WorkflowContent): Workflow {
       fail(
         `node "${node.id}" needs a col from 0 to ${MAX_COLUMNS - 1} and a row from 0`,
       );
+    }
+    if (node.kind !== undefined && !PART_KINDS.includes(node.kind)) {
+      fail(`node "${node.id}" has unknown kind "${node.kind}"`);
     }
     const cell = `${node.col},${node.row}`;
     if (cells.has(cell)) fail(`node "${node.id}" shares cell ${cell}`);

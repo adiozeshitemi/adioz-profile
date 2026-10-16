@@ -127,6 +127,26 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     }
   });
 
+  it("stacks the 3D board over the 2D diagram, above the step bar", async () => {
+    const doc = await renderPage(workflow, Page);
+    const visual = doc.querySelector(".step-through > .flow-visual")!;
+    const parts = [...visual.children].flatMap((child) =>
+      child.matches("figure.flow")
+        ? ["diagram"]
+        : child.matches("div.board3d[data-board3d]")
+          ? ["board"]
+          : child.matches(".step-bar")
+            ? ["bar"]
+            : [],
+    );
+    expect(parts).toEqual(["diagram", "board", "bar"]);
+    const board = visual.querySelector<HTMLElement>(".board3d")!;
+    expect(board.querySelector("canvas")?.getAttribute("aria-hidden")).toBe(
+      "true",
+    );
+    expect(board.hasAttribute("data-ready")).toBe(false);
+  });
+
   it("pairs each weak point with its compensation, when the workflow names any", async () => {
     const doc = await renderPage(workflow, Page);
     const rows = [...doc.querySelectorAll(".compensations li")];

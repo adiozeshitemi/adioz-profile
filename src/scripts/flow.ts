@@ -1,8 +1,9 @@
 /*
- * A workflow's step-through: which hops each step lights, the diagram's
+ * A workflow's step-through: which hops each step lights, the 2D diagram's
  * wires, routed through the gutters of its grid so no wire crosses a box,
  * and the runner that keeps one step current, moved by Auto, the step bar
- * and the captions crossing the middle of the viewport.
+ * and the captions crossing the middle of the viewport, and reports it to
+ * the 3D board with "flowstep" events.
  */
 
 /**
@@ -461,8 +462,18 @@ export const AUTO_STEP_MS = 4500;
 const STEERING_MS = 1200;
 
 /**
+ * The detail of the "flowstep" event startFlow dispatches on its root: the
+ * current step's index with `all` false, or -1 with `all` true while every
+ * step is lit at once.
+ */
+export interface FlowStepDetail {
+  step: number;
+  all: boolean;
+}
+
+/**
  * Runs the step-through in `root`, a [data-workflow-steps] section holding
- * the diagram (.flow: its .flow-stage of [data-node] boxes and its
+ * the 2D diagram (.flow: its .flow-stage of [data-node] boxes and its
  * .flow-wires of .wire[data-from][data-to] groups, each holding
  * [data-shape="line"] and [data-shape="head"] paths), the diagram's column
  * (.flow-visual), the step bar (.step-bar) and the captions (ol.steps > li,
@@ -470,12 +481,13 @@ const STEERING_MS = 1200;
  * line path's --len to its length in px, and redraws them whenever the stage
  * or a box changes size.
  *
- * Under reduced motion it sets data-flow="all" on `root`, lights every node
- * and wire and leaves the step bar hidden. Otherwise it sets
- * data-flow="step", shows the step bar and keeps one step current: its
- * nodes and wires .lit, earlier steps' .passed, its caption
+ * Under reduced motion it sets data-flow="all" and data-step="-1" on `root`,
+ * lights every node and wire and leaves the step bar hidden. Otherwise it
+ * sets data-flow="step", shows the step bar and keeps one step current
+ * (data-step): its nodes and wires .lit, earlier steps' .passed, its caption
  * aria-current="step", and the step bar's readout, entry (.now-entry) and
- * keys (.bar-key) on it.
+ * keys (.bar-key) on it. It dispatches "flowstep" (FlowStepDetail) on `root`
+ * once it starts and on every change of step.
  *
  * Auto, on from the start, moves to the next step every AUTO_STEP_MS, from
  * the last step round to the first, while .flow-visual is in view and the
@@ -560,9 +572,14 @@ export function startFlow(
   for (const box of boxes) resize.observe(box);
   void document.fonts?.ready.then(() => draw());
 
+  const dispatch = (detail: FlowStepDetail) =>
+    root.dispatchEvent(new CustomEvent<FlowStepDetail>("flowstep", { detail }));
+
   if (reduceMotion) {
+    root.dataset.step = "-1";
     for (const box of boxes) box.classList.add("lit");
     for (const wire of wires) wire.classList.add("lit");
+    dispatch({ step: -1, all: true });
     return () => resize.disconnect();
   }
 
@@ -628,6 +645,8 @@ export function startFlow(
       if (index === step) key.setAttribute("aria-current", "step");
       else key.removeAttribute("aria-current");
     });
+    root.dataset.step = String(step);
+    dispatch({ step, all: false });
     if (auto.on) schedule();
   }
 

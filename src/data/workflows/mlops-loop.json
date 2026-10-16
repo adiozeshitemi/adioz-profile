@@ -8,98 +8,112 @@
       "label": "Feature engineering",
       "detail": "Shared definitions",
       "col": 0,
-      "row": 0
+      "row": 0,
+      "kind": "qfp"
     },
     {
       "id": "cache",
       "label": "Teacher cache",
       "detail": "Computed once on GPU",
       "col": 1,
-      "row": 0
+      "row": 0,
+      "kind": "memory"
     },
     {
       "id": "teachers",
       "label": "Teacher models",
       "detail": "Video, audio and text",
       "col": 2,
-      "row": 0
+      "row": 0,
+      "kind": "gpu"
     },
     {
       "id": "tune",
       "label": "Hyperparameter search",
       "detail": "Every run tracked",
       "col": 0,
-      "row": 1
+      "row": 1,
+      "kind": "trimmer"
     },
     {
       "id": "distill",
       "label": "Multi-teacher distillation",
       "detail": "One compact student",
       "col": 1,
-      "row": 1
+      "row": 1,
+      "kind": "die"
     },
     {
       "id": "quantize",
       "label": "Quantization-aware training",
       "detail": "Ready for INT8",
       "col": 1,
-      "row": 2
+      "row": 2,
+      "kind": "bga"
     },
     {
       "id": "evaluate",
       "label": "Evaluation",
       "detail": "Accuracy, F1, fairness",
       "col": 2,
-      "row": 2
+      "row": 2,
+      "kind": "socket"
     },
     {
       "id": "tenant",
       "label": "Tenant cloud",
       "detail": "Verifies, then loads",
       "col": 0,
-      "row": 3
+      "row": 3,
+      "kind": "rj45"
     },
     {
       "id": "hub",
       "label": "Model hub",
       "detail": "Registry and distribution",
       "col": 1,
-      "row": 3
+      "row": 3,
+      "kind": "radio"
     },
     {
       "id": "sign",
       "label": "Signed bundle",
       "detail": "INT8 weights, Ed25519",
       "col": 2,
-      "row": 3
+      "row": 3,
+      "kind": "secure"
     },
     {
       "id": "abtest",
       "label": "A/B test",
       "detail": "Share of traffic",
       "col": 0,
-      "row": 4
+      "row": 4,
+      "kind": "toggle"
     },
     {
       "id": "serve",
       "label": "CPU inference",
       "detail": "No GPU runtime",
       "col": 1,
-      "row": 4
+      "row": 4,
+      "kind": "cpu"
     },
     {
       "id": "monitor",
       "label": "Drift and latency monitoring",
       "detail": "Live health checks",
       "col": 2,
-      "row": 4
+      "row": 4,
+      "kind": "gauge"
     },
     {
       "id": "alert",
       "label": "Drift alert",
       "detail": "Starts the next loop",
       "col": 0,
-      "row": 5
+      "row": 5,
+      "kind": "beacon"
     }
   ],
   "edges": [
