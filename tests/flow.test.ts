@@ -1,15 +1,14 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { needleAngle } from "../src/scripts/gauges";
 import {
+  AUTO_STEP_MS,
   arrowHead,
-  dialTarget,
+  keyTarget,
   routeWires,
   startFlow,
   stepHops,
-  stepPosition,
-  stepTicks,
   wirePath,
+  wrapStep,
   type Box,
   type PlacedNode,
   type Point,
@@ -162,55 +161,52 @@ describe("wire drawing", () => {
   });
 });
 
-describe("the step dial", () => {
-  it("spreads one tick per step across the gauges' scale", () => {
-    expect(stepTicks(5)).toHaveLength(5);
-    expect(stepPosition(0, 5)).toBe(0);
-    expect(stepPosition(4, 5)).toBe(100);
-    expect(stepPosition(0, 1)).toBe(0);
-    const [first] = stepTicks(3);
-    const angle = (needleAngle(0) * Math.PI) / 180;
-    expect(first!.x1).toBeCloseTo(50 + 37 * Math.sin(angle), 1);
+describe("the step bar's moves", () => {
+  it("wraps a step past either end round to the other", () => {
+    expect(wrapStep(4, 4)).toBe(0);
+    expect(wrapStep(-1, 4)).toBe(3);
+    expect(wrapStep(2, 4)).toBe(2);
   });
 
-  it("moves with the arrow keys, Page Up and Down, Home and End, within the steps", () => {
-    expect(dialTarget("ArrowRight", 0, 4)).toBe(1);
-    expect(dialTarget("PageDown", 2, 4)).toBe(1);
-    expect(dialTarget("ArrowLeft", 0, 4)).toBe(0);
-    expect(dialTarget("End", 0, 4)).toBe(3);
-    expect(dialTarget("Home", 3, 4)).toBe(0);
-    expect(dialTarget("ArrowUp", 3, 4)).toBe(3);
-    expect(dialTarget("Enter", 0, 4)).toBeUndefined();
+  it("moves one step with ArrowLeft and ArrowRight and to the ends with Home and End, stopping at the ends", () => {
+    expect(keyTarget("ArrowRight", 0, 4)).toBe(1);
+    expect(keyTarget("ArrowLeft", 2, 4)).toBe(1);
+    expect(keyTarget("ArrowLeft", 0, 4)).toBe(0);
+    expect(keyTarget("ArrowRight", 3, 4)).toBe(3);
+    expect(keyTarget("End", 0, 4)).toBe(3);
+    expect(keyTarget("Home", 3, 4)).toBe(0);
+    expect(keyTarget("ArrowUp", 1, 4)).toBeUndefined();
+    expect(keyTarget("Enter", 0, 4)).toBeUndefined();
   });
 });
 
+/** An IntersectionObserver stand-in whose entries the tests deliver with `fire`. */
+class FakeObserver {
+  static all: FakeObserver[] = [];
+  targets: Element[] = [];
+  constructor(readonly callback: IntersectionObserverCallback) {
+    FakeObserver.all.push(this);
+  }
+  observe(target: Element) {
+    this.targets.push(target);
+  }
+  disconnect() {
+    this.targets = [];
+  }
+  fire(target: Element, isIntersecting: boolean) {
+    this.callback(
+      [{ target, isIntersecting } as unknown as IntersectionObserverEntry],
+      this as unknown as IntersectionObserver,
+    );
+  }
+}
+
 describe("startFlow", () => {
-  let spy: (index: number) => void = () => {};
   let stop: () => void = () => {};
 
   beforeEach(() => {
-    vi.stubGlobal(
-      "IntersectionObserver",
-      class {
-        targets: Element[] = [];
-        constructor(callback: IntersectionObserverCallback) {
-          spy = (index) =>
-            callback(
-              [
-                {
-                  isIntersecting: true,
-                  target: this.targets[index]!,
-                } as unknown as IntersectionObserverEntry,
-              ],
-              this as unknown as IntersectionObserver,
-            );
-        }
-        observe(target: Element) {
-          this.targets.push(target);
-        }
-        disconnect() {}
-      },
-    );
+    FakeObserver.all = [];
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
     vi.stubGlobal(
       "ResizeObserver",
       class {
@@ -237,11 +233,21 @@ describe("startFlow", () => {
               <div class="flow-node" data-node="c" data-col="1" data-row="1"></div>
             </div>
           </figure>
-          <div class="step-dial" hidden>
-            <button class="knob dial-prev"></button>
-            <div role="slider" data-of="of"><span class="dial-rotor"></span><svg class="dial-ticks"><line></line><line></line><line></line></svg></div>
-            <p class="dial-readout"><b>01</b></p>
-            <button class="knob dial-next"></button>
+          <div class="step-bar" hidden>
+            <button class="knob bar-prev"></button>
+            <p class="readout"><b>01</b></p>
+            <button class="auto-key" aria-pressed="false"></button>
+            <div class="now-step" aria-live="polite">
+              <div class="now-entry"><b>One</b></div>
+              <div class="now-entry" hidden><b>Two</b></div>
+              <div class="now-entry" hidden><b>Three</b></div>
+            </div>
+            <button class="knob bar-next"></button>
+            <ol class="bar-keys">
+              <li><button class="bar-key" aria-current="step">01</button></li>
+              <li><button class="bar-key">02</button></li>
+              <li><button class="bar-key">03</button></li>
+            </ol>
           </div>
         </div>
         <ol class="steps">
@@ -266,28 +272,50 @@ describe("startFlow", () => {
         toJSON() {},
       } as DOMRect);
     }
-    for (const item of document.querySelectorAll("li")) {
-      item.scrollIntoView = vi.fn();
-    }
+    for (const item of captions()) item.scrollIntoView = vi.fn();
   });
 
   afterEach(() => {
     stop();
+    stop = () => {};
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
   const root = () =>
     document.querySelector<HTMLElement>("[data-workflow-steps]")!;
+  const visual = () => document.querySelector<HTMLElement>(".flow-visual")!;
+  const bar = () => document.querySelector<HTMLElement>(".step-bar")!;
+  const captions = () => [
+    ...document.querySelectorAll<HTMLElement>("ol.steps > li"),
+  ];
+  const keys = () => [...document.querySelectorAll<HTMLElement>(".bar-key")];
+  const autoKey = () => document.querySelector<HTMLElement>(".auto-key")!;
+  const live = () => document.querySelector<HTMLElement>(".now-step")!;
   const lit = () =>
     [...document.querySelectorAll<HTMLElement>(".flow-node.lit")].map(
       (node) => node.dataset.node,
     );
-  const knob = () => document.querySelector<HTMLElement>("[role=slider]")!;
   const current = () =>
-    [...document.querySelectorAll("li")].findIndex((item) =>
-      item.hasAttribute("aria-current"),
-    );
+    captions().findIndex((item) => item.hasAttribute("aria-current"));
+  const click = (selector: string) =>
+    document.querySelector<HTMLElement>(selector)!.click();
+  const press = (key: string, target: Element = autoKey()) =>
+    target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+  const spy = () =>
+    FakeObserver.all.find((observer) =>
+      observer.targets.includes(captions()[0]!),
+    )!;
+  const view = () =>
+    FakeObserver.all.find((observer) => observer.targets.includes(visual()))!;
+  /** Delivers the observers' initial entries: no caption across the middle of the viewport, .flow-visual in view. */
+  const settle = () => {
+    for (const item of captions()) spy().fire(item, false);
+    view().fire(visual(), true);
+  };
+  /** A caption scrolled across the middle of the viewport. */
+  const scrollTo = (index: number) => spy().fire(captions()[index]!, true);
 
   it("draws every wire's line and head paths from the boxes' places, with the line's length as --len", () => {
     vi.spyOn(SVGPathElement.prototype, "getTotalLength").mockReturnValue(42.04);
@@ -308,31 +336,33 @@ describe("startFlow", () => {
     }
   });
 
-  it("lights every node and hop at once under reduced motion, without the dial", () => {
+  it("lights every node and wire under reduced motion and leaves the step bar hidden", () => {
     stop = startFlow(root(), true);
     expect(root().dataset.flow).toBe("all");
     expect(lit()).toEqual(["a", "b", "c"]);
     expect(document.querySelectorAll(".wire.lit")).toHaveLength(2);
-    expect(document.querySelector<HTMLElement>(".step-dial")!.hidden).toBe(
-      true,
-    );
+    expect(bar().hidden).toBe(true);
   });
 
-  it("starts on the first step and shows the dial", () => {
+  it("starts on the first step and shows the step bar on it", () => {
     stop = startFlow(root(), false);
     expect(root().dataset.flow).toBe("step");
     expect(lit()).toEqual(["a"]);
     expect(current()).toBe(0);
-    expect(document.querySelector<HTMLElement>(".step-dial")!.hidden).toBe(
-      false,
-    );
-    expect(knob().getAttribute("aria-valuenow")).toBe("1");
-    expect(knob().getAttribute("aria-valuetext")).toBe("1 of 3: One");
+    expect(bar().hidden).toBe(false);
+    expect(document.querySelector(".readout b")?.textContent).toBe("01");
+    expect(
+      [...document.querySelectorAll<HTMLElement>(".now-entry")].map(
+        (entry) => entry.hidden,
+      ),
+    ).toEqual([false, true, true]);
+    expect(keys()[0]!.getAttribute("aria-current")).toBe("step");
   });
 
-  it("lights the step whose caption crosses the middle, and the earlier steps' as passed", () => {
+  it("lights the step whose caption crosses the middle, the earlier steps' as passed, and moves the step bar to it", () => {
     stop = startFlow(root(), false);
-    spy(2);
+    settle();
+    scrollTo(2);
     expect(lit()).toEqual(["c"]);
     expect(current()).toBe(2);
     expect(
@@ -340,31 +370,208 @@ describe("startFlow", () => {
         (node) => node.dataset.node,
       ),
     ).toEqual(["a", "b"]);
-    const wires = [...document.querySelectorAll(".wire")];
-    expect(wires.map((wire) => wire.getAttribute("class"))).toEqual([
-      "wire passed",
-      "wire lit",
-    ]);
-    expect(document.querySelector(".dial-readout b")?.textContent).toBe("03");
     expect(
-      document.querySelector<HTMLElement>(".dial-rotor")!.style.transform,
-    ).toBe(`rotate(${needleAngle(100)}deg)`);
+      [...document.querySelectorAll(".wire")].map((wire) =>
+        wire.getAttribute("class"),
+      ),
+    ).toEqual(["wire passed", "wire lit"]);
+    expect(document.querySelector(".readout b")?.textContent).toBe("03");
+    expect(
+      [...document.querySelectorAll<HTMLElement>(".now-entry")].map(
+        (entry) => entry.hidden,
+      ),
+    ).toEqual([true, true, false]);
+    expect(
+      keys().map((key) => [
+        key.classList.contains("passed"),
+        key.getAttribute("aria-current"),
+      ]),
+    ).toEqual([
+      [true, null],
+      [true, null],
+      [false, "step"],
+    ]);
   });
 
-  it("turns with the dial's keys and knobs", () => {
+  it("moves with its knobs, which wrap round, and its keys, which stop at the ends", () => {
     stop = startFlow(root(), false);
-    knob().dispatchEvent(
-      new KeyboardEvent("keydown", { key: "End", bubbles: true }),
-    );
+    press("End");
     expect(current()).toBe(2);
-    document.querySelector<HTMLElement>(".dial-prev")!.click();
-    expect(current()).toBe(1);
-    document.querySelector<HTMLElement>(".dial-next")!.click();
-    document.querySelector<HTMLElement>(".dial-next")!.click();
+    press("ArrowRight");
     expect(current()).toBe(2);
-    knob().dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Home", bubbles: true }),
-    );
+    click(".bar-next");
+    expect(current()).toBe(0);
     expect(lit()).toEqual(["a"]);
+    click(".bar-prev");
+    expect(current()).toBe(2);
+    click(".bar-prev");
+    expect(current()).toBe(1);
+    press("Home");
+    press("ArrowLeft");
+    expect(current()).toBe(0);
+    press("ArrowUp");
+    press("Enter");
+    expect(current()).toBe(0);
+  });
+
+  it("moves to a step key's step, and keeps focus on the current key while the arrow keys move it", () => {
+    stop = startFlow(root(), false);
+    keys()[1]!.click();
+    expect(current()).toBe(1);
+    keys()[1]!.focus();
+    press("ArrowRight", keys()[1]!);
+    expect(current()).toBe(2);
+    expect(document.activeElement).toBe(keys()[2]);
+  });
+
+  it("scrolls a step chosen in the step bar to the middle of the viewport while the diagram is sticky, following only that caption until it arrives", () => {
+    stop = startFlow(root(), false);
+    settle();
+    keys()[2]!.click();
+    expect(captions()[2]!.scrollIntoView).not.toHaveBeenCalled();
+    visual().style.position = "sticky";
+    keys()[1]!.click();
+    expect(captions()[1]!.scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "center",
+    });
+    scrollTo(2);
+    expect(current()).toBe(1);
+    scrollTo(1);
+    scrollTo(0);
+    expect(current()).toBe(0);
+  });
+
+  describe("Auto", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    it("is on from the start with the step bar silent, and walks the steps once in view, from the last round to the first, without scrolling", () => {
+      visual().style.position = "sticky";
+      stop = startFlow(root(), false);
+      expect(autoKey().getAttribute("aria-pressed")).toBe("true");
+      expect(live().getAttribute("aria-live")).toBe("off");
+      vi.advanceTimersByTime(AUTO_STEP_MS * 2);
+      expect(current()).toBe(0);
+      settle();
+      vi.advanceTimersByTime(AUTO_STEP_MS - 1);
+      expect(current()).toBe(0);
+      vi.advanceTimersByTime(1);
+      expect(current()).toBe(1);
+      expect(keys()[1]!.getAttribute("aria-current")).toBe("step");
+      vi.advanceTimersByTime(AUTO_STEP_MS);
+      expect(current()).toBe(2);
+      vi.advanceTimersByTime(AUTO_STEP_MS);
+      expect(current()).toBe(0);
+      for (const item of captions()) {
+        expect(item.scrollIntoView).not.toHaveBeenCalled();
+      }
+    });
+
+    it("keeps running through the scroll spy's initial entries and the current step's caption", () => {
+      stop = startFlow(root(), false);
+      spy().fire(captions()[0]!, false);
+      spy().fire(captions()[1]!, true);
+      spy().fire(captions()[2]!, false);
+      view().fire(visual(), true);
+      expect(current()).toBe(1);
+      scrollTo(1);
+      expect(autoKey().getAttribute("aria-pressed")).toBe("true");
+      vi.advanceTimersByTime(AUTO_STEP_MS);
+      expect(current()).toBe(2);
+    });
+
+    it.each([
+      ["a step key", () => keys()[2]!.click(), 2],
+      ["the previous knob", () => click(".bar-prev"), 2],
+      ["the next knob", () => click(".bar-next"), 1],
+      ["ArrowRight", () => press("ArrowRight"), 1],
+      ["ArrowLeft", () => press("ArrowLeft"), 0],
+      ["Home", () => press("Home"), 0],
+      ["End", () => press("End"), 2],
+      ["a caption scrolled across the middle", () => scrollTo(2), 2],
+    ])("turns off and takes the reader's step from %s", (_, input, step) => {
+      stop = startFlow(root(), false);
+      settle();
+      input();
+      expect(current()).toBe(step);
+      expect(autoKey().getAttribute("aria-pressed")).toBe("false");
+      expect(live().getAttribute("aria-live")).toBe("polite");
+      vi.advanceTimersByTime(AUTO_STEP_MS * 3);
+      expect(current()).toBe(step);
+    });
+
+    it("turns off and on again from the current step with the Auto key", () => {
+      stop = startFlow(root(), false);
+      settle();
+      autoKey().click();
+      expect(autoKey().getAttribute("aria-pressed")).toBe("false");
+      expect(live().getAttribute("aria-live")).toBe("polite");
+      vi.advanceTimersByTime(AUTO_STEP_MS * 2);
+      expect(current()).toBe(0);
+      keys()[2]!.click();
+      autoKey().click();
+      expect(autoKey().getAttribute("aria-pressed")).toBe("true");
+      expect(live().getAttribute("aria-live")).toBe("off");
+      vi.advanceTimersByTime(AUTO_STEP_MS);
+      expect(current()).toBe(0);
+    });
+
+    it("stays on while a step bar choice scrolls its caption into place", () => {
+      visual().style.position = "sticky";
+      stop = startFlow(root(), false);
+      settle();
+      keys()[2]!.click();
+      autoKey().click();
+      scrollTo(1);
+      scrollTo(2);
+      expect(current()).toBe(2);
+      expect(autoKey().getAttribute("aria-pressed")).toBe("true");
+    });
+
+    it("holds while the diagram is out of view or the tab is hidden", () => {
+      stop = startFlow(root(), false);
+      settle();
+      vi.advanceTimersByTime(AUTO_STEP_MS - 1000);
+      view().fire(visual(), false);
+      vi.advanceTimersByTime(AUTO_STEP_MS * 3);
+      expect(current()).toBe(0);
+      view().fire(visual(), true);
+      vi.advanceTimersByTime(AUTO_STEP_MS);
+      expect(current()).toBe(1);
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        value: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      vi.advanceTimersByTime(AUTO_STEP_MS * 3);
+      expect(current()).toBe(1);
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        value: false,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      vi.advanceTimersByTime(AUTO_STEP_MS);
+      expect(current()).toBe(2);
+      delete (document as { hidden?: boolean }).hidden;
+    });
+
+    it("never runs under reduced motion", () => {
+      stop = startFlow(root(), true);
+      vi.advanceTimersByTime(AUTO_STEP_MS * 3);
+      expect(lit()).toEqual(["a", "b", "c"]);
+      expect(current()).toBe(-1);
+      expect(autoKey().getAttribute("aria-pressed")).toBe("false");
+    });
+
+    it("stops with the runner", () => {
+      stop = startFlow(root(), false);
+      settle();
+      stop();
+      vi.advanceTimersByTime(AUTO_STEP_MS * 3);
+      click(".bar-next");
+      expect(current()).toBe(0);
+    });
   });
 });

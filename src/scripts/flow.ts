@@ -1,10 +1,9 @@
 /*
- * A workflow's step-through diagram: which hops each step lights, the wires
- * between the nodes, routed through the gutters of the diagram's grid so no
- * wire crosses a box, and the runner that lights each step's nodes and hops
- * as its caption crosses the middle of the viewport or the step dial turns.
+ * A workflow's step-through: which hops each step lights, the diagram's
+ * wires, routed through the gutters of its grid so no wire crosses a box,
+ * and the runner that keeps one step current, moved by Auto, the step bar
+ * and the captions crossing the middle of the viewport.
  */
-import { needleAngle, scaleAt } from "./gauges";
 
 /**
  * The edges each step lights, as indexes into `edges`: an edge is lit by a
@@ -426,73 +425,83 @@ export function arrowHead(points: Point[], size = 7): string {
   return `M${round(tip[0])} ${round(tip[1])} L${round(bx - uy * wing)} ${round(by + ux * wing)} L${round(bx + uy * wing)} ${round(by - ux * wing)} Z`;
 }
 
-/** One tick of the step dial, in its 100 by 100 drawing: a step's mark on the 270deg scale. */
-export interface DialTick {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
+/** `step` wrapped into 0 to `count` - 1: past the last step is the first, before the first is the last. */
+export const wrapStep = (step: number, count: number) =>
+  ((step % count) + count) % count;
 
-/** The scale position (0 to 100) of step `index` among `count` steps. */
-export const stepPosition = (index: number, count: number) =>
-  count > 1 ? (index / (count - 1)) * 100 : 0;
-
-/** The step dial's ticks, one per step, across the gauges' 270deg scale. */
-export function stepTicks(count: number): DialTick[] {
-  return Array.from({ length: count }, (_, index) => {
-    const angle = (needleAngle(stepPosition(index, count)) * Math.PI) / 180;
-    return {
-      x1: round(50 + 37 * Math.sin(angle)),
-      y1: round(50 - 37 * Math.cos(angle)),
-      x2: round(50 + 45 * Math.sin(angle)),
-      y2: round(50 - 45 * Math.cos(angle)),
-    };
-  });
-}
-
-/** The step index a key moves the dial to from `current` among `count` steps, clamped; undefined for other keys. */
-export function dialTarget(key: string, current: number, count: number) {
-  const next = {
-    ArrowRight: current + 1,
-    ArrowUp: current + 1,
-    PageUp: current + 1,
+/**
+ * The step the step bar moves to from `current` among `count` steps on
+ * `key`: ArrowLeft and ArrowRight move one step, Home and End to the first
+ * and last, stopping at the ends; undefined for every other key.
+ */
+export function keyTarget(
+  key: string,
+  current: number,
+  count: number,
+): number | undefined {
+  const moves: Record<string, number> = {
     ArrowLeft: current - 1,
-    ArrowDown: current - 1,
-    PageDown: current - 1,
+    ArrowRight: current + 1,
     Home: 0,
     End: count - 1,
-  }[key];
+  };
+  const next = moves[key];
   return next === undefined
     ? undefined
     : Math.min(count - 1, Math.max(0, next));
 }
 
+/** Milliseconds Auto holds each step before it moves to the next. */
+export const AUTO_STEP_MS = 4500;
+
+/**
+ * Milliseconds after a step chosen in the step bar during which the scroll
+ * spy ignores every caption but that step's, while the page scrolls to it.
+ */
+const STEERING_MS = 1200;
+
 /**
  * Runs the step-through in `root`, a [data-workflow-steps] section holding
  * the diagram (.flow: its .flow-stage of [data-node] boxes and its
  * .flow-wires of .wire[data-from][data-to] groups, each holding
- * [data-shape="line"] and [data-shape="head"] paths), the step dial
- * (.step-dial) and the captions (ol.steps > li, each with data-lights and
- * data-hops). It draws every wire, setting each line path's --len to its
- * length in px, and redraws them whenever the stage or a box changes size.
- * Under reduced motion it sets data-flow="all" and lights every node
- * and hop at once; otherwise it sets data-flow="step", shows the dial, and
- * lights the current step's nodes and hops (.lit), the earlier steps'
- * (.passed) and the caption crossing the middle of the viewport
- * (aria-current="step"). The dial, its knobs and its keys move the step;
- * while the diagram is sticky they also scroll the step's caption to the
- * middle of the viewport. Returns a function that stops it.
+ * [data-shape="line"] and [data-shape="head"] paths), the diagram's column
+ * (.flow-visual), the step bar (.step-bar) and the captions (ol.steps > li,
+ * each with data-lights and data-hops). It draws every wire, setting each
+ * line path's --len to its length in px, and redraws them whenever the stage
+ * or a box changes size.
+ *
+ * Under reduced motion it sets data-flow="all" on `root`, lights every node
+ * and wire and leaves the step bar hidden. Otherwise it sets
+ * data-flow="step", shows the step bar and keeps one step current: its
+ * nodes and wires .lit, earlier steps' .passed, its caption
+ * aria-current="step", and the step bar's readout, entry (.now-entry) and
+ * keys (.bar-key) on it.
+ *
+ * Auto, on from the start, moves to the next step every AUTO_STEP_MS, from
+ * the last step round to the first, while .flow-visual is in view and the
+ * tab is shown, without scrolling the page; while it runs the step bar's
+ * live region (.now-step) is aria-live="off". A step chosen by the reader
+ * turns Auto off: a step key, a knob (.bar-prev, .bar-next, wrapping with
+ * wrapStep), ArrowLeft, ArrowRight, Home or End in the step bar (stopping at
+ * the ends, keyTarget), or a caption other than the current step's scrolled
+ * across the middle of the viewport (the scroll spy, which ignores each
+ * caption's initial entry and the STEERING_MS after a step bar choice). The
+ * Auto key (.auto-key, aria-pressed) turns Auto off and on, on again from
+ * the current step. A step chosen in the step bar while .flow-visual is
+ * sticky also scrolls its caption to the middle of the viewport. Returns a
+ * function that stops it.
  */
 export function startFlow(
   root: HTMLElement,
   reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches,
 ): () => void {
-  const stage = root.querySelector<HTMLElement>(".flow-stage");
-  const flow = root.querySelector<HTMLElement>(".flow");
   const items = [...root.querySelectorAll<HTMLLIElement>("ol.steps > li")];
-  if (!stage || !flow || items.length === 0) return () => {};
-  const boxes = [...stage.querySelectorAll<HTMLElement>("[data-node]")];
+  if (items.length === 0) return () => {};
+  const stage = root.querySelector<HTMLElement>(".flow-stage");
+  const visual = root.querySelector<HTMLElement>(".flow-visual") ?? root;
+  const boxes = [
+    ...(stage?.querySelectorAll<HTMLElement>("[data-node]") ?? []),
+  ];
   const wires = [
     ...root.querySelectorAll<SVGGElement>(
       ".flow-wires .wire[data-from][data-to]",
@@ -503,10 +512,12 @@ export function startFlow(
   const hops = items.map((item) =>
     (item.dataset.hops ?? "").split(" ").filter(Boolean).map(Number),
   );
-  const pad = () => parseFloat(getComputedStyle(stage).paddingTop) || 0;
+  const pad = () =>
+    stage ? parseFloat(getComputedStyle(stage).paddingTop) || 0 : 0;
 
   function draw() {
-    const origin = stage!.getBoundingClientRect();
+    if (!stage || boxes.length === 0) return;
+    const origin = stage.getBoundingClientRect();
     const placed = boxes.map((box) => {
       const rect = box.getBoundingClientRect();
       return {
@@ -545,7 +556,7 @@ export function startFlow(
   root.dataset.flow = reduceMotion ? "all" : "step";
   draw();
   const resize = new ResizeObserver(() => draw());
-  resize.observe(stage);
+  if (stage) resize.observe(stage);
   for (const box of boxes) resize.observe(box);
   void document.fonts?.ready.then(() => draw());
 
@@ -555,17 +566,39 @@ export function startFlow(
     return () => resize.disconnect();
   }
 
-  const dial = root.querySelector<HTMLElement>(".step-dial");
-  const knob = dial?.querySelector<HTMLElement>("[role=slider]");
-  const needle = dial?.querySelector<HTMLElement>(".dial-rotor");
-  const readout = dial?.querySelector<HTMLElement>(".dial-readout b");
-  const ticks = [
-    ...(dial?.querySelectorAll<SVGLineElement>(".dial-ticks line") ?? []),
-  ];
+  const bar = root.querySelector<HTMLElement>(".step-bar");
+  const readout = bar?.querySelector<HTMLElement>(".readout b");
+  const live = bar?.querySelector<HTMLElement>(".now-step");
+  const entries = [...(bar?.querySelectorAll<HTMLElement>(".now-entry") ?? [])];
+  const keys = [...(bar?.querySelectorAll<HTMLElement>(".bar-key") ?? [])];
+  const autoKey = bar?.querySelector<HTMLElement>(".auto-key");
   const count = items.length;
   let current = -1;
-  /** The step a dial turn is scrolling to; scroll-spy steps on the way are ignored until it arrives. */
+  /** The step a step bar choice is scrolling to; the scroll spy ignores every other caption until it arrives or `until` passes. */
   let steering: { step: number; until: number } | null = null;
+  /** Auto's state: whether it is on, whether .flow-visual is in view, and the timer of its next step. */
+  const auto: {
+    on: boolean;
+    inView: boolean;
+    timer?: ReturnType<typeof setTimeout>;
+  } = { on: true, inView: false };
+
+  /** Starts the timer of Auto's next step while Auto is on, .flow-visual is in view and the tab is shown, and clears it otherwise. */
+  function schedule() {
+    clearTimeout(auto.timer);
+    if (!auto.on || !auto.inView || document.hidden) return;
+    auto.timer = setTimeout(
+      () => show(wrapStep(current + 1, count)),
+      AUTO_STEP_MS,
+    );
+  }
+
+  /** Sets the Auto key's aria-pressed and the live region's aria-live from `auto.on`, then reschedules Auto. */
+  function showAuto() {
+    autoKey?.setAttribute("aria-pressed", String(auto.on));
+    live?.setAttribute("aria-live", auto.on ? "off" : "polite");
+    schedule();
+  }
 
   function show(step: number) {
     if (step === current) return;
@@ -586,56 +619,65 @@ export function startFlow(
       if (index === step) item.setAttribute("aria-current", "step");
       else item.removeAttribute("aria-current");
     });
-    ticks.forEach((tick, index) =>
-      tick.classList.toggle("passed", index <= step),
-    );
-    if (needle) {
-      needle.style.transform = `rotate(${needleAngle(stepPosition(step, count))}deg)`;
-    }
     if (readout) readout.textContent = String(step + 1).padStart(2, "0");
-    if (knob) {
-      knob.setAttribute("aria-valuenow", String(step + 1));
-      const title = items[step]!.querySelector("h3")?.textContent?.trim() ?? "";
-      knob.setAttribute(
-        "aria-valuetext",
-        `${step + 1} ${knob.dataset.of ?? "of"} ${count}: ${title}`,
-      );
-    }
+    entries.forEach((entry, index) => {
+      entry.hidden = index !== step;
+    });
+    keys.forEach((key, index) => {
+      key.classList.toggle("passed", index < step);
+      if (index === step) key.setAttribute("aria-current", "step");
+      else key.removeAttribute("aria-current");
+    });
+    if (auto.on) schedule();
   }
 
-  function go(step: number) {
+  /** A step chosen in the step bar: turns Auto off, shows `step` (clamped to the steps) and, while .flow-visual is sticky, scrolls its caption to the middle of the viewport. */
+  function choose(step: number) {
+    auto.on = false;
+    showAuto();
     const target = Math.min(count - 1, Math.max(0, step));
     show(target);
-    const sticky =
-      getComputedStyle(root.querySelector(".flow-visual") ?? flow!).position ===
-      "sticky";
-    if (!sticky) return;
-    steering = { step: target, until: performance.now() + 1200 };
+    if (getComputedStyle(visual).position !== "sticky") return;
+    steering = { step: target, until: performance.now() + STEERING_MS };
     items[target]!.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   show(0);
-  if (dial) dial.hidden = false;
+  if (bar) bar.hidden = false;
+  showAuto();
 
+  /** Captions whose initial entry the scroll spy has had. */
+  const seen = new WeakSet<Element>();
   const spy = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        const step = items.indexOf(entry.target as HTMLLIElement);
-        if (
-          steering &&
-          performance.now() < steering.until &&
-          step !== steering.step
-        ) {
+    (records) => {
+      for (const record of records) {
+        const initial = !seen.has(record.target);
+        seen.add(record.target);
+        if (!record.isIntersecting) continue;
+        const step = items.indexOf(record.target as HTMLLIElement);
+        if (steering && performance.now() < steering.until) {
+          if (step === steering.step) steering = null;
           continue;
         }
         steering = null;
+        if (step === current) continue;
+        if (!initial) {
+          auto.on = false;
+          showAuto();
+        }
         show(step);
       }
     },
     { rootMargin: "-45% 0px -50% 0px" },
   );
   for (const item of items) spy.observe(item);
+
+  const view = new IntersectionObserver((records) => {
+    auto.inView = records.at(-1)?.isIntersecting ?? false;
+    schedule();
+  });
+  view.observe(visual);
+  document.addEventListener("visibilitychange", schedule);
 
   const cleanups: (() => void)[] = [];
   const on = <K extends keyof HTMLElementEventMap>(
@@ -647,43 +689,32 @@ export function startFlow(
     target.addEventListener(type, listener);
     cleanups.push(() => target.removeEventListener(type, listener));
   };
-  on(dial?.querySelector<HTMLElement>(".dial-prev"), "click", () =>
-    go(current - 1),
+  on(bar?.querySelector<HTMLElement>(".bar-prev"), "click", () =>
+    choose(wrapStep(current - 1, count)),
   );
-  on(dial?.querySelector<HTMLElement>(".dial-next"), "click", () =>
-    go(current + 1),
+  on(bar?.querySelector<HTMLElement>(".bar-next"), "click", () =>
+    choose(wrapStep(current + 1, count)),
   );
-  on(knob, "keydown", (event) => {
-    const next = dialTarget(event.key, current, count);
-    if (next === undefined) return;
+  keys.forEach((key, index) => on(key, "click", () => choose(index)));
+  on(autoKey, "click", () => {
+    auto.on = !auto.on;
+    showAuto();
+  });
+  on(bar, "keydown", (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const step = keyTarget(event.key, current, count);
+    if (step === undefined) return;
     event.preventDefault();
-    go(next);
-  });
-  let dragging = false;
-  const turnTo = (event: PointerEvent) => {
-    const face = knob!.getBoundingClientRect();
-    const position = scaleAt(face, event.clientX, event.clientY);
-    const step = Math.round((position / 100) * (count - 1));
-    if (step !== current) go(step);
-  };
-  on(knob, "pointerdown", (event) => {
-    dragging = true;
-    knob!.setPointerCapture?.(event.pointerId);
-    turnTo(event);
-  });
-  on(knob, "pointermove", (event) => {
-    if (dragging) turnTo(event);
-  });
-  on(knob, "pointerup", () => {
-    dragging = false;
-  });
-  on(knob, "pointercancel", () => {
-    dragging = false;
+    choose(step);
+    if (keys.includes(event.target as HTMLElement)) keys[step]?.focus();
   });
 
   return () => {
+    clearTimeout(auto.timer);
     spy.disconnect();
+    view.disconnect();
     resize.disconnect();
+    document.removeEventListener("visibilitychange", schedule);
     for (const cleanup of cleanups) cleanup();
   };
 }

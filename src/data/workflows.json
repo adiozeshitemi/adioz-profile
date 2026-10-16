@@ -15,7 +15,6 @@
     "problem": "The problem",
     "steps": "Step by step",
     "failure": "What can go wrong:",
-    "hops": "Hops:",
     "compensations": {
       "title": "Weak points and compensations",
       "weakness": "Weak point",
@@ -28,11 +27,12 @@
       "url": "#workflows",
       "icon": "arrow-left"
     },
-    "dial": {
-      "label": "Step",
+    "bar": {
       "of": "of",
       "previous": "Previous step",
-      "next": "Next step"
+      "next": "Next step",
+      "auto": "Auto",
+      "steps": "Steps"
     },
     "diagram": "Diagram of the workflow's parts and the hops between them"
   }

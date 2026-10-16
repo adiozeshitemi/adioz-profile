@@ -362,8 +362,6 @@ export interface WorkflowPageLabels {
   steps: string;
   /** Words before a step's failure mode, e.g. "What can go wrong:". */
   failure: string;
-  /** Words before a step's lit hops, e.g. "Hops:". */
-  hops: string;
   /** Heading over `Workflow.compensations`, and the words before each weak point and its compensation. */
   compensations: { title: string; weakness: string; compensation: string };
   /** Heading over `Workflow.tradeoffs`, e.g. "Trade-offs". */
@@ -372,8 +370,18 @@ export interface WorkflowPageLabels {
   stack: string;
   /** The link back to the home page's workflows section; its url is that section's `#id`. */
   back: LinkItem;
-  /** The step dial: its accessible name, the words between step number and count, and the step knobs' names. */
-  dial: { label: string; of: string; previous: string; next: string };
+  /**
+   * The step bar: the words between the step number and the count (e.g.
+   * "of"), the step knobs' names, the Auto key's label, and the step keys'
+   * list name (e.g. "Steps").
+   */
+  bar: {
+    of: string;
+    previous: string;
+    next: string;
+    auto: string;
+    steps: string;
+  };
   /** The diagram's (figure.flow) accessible name, e.g. "Diagram of the workflow's parts and the hops between them". */
   diagram: string;
 }

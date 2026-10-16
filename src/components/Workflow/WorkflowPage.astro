@@ -7,12 +7,14 @@
  * compensations when the workflow names any, the trade-offs and the stack,
  * then a port back to the home page's workflows section.
  *
- * The step-through ([data-workflow-steps]) holds the gold-inlay diagram and
- * its step dial beside the captions, an ordered list of every step with its
- * text, its lit hops and its failure mode. Without JavaScript only the list
+ * The step-through ([data-workflow-steps]) holds the diagram's column
+ * (.flow-visual) beside the captions, an ordered list of every step with its
+ * text and its failure mode, each item carrying the parts and edges its step
+ * lights in data-lights and data-hops. The column holds the gold-inlay
+ * diagram (figure.flow) over the step bar. Without JavaScript only the list
  * shows, in one column; src/scripts/flow.ts sets data-flow, which shows the
- * diagram, sticky beside the list from 1080px on screens at least 760px
- * tall, and above it otherwise.
+ * column, sticky beside the list from 1080px on screens at least 760px tall,
+ * and above it otherwise.
  */
 import { sectionNumber, workflows } from "../../data/index";
 import type { Workflow } from "../../data/types";
@@ -22,7 +24,7 @@ import Panel from "../UI/Panel.astro";
 import Port from "../UI/Port.astro";
 import Tag from "../UI/Tag.astro";
 import FlowDiagram from "./FlowDiagram.astro";
-import StepDial from "./StepDial.astro";
+import StepBar from "./StepBar.astro";
 
 interface Props {
   workflow: Workflow;
@@ -32,8 +34,6 @@ const { workflow } = Astro.props;
 const { page } = workflows;
 const number = String(sectionNumber(workflows.id)).padStart(2, "0");
 const hops = stepHops(workflow.steps, workflow.edges);
-const labelOf = (id: string) =>
-  workflow.nodes.find((node) => node.id === id)?.label ?? id;
 const pad = (value: number) => String(value).padStart(2, "0");
 ---
 
@@ -87,11 +87,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
           nodes={workflow.nodes}
           edges={workflow.edges}
         />
-        <StepDial
-          count={workflow.steps.length}
-          first={workflow.steps[0]!.title}
-          labels={page.dial}
-        />
+        <StepBar workflow={workflow} labels={page.bar} />
       </div>
       <ol class="steps">
         {workflow.steps.map((step, index) => (
@@ -107,20 +103,6 @@ const pad = (value: number) => String(value).padStart(2, "0");
             <p class="step-text">
               <Emphasis text={step.text} />
             </p>
-            {hops[index]!.length > 0 && (
-              <p class="step-hops">
-                <span class="step-key">{page.hops}</span>{" "}
-                {hops[index]!.map((edgeIndex, position) => {
-                  const edge = workflow.edges[edgeIndex]!;
-                  return (
-                    <>
-                      {position > 0 && "; "}
-                      {labelOf(edge.from)} → {labelOf(edge.to)} ({edge.label})
-                    </>
-                  );
-                })}
-              </p>
-            )}
             {step.failure && (
               <p class="step-failure">
                 <span class="step-key">{page.failure}</span>{" "}
@@ -295,8 +277,8 @@ const pad = (value: number) => String(value).padStart(2, "0");
 
   /*
    * The step-through: the captions alone in one column until flow.ts sets
-   * data-flow; then the diagram and its dial (.flow-visual) sit above them,
-   * and from 1080px beside them, sticky under the header while the captions
+   * data-flow; then the diagram's column (.flow-visual) sits above them, and
+   * from 1080px beside them, sticky under the header while the captions
    * scroll on screens at least 760px tall.
    */
   .step-through {
@@ -309,7 +291,9 @@ const pad = (value: number) => String(value).padStart(2, "0");
   }
 
   :global([data-flow]) > .step-through .flow-visual {
-    display: block;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
   }
 
   @media (width >= 67.5rem) {
@@ -329,9 +313,9 @@ const pad = (value: number) => String(value).padStart(2, "0");
 
   /*
    * The captions: each step numbered on an engraved plate, its title, its
-   * text, its lit hops in mono and its failure mode in --ember. The current
-   * step (aria-current="step") is lit gold from the left; with the diagram
-   * shown, the others dim so the current one reads first.
+   * text and its failure mode in --ember. The current step
+   * (aria-current="step") is lit gold from the left; with the diagram shown,
+   * the others dim so the current one reads first.
    */
   .steps {
     display: grid;
@@ -389,34 +373,17 @@ const pad = (value: number) => String(value).padStart(2, "0");
     line-height: 1.65;
   }
 
-  .step-hops,
   .step-failure {
     margin: 12px 0 0;
+    color: var(--body);
     font-size: 13.5px;
     line-height: 1.55;
   }
 
-  .step-hops {
-    color: var(--label);
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-  }
-
-  .step-failure {
-    color: var(--body);
-  }
-
   .step-key {
     margin-right: 6px;
-    font-weight: 600;
-  }
-
-  .step-hops .step-key {
-    color: var(--gold-text);
-  }
-
-  .step-failure .step-key {
     color: var(--ember);
+    font-weight: 600;
   }
 
   /*

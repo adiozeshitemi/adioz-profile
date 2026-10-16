@@ -77,7 +77,7 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     }
   });
 
-  it("lists every step in order, with its hops and failure mode, readable without JavaScript", async () => {
+  it("lists every step in order, with its failure mode and its lit parts and hops as data, readable without JavaScript", async () => {
     const doc = await renderPage(workflow, Page);
     const items = [...doc.querySelectorAll("ol.steps > li")];
     expect(items.map((item) => text(item.querySelector("h3")))).toEqual(
@@ -89,9 +89,7 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
       expect(item.closest("[hidden]")).toBeNull();
       expect(item.getAttribute("data-lights")).toBe(step.lights.join(" "));
       expect(item.getAttribute("data-hops")).toBe(hops[index]!.join(" "));
-      expect(item.querySelectorAll(".step-hops").length).toBe(
-        hops[index]!.length > 0 ? 1 : 0,
-      );
+      expect(item.querySelectorAll("p").length).toBe(step.failure ? 2 : 1);
       expect(text(item.querySelector(".step-failure"))).toBe(
         step.failure ? `${workflows.page.failure} ${step.failure}` : "",
       );
@@ -146,19 +144,65 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     );
   });
 
-  it("renders the step dial hidden, as a slider across the steps", async () => {
+  it("renders the step bar hidden on step 1, with its knobs, Auto key, step entries and step keys", async () => {
     const doc = await renderPage(workflow, Page);
-    const dial = doc.querySelector<HTMLElement>(".step-dial")!;
-    expect(dial.hasAttribute("hidden")).toBe(true);
-    const slider = dial.querySelector("[role=slider]")!;
-    expect(slider.getAttribute("aria-valuemax")).toBe(
-      String(workflow.steps.length),
+    const { bar: labels } = workflows.page;
+    const count = workflow.steps.length;
+    const bar = doc.querySelector<HTMLElement>(".flow-visual > .step-bar")!;
+    expect(bar.hasAttribute("hidden")).toBe(true);
+    expect(bar.querySelector(".bar-prev")?.getAttribute("aria-label")).toBe(
+      labels.previous,
     );
-    expect(slider.getAttribute("aria-valuetext")).toBe(
-      `1 ${workflows.page.dial.of} ${workflow.steps.length}: ${workflow.steps[0]!.title}`,
+    expect(bar.querySelector(".bar-next")?.getAttribute("aria-label")).toBe(
+      labels.next,
     );
-    expect(dial.querySelectorAll(".dial-ticks line")).toHaveLength(
-      workflow.steps.length,
+    const auto = bar.querySelector(".auto-key")!;
+    expect(auto.getAttribute("aria-pressed")).toBe("false");
+    expect(text(auto)).toBe(labels.auto);
+    const readout = bar.querySelector(".readout")!;
+    expect(readout.getAttribute("aria-hidden")).toBe("true");
+    expect(text(readout.querySelector("b"))).toBe("01");
+    expect(text(readout.querySelector("small"))).toBe(
+      `${labels.of} ${pad(count)}`,
+    );
+    const live = bar.querySelector(".now-step")!;
+    expect(live.getAttribute("aria-live")).toBe("polite");
+    const hops = stepHops(workflow.steps, workflow.edges);
+    const entries = [...live.querySelectorAll(":scope > .now-entry")];
+    expect(entries.map((entry) => entry.hasAttribute("hidden"))).toEqual(
+      workflow.steps.map((_, index) => index > 0),
+    );
+    entries.forEach((entry, index) => {
+      const step = workflow.steps[index]!;
+      expect(text(entry.querySelector(".now-title"))).toBe(
+        `${index + 1} ${labels.of} ${count}: ${step.title}`,
+      );
+      expect(
+        [...entry.querySelectorAll(".now-parts > li")].map((part) => [
+          text(part.querySelector("b")),
+          text(part.querySelector("span")),
+        ]),
+      ).toEqual(
+        step.lights.map((id) => {
+          const node = workflow.nodes.find((each) => each.id === id)!;
+          return [node.label, node.detail];
+        }),
+      );
+      expect(text(entry.querySelector(".now-hops"))).toBe(
+        hops[index]!.map((edge) => workflow.edges[edge]!.label).join(" → "),
+      );
+    });
+    const list = bar.querySelector("ol.bar-keys")!;
+    expect(list.getAttribute("aria-label")).toBe(labels.steps);
+    const keys = [...list.querySelectorAll(":scope > li > button.bar-key")];
+    expect(keys.map((key) => key.getAttribute("type"))).toEqual(
+      workflow.steps.map(() => "button"),
+    );
+    expect(keys.map((key) => text(key))).toEqual(
+      workflow.steps.map((step, index) => `${pad(index + 1)} ${step.title}`),
+    );
+    expect(keys.map((key) => key.getAttribute("aria-current"))).toEqual(
+      workflow.steps.map((_, index) => (index === 0 ? "step" : null)),
     );
   });
 
