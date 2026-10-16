@@ -1,0 +1,587 @@
+---
+/*
+ * One workflow's page body: its title block (the workflows section's
+ * numbered eyebrow, the title in gold, the summary, and for a peer's
+ * workflow a "Contributed by" credit with its author's name and links), the
+ * problem on a machined panel, the step-through, the weak points and their
+ * compensations when the workflow names any, the trade-offs and the stack,
+ * then a port back to the home page's workflows section.
+ *
+ * The step-through ([data-workflow-steps]) holds the diagram window and its
+ * step dial beside the captions, an ordered list of every step with its
+ * text, its lit hops and its failure mode. Without JavaScript only the list
+ * shows, in one column; src/scripts/flow.ts sets data-flow, which shows the
+ * diagram, sticky beside the list from 1080px on screens at least 760px
+ * tall, and above it otherwise.
+ */
+import { sectionNumber, workflows } from "../../data/index";
+import type { Workflow } from "../../data/types";
+import { stepHops } from "../../scripts/flow";
+import Emphasis from "../UI/Emphasis.astro";
+import Panel from "../UI/Panel.astro";
+import Port from "../UI/Port.astro";
+import Tag from "../UI/Tag.astro";
+import FlowDiagram from "./FlowDiagram.astro";
+import StepDial from "./StepDial.astro";
+
+interface Props {
+  workflow: Workflow;
+}
+
+const { workflow } = Astro.props;
+const { page, counts } = workflows;
+const number = String(sectionNumber(workflows.id)).padStart(2, "0");
+const hops = stepHops(workflow.steps, workflow.edges);
+const labelOf = (id: string) =>
+  workflow.nodes.find((node) => node.id === id)?.label ?? id;
+const pad = (value: number) => String(value).padStart(2, "0");
+---
+
+<article class="workflow">
+  <header class="head">
+    <p class="eyebrow">
+      <span class="eyebrow-no">{number}</span>
+      {workflows.label}
+    </p>
+    <h1 class="h2">
+      <span class="gilt">{workflow.title}</span>
+    </h1>
+    <p class="lede">
+      <Emphasis text={workflow.summary} />
+    </p>
+    {workflow.author && (
+      <div class="credit">
+        <p class="credit-label">{workflows.contributedBy}</p>
+        <p class="credit-name">{workflow.author.name}</p>
+        <ul class="credit-links">
+          {workflow.author.links.map((link) => (
+            <li>
+              <Port link={link} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </header>
+
+  <Panel as="section" class="problem" aria-labelledby="workflow-problem">
+    <h2 id="workflow-problem" class="part-title">
+      {page.problem}
+    </h2>
+    <p>
+      <Emphasis text={workflow.problem} />
+    </p>
+  </Panel>
+
+  <section
+    class="steps-part"
+    aria-labelledby="workflow-steps"
+    data-workflow-steps
+  >
+    <h2 id="workflow-steps" class="part-title">
+      {page.steps}
+    </h2>
+    <div class="step-through">
+      <div class="flow-visual">
+        <FlowDiagram
+          name={`adioz — ${workflow.slug}.flow`}
+          meta={`${workflow.nodes.length} ${counts.nodes} · ${workflow.edges.length} ${counts.hops}`}
+          label={page.diagram}
+          live={page.live}
+          nodes={workflow.nodes}
+          edges={workflow.edges}
+        />
+        <StepDial
+          count={workflow.steps.length}
+          first={workflow.steps[0]!.title}
+          labels={page.dial}
+        />
+      </div>
+      <ol class="steps">
+        {workflow.steps.map((step, index) => (
+          <li
+            id={`workflow-step-${index + 1}`}
+            data-lights={step.lights.join(" ")}
+            data-hops={hops[index]!.join(" ")}
+          >
+            <span class="step-no eyebrow-no" aria-hidden="true">
+              {pad(index + 1)}
+            </span>
+            <h3>{step.title}</h3>
+            <p class="step-text">
+              <Emphasis text={step.text} />
+            </p>
+            {hops[index]!.length > 0 && (
+              <p class="step-hops">
+                <span class="step-key">{page.hops}</span>
+                {hops[index]!.map((edgeIndex, position) => {
+                  const edge = workflow.edges[edgeIndex]!;
+                  return (
+                    <>
+                      {position > 0 && "; "}
+                      {labelOf(edge.from)} → {labelOf(edge.to)} ({edge.label})
+                    </>
+                  );
+                })}
+              </p>
+            )}
+            {step.failure && (
+              <p class="step-failure">
+                <span class="step-key">{page.failure}</span>
+                <Emphasis text={step.failure} />
+              </p>
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  {workflow.compensations && workflow.compensations.length > 0 && (
+    <Panel
+      as="section"
+      class="compensations"
+      aria-labelledby="workflow-compensations"
+    >
+      <h2 id="workflow-compensations" class="part-title">
+        {page.compensations.title}
+      </h2>
+      <ul>
+        {workflow.compensations.map((item) => (
+          <li>
+            <p class="weakness">
+              <span class="comp-key">{page.compensations.weakness}</span>
+              <Emphasis text={item.weakness} />
+            </p>
+            <span class="comp-arrow" aria-hidden="true"></span>
+            <p class="compensation">
+              <span class="comp-key">{page.compensations.compensation}</span>
+              <Emphasis text={item.compensation} />
+            </p>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  )}
+
+  <Panel as="section" class="tradeoffs" aria-labelledby="workflow-tradeoffs">
+    <h2 id="workflow-tradeoffs" class="part-title">
+      {page.tradeoffs}
+    </h2>
+    <ul>
+      {workflow.tradeoffs.map((tradeoff) => (
+        <li>
+          <Emphasis text={tradeoff} />
+        </li>
+      ))}
+    </ul>
+  </Panel>
+
+  <section class="stack" aria-labelledby="workflow-stack">
+    <h2 id="workflow-stack" class="part-title">
+      {page.stack}
+    </h2>
+    <ul class="tags">
+      {workflow.stack.map((tool) => (
+        <Tag as="li">{tool}</Tag>
+      ))}
+    </ul>
+  </section>
+
+  <p class="back">
+    <Port link={{ ...page.back, url: `/${page.back.url}` }} />
+  </p>
+</article>
+
+<script>
+  import { startFlow } from "../../scripts/flow";
+
+  const root = document.querySelector<HTMLElement>("[data-workflow-steps]");
+  if (root) startFlow(root);
+</script>
+
+<style>
+  /*
+   * The page: one column as wide as the home sections, under room for the
+   * brand mark that hangs below the header while the page is at its top.
+   */
+  .workflow {
+    display: grid;
+    gap: clamp(40px, 6vw, 72px);
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding: 72px 28px clamp(84px, 10vw, 140px);
+  }
+
+  .head {
+    max-width: 68ch;
+  }
+
+  .head .h2 {
+    margin-bottom: 18px;
+  }
+
+  .lede {
+    margin: 0;
+    color: var(--body);
+    font-size: clamp(16px, 1.4vw, 18px);
+    line-height: 1.72;
+  }
+
+  .credit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin: 24px 0 0;
+  }
+
+  .credit-label {
+    margin: 0;
+    color: var(--label);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .credit-name {
+    margin: 0;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .credit-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* A part's heading: gold spaced capitals led by a short gold rule. */
+  .part-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 20px;
+    color: var(--gold-text);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .part-title::before {
+    content: "";
+    width: 22px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .workflow :global(.panel.problem),
+  .workflow :global(.panel.compensations),
+  .workflow :global(.panel.tradeoffs) {
+    padding: 28px 32px 30px;
+    border-radius: 22px;
+  }
+
+  .problem p {
+    max-width: 72ch;
+    margin: 0;
+    color: var(--body);
+    font-size: 16.5px;
+    line-height: 1.7;
+  }
+
+  /*
+   * The step-through: the captions alone in one column until flow.ts sets
+   * data-flow; then the diagram and its dial (.flow-visual) sit above them,
+   * and from 1080px beside them, sticky under the header while the captions
+   * scroll on screens at least 760px tall.
+   */
+  .step-through {
+    display: grid;
+    gap: 32px;
+  }
+
+  .flow-visual {
+    display: none;
+  }
+
+  :global([data-flow]) > .step-through .flow-visual {
+    display: block;
+  }
+
+  @media (width >= 67.5rem) {
+    :global([data-flow]) > .step-through {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 48px;
+    }
+  }
+
+  @media (width >= 67.5rem) and (height >= 47.5rem) {
+    :global([data-flow]) > .step-through .flow-visual {
+      position: sticky;
+      top: calc(var(--spacing-header) + 16px);
+    }
+  }
+
+  /*
+   * The captions: each step numbered on an engraved plate, its title, its
+   * text, its lit hops in mono and its failure mode in --ember. The current
+   * step (aria-current="step") is lit gold from the left; with the diagram
+   * shown, the others dim so the current one reads first.
+   */
+  .steps {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .steps li {
+    position: relative;
+    padding: 20px 22px 22px 64px;
+    border-radius: 16px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    transition:
+      background-color 0.35s var(--ease-soft),
+      box-shadow 0.35s var(--ease-soft),
+      opacity 0.35s var(--ease-soft);
+  }
+
+  :global([data-flow="step"]) .steps li:not([aria-current]) {
+    opacity: 0.62;
+  }
+
+  .steps li[aria-current="step"] {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--particle-gold) / 0.1),
+      transparent 70%
+    );
+    box-shadow:
+      inset 2px 0 0 var(--gold-text),
+      inset 0 0 0 1px var(--line);
+  }
+
+  .step-no {
+    position: absolute;
+    top: 20px;
+    left: 18px;
+  }
+
+  .steps h3 {
+    margin: 2px 0 8px;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .step-text {
+    margin: 0;
+    color: var(--body);
+    font-size: 15.5px;
+    line-height: 1.65;
+  }
+
+  .step-hops,
+  .step-failure {
+    margin: 12px 0 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .step-hops {
+    color: var(--label);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  .step-failure {
+    color: var(--body);
+  }
+
+  .step-key {
+    margin-right: 6px;
+    font-weight: 600;
+  }
+
+  .step-hops .step-key {
+    color: var(--gold-text);
+  }
+
+  .step-failure .step-key {
+    color: var(--ember);
+  }
+
+  /*
+   * Weak points and compensations: each row a weak point, labelled in
+   * --ember, then a gold arrow to its compensation, labelled in
+   * --gold-text; rows split by --line rules, and stacked without the arrow
+   * below 860px.
+   */
+  .compensations ul {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .compensations li {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) 34px minmax(0, 1.15fr);
+    align-items: start;
+    gap: 12px 18px;
+    padding: 18px 0;
+  }
+
+  .compensations li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .compensations li:first-child {
+    padding-top: 4px;
+  }
+
+  .compensations li:last-child {
+    padding-bottom: 0;
+  }
+
+  .weakness,
+  .compensation {
+    margin: 0;
+    color: var(--body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .comp-key {
+    display: block;
+    margin-bottom: 4px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .weakness .comp-key {
+    color: var(--ember);
+  }
+
+  .compensation .comp-key {
+    color: var(--gold-text);
+  }
+
+  .compensation :global(strong) {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* The arrow: a gold rule ending in a chevron, level with the labels. */
+  .comp-arrow {
+    position: relative;
+    height: 1px;
+    margin-top: 9px;
+    background: linear-gradient(90deg, transparent, var(--gold-text));
+  }
+
+  .comp-arrow::after {
+    content: "";
+    position: absolute;
+    top: -3.5px;
+    right: 0;
+    width: 7px;
+    height: 7px;
+    border-top: 1px solid var(--gold-text);
+    border-right: 1px solid var(--gold-text);
+    transform: rotate(45deg);
+  }
+
+  @media (width <= 53.75rem) {
+    .compensations li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .comp-arrow {
+      display: none;
+    }
+  }
+
+  /* Trade-offs, each led by a short gold rule. */
+  .tradeoffs ul {
+    display: grid;
+    gap: 12px;
+    max-width: 76ch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tradeoffs li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--body);
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+
+  .tradeoffs li::before {
+    content: "";
+    position: absolute;
+    top: 0.8em;
+    left: 0;
+    width: 10px;
+    height: 1px;
+    background: var(--gold-text);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .back {
+    margin: 0;
+  }
+
+  @media (width <= 40rem) {
+    .workflow {
+      padding-inline: 16px;
+    }
+
+    .workflow :global(.panel.problem),
+    .workflow :global(.panel.compensations),
+    .workflow :global(.panel.tradeoffs) {
+      padding: 22px 20px 24px;
+    }
+
+    .steps li {
+      padding: 18px 16px 20px 56px;
+    }
+
+    .step-no {
+      left: 12px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .steps li {
+      transition: none;
+    }
+  }
+</style>

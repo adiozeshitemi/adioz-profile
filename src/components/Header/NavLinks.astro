@@ -1,12 +1,24 @@
 ---
 import { navigation } from "../../data/index";
+
+interface Props {
+  /** Prefix for every link's url: "" on the home page, "/" elsewhere. */
+  base?: string;
+  /** The url of the link to mark aria-current, e.g. "#workflows". */
+  current?: string;
+}
+
+const { base = "", current } = Astro.props;
 ---
 
 <ul class="rail">
   <li class="rail-plate" aria-hidden="true"></li>
   {navigation.links.map((link) => (
     <li>
-      <a href={link.url}>
+      <a
+        href={`${base}${link.url}`}
+        aria-current={link.url === current ? "true" : undefined}
+      >
         <span class="key-cap">{link.title}</span>
       </a>
     </li>

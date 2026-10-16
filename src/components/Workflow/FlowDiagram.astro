@@ -1,0 +1,405 @@
+---
+/*
+ * A step-through diagram in a smoked gunmetal window, dark in both themes
+ * like the career trace: a title bar with three steel studs, the engraved
+ * name, the part and hop counts and the red live lamp; under it the stage,
+ * a grid of engraved boxes (one per node, in its `col` and `row` cell) over
+ * the wires between them. The wires' paths are drawn by
+ * src/scripts/flow.ts from the boxes' measured places; the window is named
+ * for assistive technology by `label`, and its parts are hidden from it,
+ * since the step captions carry the same content.
+ */
+import type { WorkflowEdge, WorkflowNode } from "../../data/types";
+import Lamp from "../UI/Lamp.astro";
+
+interface Props {
+  /** The engraved name in the title bar, e.g. "adioz — mlops-loop.flow". */
+  name: string;
+  /** The title bar's counts, e.g. "14 parts · 15 hops". */
+  meta: string;
+  /** The window's accessible name. */
+  label: string;
+  /** The word on the live lamp, e.g. "live". */
+  live: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+}
+
+const { name, meta, label, live, nodes, edges } = Astro.props;
+const cols = Math.max(...nodes.map((node) => node.col)) + 1;
+const rows = Math.max(...nodes.map((node) => node.row)) + 1;
+const titleOf = (id: string) =>
+  nodes.find((node) => node.id === id)?.label ?? id;
+---
+
+<figure class="flow slab slab-dark" role="img" aria-label={label}>
+  <div class="flow-bar">
+    <span class="studs">
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <span class="flow-name engraved">{name}</span>
+    <span class="flow-meta engraved">{meta}</span>
+    <span class="flow-live">
+      <Lamp variant="live" />
+      <span class="engraved">{live}</span>
+    </span>
+  </div>
+  <div class="flow-stage" style={`--cols: ${cols}; --rows: ${rows}`}>
+    <svg class="flow-wires" aria-hidden="true">
+      {edges.map((edge) => (
+        <g class="wire" data-from={edge.from} data-to={edge.to}>
+          <title>
+            {titleOf(edge.from)} → {titleOf(edge.to)}: {edge.label}
+          </title>
+          <path class="wire-line"></path>
+          <path class="wire-head"></path>
+        </g>
+      ))}
+    </svg>
+    {nodes.map((node) => (
+      <div
+        class="flow-node"
+        data-node={node.id}
+        data-col={node.col}
+        data-row={node.row}
+        style={`grid-column: ${node.col + 1}; grid-row: ${node.row + 1}`}
+      >
+        <b>{node.label}</b>
+        <small>{node.detail}</small>
+      </div>
+    ))}
+  </div>
+</figure>
+
+<style>
+  /*
+   * The window: the career trace's smoked gunmetal (.slab-dark keeps the
+   * dark slab wall on the light theme), so every colour inside it is fixed.
+   */
+  .flow {
+    overflow: hidden;
+    margin: 0;
+    border-radius: 18px;
+    background: linear-gradient(
+      190deg,
+      rgb(14 16 20 / 0.92),
+      rgb(8 9 11 / 0.96)
+    );
+    box-shadow:
+      0 0 0 1px rgb(214 222 232 / 0.08),
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.08),
+      var(--slab-wall),
+      var(--slab-drop);
+    color: #c9cfd7;
+  }
+
+  /* The title bar: brushed gunmetal with three steel studs set with ember, gold and steel jewels. */
+  .flow-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background-image:
+      var(--brush-noise-soft), linear-gradient(180deg, #2b3138, #1b1f24);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      inset 0 -1px 0 rgb(0 0 0 / 0.6);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .studs {
+    display: flex;
+    flex: none;
+    gap: 6px;
+    margin-right: 6px;
+  }
+
+  .studs i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        var(--jewel) 0 2.2px,
+        transparent 2.6px
+      ),
+      conic-gradient(
+        from 40deg,
+        #f4f6f8,
+        #8c939d,
+        #e9ecef,
+        #5f6670,
+        #d9dde2,
+        #f4f6f8
+      );
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.6),
+      0 0 6px var(--jewel-glow);
+  }
+
+  .studs i:nth-child(1) {
+    --jewel: #f08a6a;
+    --jewel-glow: rgb(240 138 106 / 0.35);
+  }
+
+  .studs i:nth-child(2) {
+    --jewel: #f2c94c;
+    --jewel-glow: rgb(242 201 76 / 0.35);
+  }
+
+  .studs i:nth-child(3) {
+    --jewel: #9fb4cc;
+    --jewel-glow: rgb(159 180 204 / 0.3);
+  }
+
+  .flow-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .flow-meta {
+    margin-left: auto;
+  }
+
+  .flow-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: 18px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  /*
+   * The stage: a grid of --cols columns and --rows rows whose gutters (the
+   * gaps, and the padding around the grid) carry the wires. Boxes stretch to
+   * fill their cells, so every row's boxes share a top and bottom and every
+   * column's a left and right, as flow.ts's routeWires expects. Faint lines
+   * every 24px are the engraved backdrop.
+   */
+  .flow-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--rows), auto);
+    gap: 30px 40px;
+    padding: 28px;
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        rgb(214 222 232 / 0.035) 0 1px,
+        transparent 1px 24px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        rgb(214 222 232 / 0.035) 0 1px,
+        transparent 1px 24px
+      );
+  }
+
+  .flow-wires {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  /*
+   * A wire is a hairline of steel with an arrowhead at its end. The current
+   * step's hops (.lit) run in gold with a glow and a marching dash; hops lit
+   * by earlier steps (.passed) keep a dim gold.
+   */
+  .wire-line {
+    fill: none;
+    stroke: rgb(214 222 232 / 0.3);
+    stroke-width: 1.4;
+    transition:
+      stroke 0.4s var(--ease-soft),
+      stroke-width 0.4s var(--ease-soft);
+  }
+
+  .wire-head {
+    fill: rgb(214 222 232 / 0.45);
+    transition: fill 0.4s var(--ease-soft);
+  }
+
+  .wire.passed .wire-line {
+    stroke: rgb(230 192 98 / 0.4);
+  }
+
+  .wire.passed .wire-head {
+    fill: rgb(230 192 98 / 0.55);
+  }
+
+  .wire.lit .wire-line {
+    stroke: #e6c56c;
+    stroke-width: 2;
+    stroke-dasharray: 7 5;
+    filter: drop-shadow(0 0 4px rgb(230 192 98 / 0.55));
+    animation: wire-march 0.9s linear infinite;
+  }
+
+  .wire.lit .wire-head {
+    fill: #f2d17b;
+  }
+
+  /* Under data-flow="all" every hop is lit at once, drawn solid. */
+  :global([data-flow="all"]) .wire.lit .wire-line {
+    stroke-dasharray: none;
+    animation: none;
+  }
+
+  @keyframes wire-march {
+    to {
+      stroke-dashoffset: -12;
+    }
+  }
+
+  /*
+   * A node is an engraved gunmetal box: a dark face under a steel rim, its
+   * label over its detail in mono. The current step's nodes (.lit) take the
+   * career trace's selected gold ring and glow; nodes lit by earlier steps
+   * (.passed) keep a gold rim.
+   */
+  .flow-node {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background:
+      var(--brush-noise-soft), linear-gradient(180deg, #252a31, #171a1f);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.1),
+      inset 0 -1px 0 rgb(0 0 0 / 0.5),
+      0 0 0 1px rgb(214 222 232 / 0.16),
+      calc(var(--lean) * var(--slant) * 6px) 6px 14px -6px rgb(0 0 0 / 0.9);
+    text-align: center;
+    transition:
+      box-shadow 0.4s var(--ease-soft),
+      background-color 0.4s var(--ease-soft);
+  }
+
+  .flow-node b {
+    color: #eef1f4;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    hyphens: auto;
+    overflow-wrap: break-word;
+    transition: color 0.4s var(--ease-soft);
+  }
+
+  .flow-node small {
+    color: #8b94a0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+
+  .flow-node.passed {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.1),
+      inset 0 -1px 0 rgb(0 0 0 / 0.5),
+      0 0 0 1px rgb(230 192 98 / 0.45),
+      calc(var(--lean) * var(--slant) * 6px) 6px 14px -6px rgb(0 0 0 / 0.9);
+  }
+
+  .flow-node.lit {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.14),
+      inset 0 -1px 0 rgb(0 0 0 / 0.5),
+      0 0 0 1px rgb(230 192 98 / 0.85),
+      0 0 22px -2px rgb(230 192 98 / 0.55),
+      calc(var(--lean) * var(--slant) * 6px) 6px 14px -6px rgb(0 0 0 / 0.9);
+  }
+
+  .flow-node.lit b {
+    color: #f2d17b;
+  }
+
+  /*
+   * Below 640px of window width the boxes tighten; below 440px they drop
+   * their detail line, the title bar drops its counts and the gutters
+   * narrow further.
+   */
+  @container flow (width < 40rem) {
+    .flow-stage {
+      gap: 22px 26px;
+      padding: 20px;
+    }
+
+    .flow-node {
+      padding: 9px 8px;
+      border-radius: 8px;
+    }
+
+    .flow-node b {
+      font-size: 12px;
+    }
+
+    .flow-node small {
+      font-size: 10px;
+    }
+  }
+
+  @container flow (width < 27.5rem) {
+    .flow-meta,
+    .flow-node small {
+      display: none;
+    }
+
+    .flow-live {
+      margin-left: auto;
+    }
+
+    .flow-stage {
+      gap: 20px 18px;
+      padding: 16px;
+    }
+
+    .flow-node {
+      padding: 8px 5px;
+    }
+
+    .flow-node b {
+      font-size: 10.5px;
+    }
+  }
+
+  .flow {
+    container: flow / inline-size;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wire-line,
+    .wire-head,
+    .flow-node,
+    .flow-node b {
+      transition: none;
+    }
+
+    .wire.lit .wire-line {
+      animation: none;
+    }
+  }
+</style>

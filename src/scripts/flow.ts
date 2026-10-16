@@ -1,0 +1,676 @@
+/*
+ * A workflow's step-through diagram: which hops each step lights, the wires
+ * between the nodes, routed through the gutters of the diagram's grid so no
+ * wire crosses a box, and the runner that lights each step's nodes and hops
+ * as its caption crosses the middle of the viewport or the step dial turns.
+ */
+import { needleAngle, scaleAt } from "./gauges";
+
+/**
+ * The edges each step lights, as indexes into `edges`: an edge is lit by a
+ * step that lights its `to` node when its `from` node is lit by that step or
+ * the step before.
+ */
+export function stepHops(
+  steps: { lights: string[] }[],
+  edges: { from: string; to: string }[],
+): number[][] {
+  return steps.map((step, index) => {
+    const before = steps[index - 1]?.lights ?? [];
+    return edges.flatMap((edge, edgeIndex) =>
+      step.lights.includes(edge.to) &&
+      (step.lights.includes(edge.from) || before.includes(edge.from))
+        ? [edgeIndex]
+        : [],
+    );
+  });
+}
+
+/** A box in the diagram's stage, in pixels from the stage's top left. */
+export interface Box {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/** A node's grid cell and its measured box. */
+export interface PlacedNode {
+  col: number;
+  row: number;
+  box: Box;
+}
+
+/** A point in the stage, in pixels: [x, y]. */
+export type Point = [number, number];
+
+type Side = "top" | "right" | "bottom" | "left";
+/** A gutter a wire travels along: a vertical one (x) between columns, or a horizontal one (y) between rows; index 0 is the outer gutter before the first. */
+type Lane = { axis: "x" | "y"; index: number };
+interface Plan {
+  exit: Side;
+  lanes: Lane[];
+  entry: Side;
+}
+
+/** Pixels between wires that share a gutter. */
+export const LANE_SPACING = 7;
+
+/**
+ * The plans a wire from cell `a` to cell `b` can take: the side it leaves,
+ * the gutters it travels along, and the side it enters. Neighbours in a row
+ * or column have one plan, straight across their gutter. Any other wire
+ * may go round either side of its row or column, or reach a diagonal
+ * target through the gutters next to it (inner) or round its far side
+ * (wrap), leaving across or along, and through the gutter between two
+ * neighbouring rows or columns.
+ */
+function plans(
+  a: { col: number; row: number },
+  b: { col: number; row: number },
+): Plan[] {
+  const dc = b.col - a.col;
+  const dr = b.row - a.row;
+  const right = dc > 0;
+  const down = dr > 0;
+  const x = (index: number): Lane => ({ axis: "x", index });
+  const y = (index: number): Lane => ({ axis: "y", index });
+  if (dr === 0 && Math.abs(dc) === 1) {
+    return [
+      {
+        exit: right ? "right" : "left",
+        lanes: [x(right ? a.col + 1 : a.col)],
+        entry: right ? "left" : "right",
+      },
+    ];
+  }
+  if (dc === 0 && Math.abs(dr) === 1) {
+    return [
+      {
+        exit: down ? "bottom" : "top",
+        lanes: [y(down ? a.row + 1 : a.row)],
+        entry: down ? "top" : "bottom",
+      },
+    ];
+  }
+  if (dr === 0) {
+    return [
+      { exit: "bottom", lanes: [y(a.row + 1)], entry: "bottom" },
+      { exit: "top", lanes: [y(a.row)], entry: "top" },
+    ];
+  }
+  if (dc === 0) {
+    return [
+      { exit: "left", lanes: [x(a.col)], entry: "left" },
+      { exit: "right", lanes: [x(a.col + 1)], entry: "right" },
+    ];
+  }
+  const across = right ? "right" : "left";
+  const back = right ? "left" : "right";
+  const along = down ? "bottom" : "top";
+  const up = down ? "top" : "bottom";
+  const options: Plan[] = [
+    {
+      exit: across,
+      lanes: [x(right ? a.col + 1 : a.col), y(down ? b.row : b.row + 1)],
+      entry: up,
+    },
+    {
+      exit: along,
+      lanes: [y(down ? a.row + 1 : a.row), x(right ? b.col : b.col + 1)],
+      entry: back,
+    },
+    {
+      exit: back,
+      lanes: [x(right ? a.col : a.col + 1), y(down ? b.row + 1 : b.row)],
+      entry: along,
+    },
+    {
+      exit: up,
+      lanes: [y(down ? a.row : a.row + 1), x(right ? b.col + 1 : b.col)],
+      entry: across,
+    },
+  ];
+  if (Math.abs(dr) === 1) {
+    options.push({
+      exit: along,
+      lanes: [y(down ? a.row + 1 : a.row)],
+      entry: up,
+    });
+  }
+  if (Math.abs(dc) === 1) {
+    options.push({
+      exit: across,
+      lanes: [x(right ? a.col + 1 : a.col)],
+      entry: back,
+    });
+  }
+  return options;
+}
+
+/** Whether runs `p` and `q` cross at right angles away from their ends. */
+function crossing(p: [Point, Point], q: [Point, Point]) {
+  const flat = (run: [Point, Point]) => run[0][1] === run[1][1];
+  if (flat(p) === flat(q)) return false;
+  const [h, v] = flat(p) ? [p, q] : [q, p];
+  const between = (value: number, a: number, b: number) =>
+    value > Math.min(a, b) + 0.5 && value < Math.max(a, b) - 0.5;
+  return (
+    between(v[0][0], h[0][0], h[1][0]) && between(h[0][1], v[0][1], v[1][1])
+  );
+}
+
+/** Pixels a turn adds to a plan's cost. */
+const TURN_COST = 24;
+
+/** The point at `fraction` along `side` of `box`. */
+function onSide(box: Box, side: Side, fraction: number): Point {
+  const x = box.left + (box.right - box.left) * fraction;
+  const y = box.top + (box.bottom - box.top) * fraction;
+  if (side === "top") return [x, box.top];
+  if (side === "bottom") return [x, box.bottom];
+  if (side === "left") return [box.left, y];
+  return [box.right, y];
+}
+
+/** `points` without repeated points or points in the middle of a straight run. */
+function simplify(points: Point[]): Point[] {
+  const out: Point[] = [];
+  for (const point of points) {
+    const last = out.at(-1);
+    if (last && last[0] === point[0] && last[1] === point[1]) continue;
+    const before = out.at(-2);
+    if (
+      before &&
+      last &&
+      ((before[0] === last[0] && last[0] === point[0]) ||
+        (before[1] === last[1] && last[1] === point[1]))
+    ) {
+      out[out.length - 1] = point;
+      continue;
+    }
+    out.push(point);
+  }
+  return out;
+}
+
+/**
+ * The wires of `edges` (indexes into `nodes`) as polylines of right-angled
+ * runs, from the side of the `from` box to the side of the `to` box,
+ * each on its cheapest plan (see `plans`): the shortest, with the fewest
+ * turns and above all the fewest crossings with the wires planned before
+ * it. Every row's boxes share a top and bottom and every column's boxes a left
+ * and right, as a CSS grid that stretches its items lays them out; `pad`
+ * is the stage's padding around the grid, which holds the outer gutters.
+ * Wires that leave or enter the same side of a box spread along it, and
+ * wires that share a gutter run LANE_SPACING apart.
+ */
+export function routeWires(
+  nodes: PlacedNode[],
+  edges: { from: number; to: number }[],
+  pad: number,
+): Point[][] {
+  const cols = Math.max(...nodes.map((node) => node.col)) + 1;
+  const rows = Math.max(...nodes.map((node) => node.row)) + 1;
+  const span = (axis: "col" | "row", at: number) => {
+    const boxes = nodes.filter((node) => node[axis] === at).map((n) => n.box);
+    return axis === "col"
+      ? [
+          Math.min(...boxes.map((b) => b.left)),
+          Math.max(...boxes.map((b) => b.right)),
+        ]
+      : [
+          Math.min(...boxes.map((b) => b.top)),
+          Math.max(...boxes.map((b) => b.bottom)),
+        ];
+  };
+  const colSpans = Array.from({ length: cols }, (_, at) => span("col", at));
+  const rowSpans = Array.from({ length: rows }, (_, at) => span("row", at));
+  /** A gutter's centre and half-width; gutter `index` lies before track `index`. */
+  const gutter = (spans: number[][], index: number) => {
+    const before = spans[index - 1];
+    const after = spans[index];
+    if (!before) return { mid: after![0]! - pad / 2, half: pad / 2 };
+    if (!after) return { mid: before[1]! + pad / 2, half: pad / 2 };
+    return {
+      mid: (before[1]! + after[0]!) / 2,
+      half: (after[0]! - before[1]!) / 2,
+    };
+  };
+
+  /** The polyline of `route` from `from` to `to`, its ends at `ports` or mid-side and its gutter runs at `lanes` or mid-gutter. */
+  const trace = (
+    route: Plan,
+    from: number,
+    to: number,
+    exitAt = 0.5,
+    entryAt = 0.5,
+    lane = (l: Lane) =>
+      gutter(l.axis === "x" ? colSpans : rowSpans, l.index).mid,
+  ) => {
+    const start = onSide(nodes[from]!.box, route.exit, exitAt);
+    const end = onSide(nodes[to]!.box, route.entry, entryAt);
+    const points: Point[] = [start];
+    let [x, y] = start;
+    for (const l of route.lanes) {
+      if (l.axis === "x") x = lane(l);
+      else y = lane(l);
+      points.push([x, y]);
+    }
+    if (route.entry === "left" || route.entry === "right") {
+      points.push([x, end[1]]);
+    } else points.push([end[0], y]);
+    points.push(end);
+    return simplify(points);
+  };
+  const runs = (points: Point[]) =>
+    points.slice(1).map((point, i) => [points[i]!, point] as [Point, Point]);
+
+  // Plans: straight wires first, then each other wire's cheapest plan, by
+  // length, turns and crossings with the wires already planned; a crossing
+  // costs half the stage's width and height together.
+  const all = nodes.map((node) => node.box);
+  const crossCost =
+    (Math.max(...all.map((b) => b.right)) -
+      Math.min(...all.map((b) => b.left)) +
+      Math.max(...all.map((b) => b.bottom)) -
+      Math.min(...all.map((b) => b.top))) /
+    2;
+  const options = edges.map((edge) =>
+    plans(nodes[edge.from]!, nodes[edge.to]!),
+  );
+  const chosen: (Plan | undefined)[] = options.map((list) =>
+    list.length === 1 ? list[0] : undefined,
+  );
+  const placed = () =>
+    chosen.flatMap((route, edge) =>
+      route ? runs(trace(route, edges[edge]!.from, edges[edge]!.to)) : [],
+    );
+  options.forEach((list, edge) => {
+    if (chosen[edge]) return;
+    const others = placed();
+    let best = Infinity;
+    for (const route of list) {
+      const points = trace(route, edges[edge]!.from, edges[edge]!.to);
+      const own = runs(points);
+      const length = own.reduce(
+        (sum, [p, q]) => sum + Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]),
+        0,
+      );
+      const crossings = own.reduce(
+        (sum, run) =>
+          sum + others.filter((other) => crossing(run, other)).length,
+        0,
+      );
+      const cost =
+        length + (points.length - 2) * TURN_COST + crossings * crossCost;
+      if (cost < best) {
+        best = cost;
+        chosen[edge] = route;
+      }
+    }
+  });
+  const plansOf = chosen as Plan[];
+
+  // Ports: each wire's fraction along the side it leaves and the side it enters.
+  const ends = new Map<
+    string,
+    { edge: number; end: "exit" | "entry"; key: number }[]
+  >();
+  plansOf.forEach((route, edge) => {
+    const { from, to } = edges[edge]!;
+    for (const [end, node, other, side] of [
+      ["exit", from, to, route.exit],
+      ["entry", to, from, route.entry],
+    ] as const) {
+      const far = nodes[other]!.box;
+      const key =
+        side === "top" || side === "bottom"
+          ? (far.left + far.right) / 2
+          : (far.top + far.bottom) / 2;
+      const id = `${node}:${side}`;
+      ends.set(id, [...(ends.get(id) ?? []), { edge, end, key }]);
+    }
+  });
+  const ports = new Map<string, number>();
+  for (const list of ends.values()) {
+    list
+      .sort((a, b) => a.key - b.key || a.edge - b.edge)
+      .forEach((port, index) =>
+        ports.set(`${port.edge}:${port.end}`, (index + 1) / (list.length + 1)),
+      );
+  }
+  // A straight wire between neighbours keeps one line: the end alone on its
+  // side takes the other end's place along it.
+  plansOf.forEach((route, edge) => {
+    if (route.lanes.length !== 1 || options[edge]!.length !== 1) return;
+    const { from, to } = edges[edge]!;
+    const alone = (node: number, side: Side) =>
+      ends.get(`${node}:${side}`)!.length === 1;
+    if (alone(from, route.exit)) {
+      ports.set(`${edge}:exit`, ports.get(`${edge}:entry`)!);
+    } else if (alone(to, route.entry)) {
+      ports.set(`${edge}:entry`, ports.get(`${edge}:exit`)!);
+    }
+  });
+
+  // Lanes: each wire's offset from the centre of every gutter it travels along.
+  const users = new Map<string, number[]>();
+  plansOf.forEach((route, edge) => {
+    for (const lane of route.lanes) {
+      const id = `${lane.axis}${lane.index}`;
+      users.set(id, [...(users.get(id) ?? []), edge]);
+    }
+  });
+  const laneAt = (lane: Lane, edge: number) => {
+    const { mid, half } = gutter(
+      lane.axis === "x" ? colSpans : rowSpans,
+      lane.index,
+    );
+    const list = users.get(`${lane.axis}${lane.index}`)!;
+    const spacing = Math.min(LANE_SPACING, (half * 2) / (list.length + 1));
+    return mid + (list.indexOf(edge) - (list.length - 1) / 2) * spacing;
+  };
+
+  return plansOf.map((route, edge) =>
+    trace(
+      route,
+      edges[edge]!.from,
+      edges[edge]!.to,
+      ports.get(`${edge}:exit`)!,
+      ports.get(`${edge}:entry`)!,
+      (lane) => laneAt(lane, edge),
+    ),
+  );
+}
+
+const round = (value: number) => Math.round(value * 10) / 10;
+
+/** `points` as SVG path data, each corner rounded with up to `radius` pixels. */
+export function wirePath(points: Point[], radius = 8): string {
+  const [first, ...rest] = points;
+  if (!first) return "";
+  let d = `M${round(first[0])} ${round(first[1])}`;
+  rest.forEach((point, index) => {
+    const next = rest[index + 1];
+    const prev = index === 0 ? first : rest[index - 1]!;
+    if (!next) {
+      d += ` L${round(point[0])} ${round(point[1])}`;
+      return;
+    }
+    const inLength = Math.hypot(point[0] - prev[0], point[1] - prev[1]);
+    const outLength = Math.hypot(next[0] - point[0], next[1] - point[1]);
+    const r = Math.min(radius, inLength / 2, outLength / 2);
+    const toward = (from: Point, length: number): Point => [
+      point[0] + ((from[0] - point[0]) / length) * r,
+      point[1] + ((from[1] - point[1]) / length) * r,
+    ];
+    const [ax, ay] = toward(prev, inLength);
+    const [bx, by] = toward(next, outLength);
+    d += ` L${round(ax)} ${round(ay)} Q${round(point[0])} ${round(point[1])} ${round(bx)} ${round(by)}`;
+  });
+  return d;
+}
+
+/** The arrowhead at the end of `points`, a triangle `size` pixels long pointing along the last run. */
+export function arrowHead(points: Point[], size = 7): string {
+  const tip = points.at(-1);
+  const from = points.at(-2);
+  if (!tip || !from) return "";
+  const length = Math.hypot(tip[0] - from[0], tip[1] - from[1]) || 1;
+  const ux = (tip[0] - from[0]) / length;
+  const uy = (tip[1] - from[1]) / length;
+  const bx = tip[0] - ux * size;
+  const by = tip[1] - uy * size;
+  const wing = size * 0.55;
+  return `M${round(tip[0])} ${round(tip[1])} L${round(bx - uy * wing)} ${round(by + ux * wing)} L${round(bx + uy * wing)} ${round(by - ux * wing)} Z`;
+}
+
+/** One tick of the step dial, in its 100 by 100 drawing: a step's mark on the 270deg scale. */
+export interface DialTick {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+/** The scale position (0 to 100) of step `index` among `count` steps. */
+export const stepPosition = (index: number, count: number) =>
+  count > 1 ? (index / (count - 1)) * 100 : 0;
+
+/** The step dial's ticks, one per step, across the gauges' 270deg scale. */
+export function stepTicks(count: number): DialTick[] {
+  return Array.from({ length: count }, (_, index) => {
+    const angle = (needleAngle(stepPosition(index, count)) * Math.PI) / 180;
+    return {
+      x1: round(50 + 37 * Math.sin(angle)),
+      y1: round(50 - 37 * Math.cos(angle)),
+      x2: round(50 + 45 * Math.sin(angle)),
+      y2: round(50 - 45 * Math.cos(angle)),
+    };
+  });
+}
+
+/** The step index a key moves the dial to from `current` among `count` steps, clamped; undefined for other keys. */
+export function dialTarget(key: string, current: number, count: number) {
+  const next = {
+    ArrowRight: current + 1,
+    ArrowUp: current + 1,
+    PageUp: current + 1,
+    ArrowLeft: current - 1,
+    ArrowDown: current - 1,
+    PageDown: current - 1,
+    Home: 0,
+    End: count - 1,
+  }[key];
+  return next === undefined
+    ? undefined
+    : Math.min(count - 1, Math.max(0, next));
+}
+
+/**
+ * Runs the step-through in `root`, a [data-workflow-steps] section holding
+ * the diagram (.flow: its .flow-stage of [data-node] boxes and its
+ * .flow-wires of [data-from][data-to] wires), the step dial (.step-dial) and
+ * the captions (ol.steps > li, each with data-lights and data-hops). It
+ * draws the wires and redraws them whenever the stage or a box changes
+ * size. Under reduced motion it sets data-flow="all" and lights every node
+ * and hop at once; otherwise it sets data-flow="step", shows the dial, and
+ * lights the current step's nodes and hops (.lit), the earlier steps'
+ * (.passed) and the caption crossing the middle of the viewport
+ * (aria-current="step"). The dial, its knobs and its keys move the step;
+ * while the diagram is sticky they also scroll the step's caption to the
+ * middle of the viewport. Returns a function that stops it.
+ */
+export function startFlow(
+  root: HTMLElement,
+  reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches,
+): () => void {
+  const stage = root.querySelector<HTMLElement>(".flow-stage");
+  const flow = root.querySelector<HTMLElement>(".flow");
+  const items = [...root.querySelectorAll<HTMLLIElement>("ol.steps > li")];
+  if (!stage || !flow || items.length === 0) return () => {};
+  const boxes = [...stage.querySelectorAll<HTMLElement>("[data-node]")];
+  const wires = [
+    ...root.querySelectorAll<SVGGElement>(".flow-wires [data-from]"),
+  ];
+  const ids = boxes.map((box) => box.dataset.node ?? "");
+  const lights = items.map((item) => (item.dataset.lights ?? "").split(" "));
+  const hops = items.map((item) =>
+    (item.dataset.hops ?? "").split(" ").filter(Boolean).map(Number),
+  );
+  const pad = () => parseFloat(getComputedStyle(stage).paddingTop) || 0;
+
+  function draw() {
+    const origin = stage!.getBoundingClientRect();
+    const placed = boxes.map((box) => {
+      const rect = box.getBoundingClientRect();
+      return {
+        col: Number(box.dataset.col),
+        row: Number(box.dataset.row),
+        box: {
+          left: rect.left - origin.left,
+          top: rect.top - origin.top,
+          right: rect.right - origin.left,
+          bottom: rect.bottom - origin.top,
+        },
+      };
+    });
+    const edges = wires.map((wire) => ({
+      from: ids.indexOf(wire.dataset.from ?? ""),
+      to: ids.indexOf(wire.dataset.to ?? ""),
+    }));
+    const routes = routeWires(placed, edges, pad());
+    wires.forEach((wire, index) => {
+      const points = routes[index]!;
+      wire.querySelector(".wire-line")?.setAttribute("d", wirePath(points));
+      wire.querySelector(".wire-head")?.setAttribute("d", arrowHead(points));
+    });
+  }
+
+  draw();
+  const resize = new ResizeObserver(() => draw());
+  resize.observe(stage);
+  for (const box of boxes) resize.observe(box);
+  void document.fonts?.ready.then(() => draw());
+
+  if (reduceMotion) {
+    root.dataset.flow = "all";
+    for (const box of boxes) box.classList.add("lit");
+    for (const wire of wires) wire.classList.add("lit");
+    return () => resize.disconnect();
+  }
+
+  const dial = root.querySelector<HTMLElement>(".step-dial");
+  const knob = dial?.querySelector<HTMLElement>("[role=slider]");
+  const needle = dial?.querySelector<HTMLElement>(".dial-rotor");
+  const readout = dial?.querySelector<HTMLElement>(".dial-readout b");
+  const ticks = [
+    ...(dial?.querySelectorAll<SVGLineElement>(".dial-ticks line") ?? []),
+  ];
+  const count = items.length;
+  let current = -1;
+  /** The step a dial turn is scrolling to; scroll-spy steps on the way are ignored until it arrives. */
+  let steering: { step: number; until: number } | null = null;
+
+  function show(step: number) {
+    if (step === current) return;
+    current = step;
+    const earlier = new Set(lights.slice(0, step).flat());
+    const earlierHops = new Set(hops.slice(0, step).flat());
+    boxes.forEach((box, index) => {
+      const lit = lights[step]!.includes(ids[index]!);
+      box.classList.toggle("lit", lit);
+      box.classList.toggle("passed", !lit && earlier.has(ids[index]!));
+    });
+    wires.forEach((wire, index) => {
+      const lit = hops[step]!.includes(index);
+      wire.classList.toggle("lit", lit);
+      wire.classList.toggle("passed", !lit && earlierHops.has(index));
+    });
+    items.forEach((item, index) => {
+      if (index === step) item.setAttribute("aria-current", "step");
+      else item.removeAttribute("aria-current");
+    });
+    ticks.forEach((tick, index) =>
+      tick.classList.toggle("passed", index <= step),
+    );
+    if (needle) {
+      needle.style.transform = `rotate(${needleAngle(stepPosition(step, count))}deg)`;
+    }
+    if (readout) readout.textContent = String(step + 1).padStart(2, "0");
+    if (knob) {
+      knob.setAttribute("aria-valuenow", String(step + 1));
+      const title = items[step]!.querySelector("h3")?.textContent?.trim() ?? "";
+      knob.setAttribute(
+        "aria-valuetext",
+        `${step + 1} ${knob.dataset.of ?? "of"} ${count}: ${title}`,
+      );
+    }
+  }
+
+  function go(step: number) {
+    const target = Math.min(count - 1, Math.max(0, step));
+    show(target);
+    const sticky =
+      getComputedStyle(root.querySelector(".flow-visual") ?? flow!).position ===
+      "sticky";
+    if (!sticky) return;
+    steering = { step: target, until: performance.now() + 1200 };
+    items[target]!.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  root.dataset.flow = "step";
+  show(0);
+  if (dial) dial.hidden = false;
+
+  const spy = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const step = items.indexOf(entry.target as HTMLLIElement);
+        if (
+          steering &&
+          performance.now() < steering.until &&
+          step !== steering.step
+        ) {
+          continue;
+        }
+        steering = null;
+        show(step);
+      }
+    },
+    { rootMargin: "-45% 0px -50% 0px" },
+  );
+  for (const item of items) spy.observe(item);
+
+  const cleanups: (() => void)[] = [];
+  const on = <K extends keyof HTMLElementEventMap>(
+    target: HTMLElement | null | undefined,
+    type: K,
+    listener: (event: HTMLElementEventMap[K]) => void,
+  ) => {
+    if (!target) return;
+    target.addEventListener(type, listener);
+    cleanups.push(() => target.removeEventListener(type, listener));
+  };
+  on(dial?.querySelector<HTMLElement>(".dial-prev"), "click", () =>
+    go(current - 1),
+  );
+  on(dial?.querySelector<HTMLElement>(".dial-next"), "click", () =>
+    go(current + 1),
+  );
+  on(knob, "keydown", (event) => {
+    const next = dialTarget(event.key, current, count);
+    if (next === undefined) return;
+    event.preventDefault();
+    go(next);
+  });
+  let dragging = false;
+  const turnTo = (event: PointerEvent) => {
+    const face = knob!.getBoundingClientRect();
+    const position = scaleAt(face, event.clientX, event.clientY);
+    const step = Math.round((position / 100) * (count - 1));
+    if (step !== current) go(step);
+  };
+  on(knob, "pointerdown", (event) => {
+    dragging = true;
+    knob!.setPointerCapture?.(event.pointerId);
+    turnTo(event);
+  });
+  on(knob, "pointermove", (event) => {
+    if (dragging) turnTo(event);
+  });
+  on(knob, "pointerup", () => {
+    dragging = false;
+  });
+  on(knob, "pointercancel", () => {
+    dragging = false;
+  });
+
+  return () => {
+    spy.disconnect();
+    resize.disconnect();
+    for (const cleanup of cleanups) cleanup();
+  };
+}
