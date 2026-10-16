@@ -20,12 +20,13 @@ Full-stack AI engineer with a background in backend systems and web applications
 - **Progressive Motion**: scroll-driven CSS drives the header's progress bar where browsers support it; a small script adds the stat counters and the header's scroll state. Every section is complete without them, and reduced motion turns them off.
 - **Design Tokens in CSS**: `src/styles/theme.css` holds the design tokens as CSS variables for both themes, and configures Tailwind CSS v4 with an `@theme` block (fonts, page width, header height and easing); there is no `tailwind.config.*` file.
 - **Light and Dark Themes**: the theme follows the device's `prefers-color-scheme` setting until the visitor picks one with the header's theme knob; the choice is saved in `localStorage` and applied before first paint. Without JavaScript the dark theme applies. Text meets WCAG AA contrast in both themes.
-- **Accessible Navigation**: a fixed header with section links from `src/data/navigation.json`; below 980px a menu knob opens them in an HTML popover sheet that `Escape`, a tap outside or a chosen link closes, that keyboard and screen-reader users cannot reach while closed, and whose knob is named for what a press does.
-- **Search and Social Metadata**: `Layout.astro` sets the title, description, icons, web manifest, canonical URL and the Open Graph and Twitter card tags (a 1200×630 link preview) from `site` in `astro.config.mjs` and `src/data/site.json`.
+- **Accessible Navigation**: a fixed header with section links from `src/data/navigation.json`, pointing back to the home page from the workflow pages; below 980px a menu knob opens them in an HTML popover sheet that `Escape`, a tap outside or a chosen link closes, that keyboard and screen-reader users cannot reach while closed, and whose knob is named for what a press does.
+- **Search and Social Metadata**: `Layout.astro` sets the title, description, icons, web manifest, canonical URL and the Open Graph and Twitter card tags (a 1200×630 link preview) from `site` in `astro.config.mjs` and `src/data/site.json`; each workflow page sets its own title and description, and `/sitemap.xml` and `/robots.txt` list the pages for search engines.
+- **System Workflows**: a page per workflow in `src/data/workflows/` (and peers' in `src/data/workflows/peers/`, credited to their authors), around a gold-inlay diagram and a 3D circuit board the reader steps through with a step bar, Auto or by scrolling, each step lighting its parts and hops. Every step reads as an ordered list without JavaScript, and reduced motion lights every step at once. The home page lists them in its Workflows section.
 - **Self-Hosted Fonts**: Montserrat and JetBrains Mono variable fonts are served from `public/fonts/` and preloaded; JetBrains Mono sets the hero's agent log and the main design's section numbers.
 - **Strict TypeScript**: `tsconfig.json` extends `astro/tsconfigs/strict` and defines path aliases (`@components/*`, `@layouts/*`, `@styles/*`, `@data/*`, `@utils/*`).
 - **Consistent Formatting**: Prettier with the Astro plugin (`npm run format`, `npm run format:check`).
-- **Unit Tests**: Vitest renders the components through the Astro Container API and checks the data rules, the UI primitives, every section and the assembled page (`npm test`).
+- **Unit Tests**: Vitest renders the components through the Astro Container API and checks the data rules, the UI primitives, every section, the assembled page and the workflow pages (`npm test`).
 - **CI Quality Gate**: `.github/workflows/ci.yml` checks formatting, runs the unit tests, type-checks and builds on pull requests into `main` and before every deployment.
 - **GitHub Activity**: the build reads the owner's GitHub activity (contributions per year, streaks and language bytes, private contributions included) from the GitHub GraphQL API with `GITHUB_ACTIVITY_TOKEN`, falling back to the committed `src/data/activity.json`. The experience section shows it on an instrument plate whose odometer wheels spin to their figures as it comes into view, and `/activity/contributions.svg` and `/activity/languages.svg` serve it as SVG cards for the GitHub profile README.
 - **Continuous Deployment**: `.github/workflows/deploy.yml` deploys every push to `main` to Cloudflare Workers at `adioz.dev` once the quality gate passes, then regenerates the GitHub profile README from `src/data` (`scripts/profile-readme.ts`) and pushes it to `adiozeshitemi/adiozeshitemi` when it changed.
@@ -46,7 +47,7 @@ For a detailed breakdown of the project's layout and design philosophy, please r
 
 ## 🔧 Getting Started
 
-Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24.
+Requires Node.js 22.22 or newer; `.nvmrc` pins Node.js 24.
 
 1. **Clone the repository**
 

@@ -1,0 +1,39 @@
+---
+/*
+ * A page per workflow in src/data/workflows/: /workflows/<slug>/, titled and
+ * described by the workflow, with the header's section links pointing back
+ * to the home page and its Workflows link marked current.
+ */
+import Footer from "../../components/Footer/Footer.astro";
+import Header from "../../components/Header/Header.astro";
+import WorkflowPage from "../../components/Workflow/WorkflowPage.astro";
+import { workflows } from "../../data/index";
+import type { Workflow } from "../../data/types";
+import Layout from "../../layouts/Layout.astro";
+import { ownWorkflows } from "../../lib/workflows";
+
+export function getStaticPaths() {
+  return ownWorkflows.map((workflow) => ({
+    params: { slug: workflow.slug },
+    props: { workflow },
+  }));
+}
+
+interface Props {
+  workflow: Workflow;
+}
+
+const { workflow } = Astro.props;
+---
+
+<Layout
+  title={`${workflow.title} · ${workflows.page.titleSuffix}`}
+  description={workflow.summary}
+  previewDescription={workflow.summary}
+>
+  <Header home={false} current={`#${workflows.id}`} />
+  <main class="grow">
+    <WorkflowPage workflow={workflow} />
+  </main>
+  <Footer />
+</Layout>

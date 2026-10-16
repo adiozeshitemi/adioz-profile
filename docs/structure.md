@@ -71,24 +71,31 @@ adioz-dev/
 │   │   │   ├── Gauge.astro
 │   │   │   ├── TagCloud.astro
 │   │   │   └── TechStackSection.astro
-│   │   └── UI/                # Reusable primitives: brand mark, buttons, knobs, panels, plates, ports, tags, lamps, emphasis, engraving filters, icons, stats, section titles
-│   │       ├── BrandMark.astro
-│   │       ├── Button.astro
-│   │       ├── Emphasis.astro
-│   │       ├── EngravingFilters.astro
-│   │       ├── Icon.astro
-│   │       ├── Knob.astro
-│   │       ├── Lamp.astro
-│   │       ├── Nameplate.astro
-│   │       ├── Panel.astro
-│   │       ├── ParticleField.astro
-│   │       ├── Plate.astro
-│   │       ├── Port.astro
-│   │       ├── Screw.astro
-│   │       ├── SectionTitle.astro
-│   │       ├── StatBanner.astro
-│   │       ├── StatCard.astro
-│   │       └── Tag.astro
+│   │   ├── UI/                # Reusable primitives: brand mark, buttons, knobs, panels, plates, ports, tags, lamps, emphasis, engraving filters, icons, stats, section titles
+│   │   │   ├── BrandMark.astro
+│   │   │   ├── Button.astro
+│   │   │   ├── Emphasis.astro
+│   │   │   ├── EngravingFilters.astro
+│   │   │   ├── Icon.astro
+│   │   │   ├── Knob.astro
+│   │   │   ├── Lamp.astro
+│   │   │   ├── Nameplate.astro
+│   │   │   ├── Panel.astro
+│   │   │   ├── ParticleField.astro
+│   │   │   ├── Plate.astro
+│   │   │   ├── Port.astro
+│   │   │   ├── Screw.astro
+│   │   │   ├── SectionTitle.astro
+│   │   │   ├── StatBanner.astro
+│   │   │   ├── StatCard.astro
+│   │   │   └── Tag.astro
+│   │   └── Workflow/          # Workflows section and workflow pages: cards, the step-through's gold-inlay diagram, 3D board and step bar
+│   │       ├── Board3D.astro
+│   │       ├── FlowDiagram.astro
+│   │       ├── StepBar.astro
+│   │       ├── WorkflowCard.astro
+│   │       ├── WorkflowPage.astro
+│   │       └── WorkflowsSection.astro
 │   ├── data/                  # 🗄️ Data layer
 │   │   ├── about.json         # About section: id, label, headline, bio, portrait, pillars with icons, service record
 │   │   ├── activity.json      # GitHub activity snapshot (npm run activity:snapshot)
@@ -105,12 +112,14 @@ adioz-dev/
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
 │   │   ├── types.ts           # TypeScript interfaces for the portfolio content
-│   │   └── workflows/         # System workflows: nodes, edges and steps, one file each
+│   │   ├── workflows.json     # Workflows section and workflow page copy: headings, labels, step bar and back link
+│   │   └── workflows/         # System workflows, one file each, named by its slug: nodes in grid cells, edges, steps, compensations
 │   │       ├── mlops-loop.json
-│   │       └── peers/         # Workflows by other engineers, each with its author
-│   │           └── ruchitasingla-mlops-loop.json
+│   │       └── peers/         # Workflows by other engineers, each with its author's name and links
+│   │           └── ruchitasingla-mlops-loop.json  # Ruchita Singla's MLOps loop, at /workflows/peers/ruchitasingla-mlops-loop/
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro (logo-* full-colour and lang-* single-colour language logos), with their sources and licenses
 │   │   ├── activity.svg
+│   │   ├── arrow-left.svg
 │   │   ├── arrow-right.svg
 │   │   ├── arrow-up.svg
 │   │   ├── box.svg
@@ -131,15 +140,24 @@ adioz-dev/
 │   │   ├── activityCards.ts   # The activity as SVG cards for the GitHub profile README
 │   │   ├── github.ts          # GitHub GraphQL reads, streaks, totals and languages
 │   │   ├── period.ts          # Role periods as text, <time> values and fractional years
-│   │   └── profileReadme.ts   # The GitHub profile README rendered from src/data
+│   │   ├── profileReadme.ts   # The GitHub profile README rendered from src/data
+│   │   └── workflows.ts       # The workflow files, loaded and checked: ownWorkflows, peerWorkflows
 │   ├── pages/                 # 📄 File-based routes
 │   │   ├── activity/          # SVG cards written at build time
 │   │   │   ├── contributions.svg.ts  # /activity/contributions.svg
 │   │   │   └── languages.svg.ts      # /activity/languages.svg
-│   │   └── index.astro        # Landing page (/)
+│   │   ├── workflows/
+│   │   │   ├── [slug].astro   # A page per owner's workflow (/workflows/<slug>/)
+│   │   │   └── peers/
+│   │   │       └── [slug].astro  # A page per peer's workflow (/workflows/peers/<slug>/), e.g. Ruchita Singla's
+│   │   ├── index.astro        # Landing page (/)
+│   │   ├── robots.txt.ts      # /robots.txt, naming the sitemap
+│   │   └── sitemap.xml.ts     # /sitemap.xml: the home page and every workflow page
 │   ├── scripts/               # 📜 Client scripts
+│   │   ├── board3d.ts         # Workflow 3D board: Three.js circuit board, engraved components, traces and lit steps
 │   │   ├── copy.ts            # Contact copy knob: Clipboard API with a textarea fallback
 │   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
+│   │   ├── flow.ts            # Workflow step-through: lit hops, wire routing, the step bar, Auto and scroll lighting
 │   │   ├── gauges.ts          # Tech stack gauges: scale geometry, needle sweep and drag
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
@@ -166,14 +184,16 @@ adioz-dev/
 │
 ├── tests/                     # 🧪 Vitest unit tests (npm test)
 │   ├── fixtures/
-│   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests
+│   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests, recording the head props
 │   ├── activity.test.ts       # Activity panel layout, formatting and markup
 │   ├── activityCards.test.ts  # Activity SVG cards and their routes
+│   ├── board3d.test.ts        # Workflow board layout, markings, step states, markup and WebGL fallback
 │   ├── brand.test.ts          # Brand files: sizes, favicon scheme switch, manifest
 │   ├── copy.test.ts           # Copy action, its fallback and the knob's notes
 │   ├── data.test.ts           # Data rules and load-time errors
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── field.test.ts          # Particle field helpers and drawing
+│   ├── flow.test.ts           # Step-through hops, wire routing, step bar moves, Auto and runner
 │   ├── gauges.test.ts         # Gauge scale, needle springs, sweep and drag
 │   ├── github.test.ts         # GitHub activity reads, streaks, totals and the snapshot fallback
 │   ├── light.test.ts          # Pointer light helpers and frames
@@ -181,12 +201,14 @@ adioz-dev/
 │   ├── odometer.test.ts       # Odometer reels and their spin
 │   ├── page.test.ts           # Assembled landing page
 │   ├── pillars.test.ts        # Pillar .lit fallback and drawstring physics
-│   ├── pipeline.test.ts       # Agent pipeline markup, runs and WebGL fallback
+│   ├── pipeline.test.ts       # Agent pipeline runs and WebGL fallback
+│   ├── pipelineMarkup.test.ts # Agent pipeline markup
 │   ├── period.test.ts         # Role period labels and bounds
 │   ├── profileReadme.test.ts  # GitHub profile README rendering
 │   ├── rail.test.ts           # Scroll spy, springs and the rail's plate
 │   ├── render.ts              # Container API rendering and happy-dom parsing
 │   ├── sections.test.ts       # Header, sections and footer
+│   ├── sitemap.test.ts        # Sitemap URLs and robots file
 │   ├── terminal.test.ts       # Agent log typing and window buttons
 │   ├── theme-toggle.test.ts   # Pre-paint theme script and theme switching
 │   ├── theme.test.ts          # Main design tokens and their contrast
@@ -195,7 +217,9 @@ adioz-dev/
 │   ├── trace.test.ts          # Career trace scale, tabs and view switch
 │   ├── typography.test.ts     # Main design type tokens, fonts and text styles
 │   ├── ui.test.ts             # UI primitives
-│   └── view.test.ts           # View turn helpers and frames
+│   ├── view.test.ts           # View turn helpers and frames
+│   ├── workflowPages.test.ts  # Workflow page routes and pages
+│   └── workflows.test.ts      # Workflow file rules and loading
 │
 ├── .editorconfig              # Editor encoding, line endings and indentation
 ├── .gitignore

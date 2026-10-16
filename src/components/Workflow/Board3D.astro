@@ -1,0 +1,134 @@
+---
+/*
+ * A workflow's 3D board, one island: div.board3d[data-board3d] holding a
+ * canvas, hidden from assistive technology, and the board's data (its
+ * silkscreen name, the parts' ids, names, cells and kinds, the hops and
+ * each step's lit parts) as JSON. The div takes the board's aspect ratio
+ * (boardAspect) and stays invisible until src/scripts/board3d.ts sets
+ * data-ready after its first frame. After first paint, when the browser is
+ * idle and a WebGL2 context can be created, the script imports
+ * src/scripts/board3d.ts, which loads with Three.js in chunks apart from the
+ * page's script, and starts every board on the page.
+ */
+import type { Workflow } from "../../data/types";
+import {
+  boardAspect,
+  kindOf,
+  layoutBoard,
+  type BoardData,
+} from "../../scripts/board3d";
+
+interface Props {
+  workflow: Workflow;
+}
+
+const { workflow } = Astro.props;
+const data: BoardData = {
+  name: `adioz  ${workflow.slug}.flow`,
+  nodes: workflow.nodes.map(({ id, label, col, row, kind }) => ({
+    id,
+    label,
+    col,
+    row,
+    kind: kindOf({ kind }),
+  })),
+  edges: workflow.edges.map(({ from, to, label }) => ({ from, to, label })),
+  steps: workflow.steps.map((step) => step.lights),
+};
+const aspect = boardAspect(layoutBoard(data.nodes)).toFixed(4);
+/** The data as JSON safe inside a script element. */
+const json = JSON.stringify(data).replace(/</g, "\\u003c");
+---
+
+<div class="board3d" data-board3d style={`--board-aspect: ${aspect}`}>
+  <canvas aria-hidden="true"></canvas>
+  <script type="application/json" set:html={json} />
+</div>
+
+<script>
+  /*
+   * Starts the board in every .board3d[data-board3d] when the browser is idle
+   * after the page's first paint, only where a WebGL2 context can be created.
+   */
+  const hosts = [
+    ...document.querySelectorAll<HTMLElement>(".board3d[data-board3d]"),
+  ];
+  const webgl = () => {
+    try {
+      return !!document.createElement("canvas").getContext("webgl2");
+    } catch {
+      return false;
+    }
+  };
+  const load = () => {
+    if (hosts.length === 0 || !webgl()) return;
+    void import("../../scripts/board3d").then(({ startBoard }) => {
+      for (const host of hosts) startBoard(host);
+    });
+  };
+  requestAnimationFrame(() => {
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(load, { timeout: 2000 });
+    } else {
+      setTimeout(load, 200);
+    }
+  });
+</script>
+
+<style>
+  /*
+   * The board: as wide as its container at the board's aspect ratio, clear
+   * to the pointer, and invisible until its first frame (data-ready). Behind
+   * the canvas, ::before pools the page's light under the board, where its
+   * shadow falls: a faint cool pool on the dark theme, a bright white one on
+   * the light theme.
+   */
+  .board3d {
+    --board-pool: radial-gradient(
+      ellipse 50% 50% at 50% 54%,
+      rgb(196 206 220 / 0.07),
+      rgb(196 206 220 / 0.025) 62%,
+      transparent
+    );
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--board-aspect, 1.52);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s var(--ease-soft);
+  }
+
+  :global([data-theme="light"]) .board3d {
+    --board-pool: radial-gradient(
+      ellipse 50% 50% at 50% 52%,
+      rgb(255 255 255 / 0.75),
+      rgb(255 255 255 / 0.3) 62%,
+      transparent
+    );
+  }
+
+  .board3d::before {
+    content: "";
+    position: absolute;
+    inset: -8% 0;
+    background: var(--board-pool);
+  }
+
+  .board3d[data-ready] {
+    opacity: 1;
+  }
+
+  .board3d canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .board3d {
+      transition: none;
+    }
+  }
+</style>

@@ -1,7 +1,8 @@
 ---
 /*
- * The header's link to the top of the page: the Dividers mark alone, named
- * for assistive technology by the link's aria-label. The link keeps a 48px
+ * The header's link to the top of the page (to the home page from any other
+ * page): the Dividers mark alone, named for assistive technology by the
+ * link's aria-label. The link keeps a 48px
  * box in the header's row; the mark is drawn larger from its top and hangs
  * below the header into the hero (96px, 68px below 760px) while the page is
  * at its top; once the header is stuck (no data-at-top) it shrinks into the
@@ -10,9 +11,20 @@
  * focused.
  */
 import BrandMark from "../UI/BrandMark.astro";
+
+interface Props {
+  /** Whether the header is on the home page; elsewhere the mark links to it. */
+  home?: boolean;
+}
+
+const { home = true } = Astro.props;
 ---
 
-<a href="#top" class="brand" aria-label="adioz.dev, back to top">
+<a
+  href={home ? "#top" : "/"}
+  class="brand"
+  aria-label={home ? "adioz.dev, back to top" : "adioz.dev, home"}
+>
   <BrandMark label="" size={96} />
 </a>
 

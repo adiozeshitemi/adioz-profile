@@ -8,6 +8,7 @@ import Hero from "../src/components/Hero/Hero.astro";
 import ProjectCard from "../src/components/Projects/ProjectCard.astro";
 import ProjectsSection from "../src/components/Projects/ProjectsSection.astro";
 import TechStackSection from "../src/components/TechStack/TechStackSection.astro";
+import WorkflowsSection from "../src/components/Workflow/WorkflowsSection.astro";
 import {
   about,
   contact,
@@ -20,8 +21,10 @@ import {
   stats,
   techStack,
   terminal,
+  workflows,
 } from "../src/data/index";
 import { periodFrom, periodLabel, periodPoints } from "../src/lib/period";
+import { ownWorkflows, peerWorkflows } from "../src/lib/workflows";
 import { traceOrder, yearOf } from "../src/scripts/trace";
 import { render, text } from "./render";
 
@@ -543,6 +546,9 @@ describe("ExperienceSection", () => {
       );
       const company = card?.querySelector(".company");
       expect(company?.firstChild?.textContent?.trim()).toBe(item.company);
+      expect(text(company ?? null)).toBe(
+        [item.company, item.location].filter(Boolean).join(" "),
+      );
       expect(text(company?.querySelector(".location") ?? null)).toBe(
         item.location ?? "",
       );
@@ -664,7 +670,7 @@ describe("ContactSection", () => {
     expect(section?.getAttribute("aria-labelledby")).toBe(
       `${contact.id}-title`,
     );
-    expect(text(doc.querySelector(".eyebrow"))).toBe(`05 ${contact.label}`);
+    expect(text(doc.querySelector(".eyebrow"))).toBe(`06 ${contact.label}`);
     expect(text(doc.querySelector("h2 .gilt"))).toBe(contact.headline);
     expect(text(doc.querySelector(".panel.contact-panel .lead"))).toBe(
       contact.lead,
@@ -748,5 +754,33 @@ describe("Footer", () => {
     expect(top.getAttribute("href")).toBe(footer.top.url);
     expect(top.getAttribute("aria-label")).toBe(footer.top.title);
     expect(top.querySelector("svg")).not.toBeNull();
+  });
+});
+
+describe("WorkflowsSection", () => {
+  it("lists the owner's workflows, then the peers' under their own heading, each linked to its page", async () => {
+    const doc = await render(WorkflowsSection);
+    const section = doc.querySelector(`section#${workflows.id}`)!;
+    expect(text(section.querySelector("h2 .gilt"))).toBe(workflows.headline);
+    const cards = [...section.querySelectorAll("article.workflow-card")];
+    expect(cards.map((card) => text(card.querySelector("h3")))).toEqual(
+      [...ownWorkflows, ...peerWorkflows].map((w) => w.title),
+    );
+    expect(cards.map((card) => text(card.querySelector(".counts")))).toEqual(
+      [...ownWorkflows, ...peerWorkflows].map(
+        (w) =>
+          `${w.nodes.length} ${workflows.counts.nodes} · ${w.steps.length} ${workflows.counts.steps}`,
+      ),
+    );
+    expect(
+      cards.map((card) => card.querySelector(".open a")?.getAttribute("href")),
+    ).toEqual([...ownWorkflows, ...peerWorkflows].map((w) => w.path));
+    expect(text(section.querySelector("h3.peers"))).toBe(workflows.peers);
+    const peerCards = cards.slice(ownWorkflows.length);
+    peerCards.forEach((card, index) => {
+      expect(text(card.querySelector(".author"))).toBe(
+        `${workflows.contributedBy} ${peerWorkflows[index]!.author!.name}`,
+      );
+    });
   });
 });
