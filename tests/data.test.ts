@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as data from "../src/data/index";
 import {
@@ -11,6 +11,7 @@ import {
   sectionNumber,
   techStack,
   terminal,
+  workflows,
 } from "../src/data/index";
 import type { TechStack, TerminalTone } from "../src/data/types";
 
@@ -84,9 +85,10 @@ describe("data", () => {
       techStack.id,
       experience.id,
       projects.id,
+      workflows.id,
       contact.id,
     ];
-    expect(ids.map(sectionNumber)).toEqual([1, 2, 3, 4, 5]);
+    expect(ids.map(sectionNumber)).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it("throws for a section that no navigation link targets", () => {
@@ -104,48 +106,6 @@ describe("data", () => {
 });
 
 // Each test imports src/data/index.ts afresh, so its JSON mocks apply.
-/** Every workflow file under src/data/workflows/, peers included, as [path, parsed JSON]. */
-function workflowFiles(): [string, Workflow][] {
-  return readdirSync("src/data/workflows", { recursive: true })
-    .map(String)
-    .filter((path) => path.endsWith(".json"))
-    .map((path) => [
-      path,
-      JSON.parse(readFileSync(`src/data/workflows/${path}`, "utf8")),
-    ]);
-}
-
-/** The fields of a workflow file that the structure rules read. */
-interface Workflow {
-  nodes: { id: string }[];
-  edges: { from: string; to: string }[];
-  steps: { lights: string[] }[];
-}
-
-describe("workflows", () => {
-  const files = workflowFiles();
-
-  it("finds the workflow files", () => {
-    expect(files.map(([path]) => path)).toContain("mlops-loop.json");
-  });
-
-  it.each(files)(
-    "%s: unique node ids, every edge and step light on a node, every node lit",
-    (_, workflow) => {
-      const ids = workflow.nodes.map((node) => node.id);
-      expect(new Set(ids).size).toBe(ids.length);
-      const known = new Set(ids);
-      const referenced = [
-        ...workflow.edges.flatMap((edge) => [edge.from, edge.to]),
-        ...workflow.steps.flatMap((step) => step.lights),
-      ];
-      expect(referenced.filter((id) => !known.has(id))).toEqual([]);
-      const lit = new Set(workflow.steps.flatMap((step) => step.lights));
-      expect(ids.filter((id) => !lit.has(id))).toEqual([]);
-    },
-  );
-});
-
 describe("data loading", () => {
   beforeEach(() => {
     vi.resetModules();
