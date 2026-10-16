@@ -1,0 +1,328 @@
+{
+  "title": "A request through microservices",
+  "summary": "One order travels from the client to its confirmation through a gateway and four services: charged once with an idempotency key, shielded by retries and a circuit breaker, undone by a saga when a step fails, and followed by one trace from end to end.",
+  "problem": "Split across services, one order becomes several separate writes with no transaction around them. A retried call can charge a card twice, a payment can go through for stock that has run out, one slow payment provider can hold up every request waiting on it, and when an order fails no single place shows where.",
+  "nodes": [
+    {
+      "id": "client",
+      "label": "Client app",
+      "detail": "Places the order",
+      "col": 0,
+      "row": 0,
+      "kind": "rj45"
+    },
+    {
+      "id": "gateway",
+      "label": "API gateway",
+      "detail": "Checks the token",
+      "col": 1,
+      "row": 0,
+      "kind": "secure"
+    },
+    {
+      "id": "limiter",
+      "label": "Rate limiter",
+      "detail": "Per-client counts in Redis",
+      "col": 2,
+      "row": 0,
+      "kind": "memory"
+    },
+    {
+      "id": "inventory",
+      "label": "Inventory service",
+      "detail": "Holds the stock",
+      "col": 0,
+      "row": 1,
+      "kind": "socket"
+    },
+    {
+      "id": "order",
+      "label": "Order service",
+      "detail": "Coordinates each step",
+      "col": 1,
+      "row": 1,
+      "kind": "cpu"
+    },
+    {
+      "id": "orderdb",
+      "label": "Order database",
+      "detail": "Orders and outbox",
+      "col": 2,
+      "row": 1,
+      "kind": "memory"
+    },
+    {
+      "id": "broker",
+      "label": "Event broker",
+      "detail": "Order events on Kafka",
+      "col": 3,
+      "row": 1,
+      "kind": "die"
+    },
+    {
+      "id": "compensate",
+      "label": "Saga compensation",
+      "detail": "Refund, then cancel",
+      "col": 0,
+      "row": 2,
+      "kind": "beacon"
+    },
+    {
+      "id": "payment",
+      "label": "Payment service",
+      "detail": "One charge per key",
+      "col": 1,
+      "row": 2,
+      "kind": "bga"
+    },
+    {
+      "id": "retry",
+      "label": "Retry policy",
+      "detail": "Backoff with jitter",
+      "col": 2,
+      "row": 2,
+      "kind": "trimmer"
+    },
+    {
+      "id": "notify",
+      "label": "Notification service",
+      "detail": "Email and push",
+      "col": 3,
+      "row": 2,
+      "kind": "radio"
+    },
+    {
+      "id": "provider",
+      "label": "Payment provider",
+      "detail": "Charges the card",
+      "col": 1,
+      "row": 3,
+      "kind": "radio"
+    },
+    {
+      "id": "breaker",
+      "label": "Circuit breaker",
+      "detail": "Fails fast when open",
+      "col": 2,
+      "row": 3,
+      "kind": "toggle"
+    },
+    {
+      "id": "trace",
+      "label": "Trace collector",
+      "detail": "Spans from every service",
+      "col": 3,
+      "row": 3,
+      "kind": "gauge"
+    }
+  ],
+  "edges": [
+    {
+      "from": "client",
+      "to": "gateway",
+      "label": "order and token"
+    },
+    {
+      "from": "gateway",
+      "to": "limiter",
+      "label": "client ID"
+    },
+    {
+      "from": "limiter",
+      "to": "gateway",
+      "label": "within limit"
+    },
+    {
+      "from": "gateway",
+      "to": "order",
+      "label": "checked order"
+    },
+    {
+      "from": "order",
+      "to": "payment",
+      "label": "take payment"
+    },
+    {
+      "from": "payment",
+      "to": "retry",
+      "label": "keyed charge"
+    },
+    {
+      "from": "retry",
+      "to": "breaker",
+      "label": "each attempt"
+    },
+    {
+      "from": "breaker",
+      "to": "provider",
+      "label": "card charge"
+    },
+    {
+      "from": "provider",
+      "to": "payment",
+      "label": "result"
+    },
+    {
+      "from": "order",
+      "to": "inventory",
+      "label": "reserve items"
+    },
+    {
+      "from": "inventory",
+      "to": "compensate",
+      "label": "out of stock"
+    },
+    {
+      "from": "compensate",
+      "to": "payment",
+      "label": "refund"
+    },
+    {
+      "from": "compensate",
+      "to": "order",
+      "label": "cancel"
+    },
+    {
+      "from": "order",
+      "to": "orderdb",
+      "label": "order state"
+    },
+    {
+      "from": "orderdb",
+      "to": "broker",
+      "label": "outbox event"
+    },
+    {
+      "from": "broker",
+      "to": "notify",
+      "label": "order confirmed"
+    },
+    {
+      "from": "notify",
+      "to": "client",
+      "label": "email or push"
+    },
+    {
+      "from": "notify",
+      "to": "trace",
+      "label": "spans"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Check the token",
+      "text": "The client app sends the order with a signed access token, a pass it got at sign-in. Before anything else runs, the API gateway checks that the token is signed, meant for this API and not expired, so no service behind it handles a request from an unknown caller.",
+      "lights": ["client", "gateway"],
+      "failure": "A token that is read but never verified lets anyone pose as any user; the gateway checks every signature against the keys the sign-in service publishes."
+    },
+    {
+      "title": "Limit each client's rate",
+      "text": "The gateway then asks the rate limiter whether this client has requests to spare. Each client has a token bucket: a count that refills at a steady rate and drops by one with each request, kept in Redis, a fast shared store. A request that finds the bucket empty gets a 429 Too Many Requests answer, with a time to try again.",
+      "lights": ["limiter"],
+      "failure": "Counts kept in each gateway's own memory let a client multiply its limit by the number of gateways; one shared count in Redis, read and updated in a single step, gives every gateway the same limit."
+    },
+    {
+      "title": "Record the order",
+      "text": "Let through by the limiter, the order reaches the order service, which saves it in Postgres as pending before any money moves, so every later step has an order to point to. From here, the order service runs the order as a saga: a series of steps in different services, each with an undo, in place of one transaction across them all.",
+      "lights": ["gateway", "order", "orderdb"],
+      "failure": "A double click or a client retry can send the same order twice; the client sends a request ID with each order, and the orders table accepts each ID only once, so a repeat returns the first order instead of creating another."
+    },
+    {
+      "title": "Charge with an idempotency key",
+      "text": "The payment service charges the card through the payment provider, by way of a retry policy and a circuit breaker. Every charge carries an idempotency key made from the order's ID: a label that tells the provider two requests are the same charge, so the charge is applied once and a repeat gets the first answer back.",
+      "lights": ["payment", "retry", "breaker", "provider"],
+      "failure": "A charge that times out may still have gone through; without the key, sending it again would charge the customer twice."
+    },
+    {
+      "title": "Reserve the stock",
+      "text": "With the payment taken, the order service asks the inventory service to reserve the items. Charging first means stock is only ever held for orders that have paid. The order service makes the reservation final once the order is confirmed, and one never made final expires on its own.",
+      "lights": ["order", "inventory"],
+      "failure": "Two orders can race for the last item; the reservation is a single update that succeeds only while enough stock remains, so only one order gets the item."
+    },
+    {
+      "title": "Confirm through an outbox",
+      "text": "With the stock held, the order is marked confirmed, and a confirmation event is written to an outbox table in the same database transaction, so the two are saved together or not at all. A relay process that reads the outbox then publishes the event to Kafka, keyed by the order's ID so one order's events stay in sequence.",
+      "lights": ["order", "orderdb", "broker"],
+      "failure": "Saving the order and then publishing to Kafka as two separate steps can confirm an order no other service ever hears about; the outbox makes them one write."
+    },
+    {
+      "title": "Send the confirmation",
+      "text": "The notification service reads the event from Kafka and sends the customer an email or a push message. It runs apart from the order service, so a slow mail server never holds up a confirmation.",
+      "lights": ["notify", "client"],
+      "failure": "Kafka can deliver the same event more than once; the service records each event ID it has handled and skips repeats, so only a crash between sending and recording can repeat an email."
+    },
+    {
+      "title": "Retry with backoff",
+      "text": "Back at the charge: when the provider times out or answers that it is busy, the retry policy waits and tries again, backing off by doubling the wait each time, and adding a random spread called jitter so retries from many orders do not all land together. The same idempotency key goes with every attempt, so a retry can never charge the card twice.",
+      "lights": ["retry", "breaker", "provider"],
+      "failure": "A decline is the bank's answer, not a fault, and sending it again under the same key returns the same decline; only timeouts and busy answers are retried, with a cap on attempts so one failure cannot loop forever."
+    },
+    {
+      "title": "Open the breaker",
+      "text": "Like the electrical kind, a closed circuit breaker lets calls through. When too large a share of recent calls fails, the breaker opens: each call then fails immediately instead of waiting on a provider that is down. An order whose charge never reached the provider is cancelled with nothing to refund; one whose attempt timed out stays pending until the same key, sent again, shows the result. After a pause, a few trial calls go through, and the breaker closes once they succeed.",
+      "lights": ["breaker"],
+      "failure": "Retrying a call the open breaker refused would only spin in place; the retry policy treats that refusal as final, so the order fails fast instead."
+    },
+    {
+      "title": "Refund the payment",
+      "text": "Back at the reservation: if the stock has run out, the charge cannot be rolled back, because the money has already moved. The saga runs its compensation instead, undoing each finished step in reverse order, and starts with a refund sent under its own idempotency key.",
+      "lights": ["inventory", "compensate", "payment"],
+      "failure": "A refund that fails must not be dropped; the saga saves its progress with the order and retries the refund, and one still failing after its retries raises an alert for a person to settle."
+    },
+    {
+      "title": "Cancel the order",
+      "text": "With the refund accepted by the provider, the compensation's last step marks the order cancelled, and the cancellation goes out through the outbox the same way a confirmation does, so the customer is told. Every order ends confirmed or cancelled, or raises an alert for a person, never silently stuck halfway.",
+      "lights": ["order", "orderdb", "broker"],
+      "failure": "A crash halfway through the compensation could leave an order refunded but still open; the saga's saved progress lets a restarted order service resume the compensation where it stopped."
+    },
+    {
+      "title": "Follow one trace",
+      "text": "The gateway gives each order a trace ID, and every service passes it on in the headers of its calls. The outbox row stores it too, so the relay can carry it on in the Kafka message headers. Each service sends its spans, the timed pieces of its work, to the trace collector, which joins them into one timeline of the whole order.",
+      "lights": [
+        "gateway",
+        "order",
+        "payment",
+        "inventory",
+        "broker",
+        "notify",
+        "trace"
+      ],
+      "failure": "One service that drops the trace ID splits the order into two traces that cannot be joined; a shared OpenTelemetry library passes the ID on, and only the outbox relay sets it by hand, from the row."
+    }
+  ],
+  "compensations": [
+    {
+      "weakness": "No transaction spans the order, payment and inventory databases, so a failure partway leaves some steps done and others not.",
+      "compensation": "Every step has a **compensating action** that undoes it, and the saga saves its progress with the order, so a failure at any point ends in a cancelled order, refunded if it was charged, never a charge with nothing behind it."
+    },
+    {
+      "weakness": "Over a network, a timeout does not say whether the other side did the work.",
+      "compensation": "Every charge and refund carries an **idempotency key**, so the safe answer to any timeout is to send the same request again, and the provider applies it only once for as long as it keeps the key."
+    },
+    {
+      "weakness": "Other services can see a saga half-done: for a moment, a charge exists for an order that is about to be cancelled.",
+      "compensation": "The order stays **pending** until every step succeeds, and a pending order is never shipped or confirmed, so no other service acts on an order that may yet be cancelled."
+    },
+    {
+      "weakness": "Retries add load at the very moment a provider is struggling.",
+      "compensation": "The **circuit breaker** stops calls altogether while failures stay high, backoff with jitter spreads out the retries that still go through, and a retry budget caps retries at a small share of all calls, so a provider that is recovering is not knocked down again."
+    },
+    {
+      "weakness": "With each service keeping its own logs, the story of one failed order is scattered across them.",
+      "compensation": "A **trace ID** carried through every HTTP call and Kafka message joins the pieces into one timeline, so the slow call or the failed step is found in one place."
+    }
+  ],
+  "tradeoffs": [
+    "A saga lets each service keep its own database and fail on its own, but an order is briefly half-done, and every step needs an undo that is written and tested like any other feature.",
+    "Charging before reserving holds stock only for orders that have paid, but an item that sells out in between costs the customer a charge and a refund.",
+    "Tracing every order shows exactly where it slowed down or failed, but keeping every span is costly at high traffic, so the trace collector waits for each trace to end and keeps a sample, along with every slow or failed one."
+  ],
+  "stack": [
+    "Spring Boot",
+    "Resilience4j",
+    "Kafka",
+    "Postgres",
+    "Redis",
+    "OpenTelemetry"
+  ]
+}

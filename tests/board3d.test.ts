@@ -3,7 +3,7 @@ import Board3D from "../src/components/Workflow/Board3D.astro";
 import mlops from "../src/data/workflows/mlops-loop.json";
 import peer from "../src/data/workflows/peers/ruchitasingla-mlops-loop.json";
 import type { WorkflowPartKind } from "../src/data/types";
-import { ownWorkflows } from "../src/lib/workflows";
+import { allWorkflows, ownWorkflows } from "../src/lib/workflows";
 import {
   attachEnd,
   boardAspect,
@@ -159,8 +159,8 @@ describe("boardFills", () => {
     ]);
   });
 
-  it("keeps every board-level part clear of every wire", () => {
-    for (const workflow of [mlops, peer]) {
+  it("keeps every board-level part clear of every wire, on every workflow's board", () => {
+    for (const workflow of allWorkflows) {
       const { fills, routes } = board(nodesOf(workflow), workflow.edges);
       for (const { rect } of fills) {
         for (const points of routes) {
@@ -247,7 +247,7 @@ describe("partNumber", () => {
   });
 
   it("names no country", () => {
-    for (const node of [...nodesOf(mlops), ...nodesOf(peer)]) {
+    for (const node of allWorkflows.flatMap((workflow) => nodesOf(workflow))) {
       expect(partNumber(node)).not.toMatch(/[A-Z]{3}$/);
     }
   });

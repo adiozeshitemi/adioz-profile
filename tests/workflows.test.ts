@@ -174,7 +174,9 @@ describe("toWorkflow", () => {
 
 describe("the loaded workflows", () => {
   it("lists the owner's workflows, then the peers', each sorted by slug", () => {
-    expect(ownWorkflows.map((w) => w.slug)).toContain("mlops-loop");
+    expect(ownWorkflows.map((w) => w.slug)).toEqual(
+      expect.arrayContaining(["mlops-loop", "request-flow"]),
+    );
     expect(peerWorkflows.map((w) => w.slug)).toContain(
       "ruchitasingla-mlops-loop",
     );

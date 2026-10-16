@@ -115,6 +115,7 @@ adioz-dev/
 │   │   ├── workflows.json     # Workflows section and workflow page copy: headings, labels, step bar and back link
 │   │   └── workflows/         # System workflows, one file each, named by its slug: nodes in grid cells, edges, steps, compensations
 │   │       ├── mlops-loop.json
+│   │       ├── request-flow.json
 │   │       └── peers/         # Workflows by other engineers, each with its author's name and links
 │   │           └── ruchitasingla-mlops-loop.json  # Ruchita Singla's MLOps loop, at /workflows/peers/ruchitasingla-mlops-loop/
 │   ├── icons/                 # 🖼️ SVG icons inlined by Icon.astro (logo-* full-colour and lang-* single-colour language logos), with their sources and licenses
