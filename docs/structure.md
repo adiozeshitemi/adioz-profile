@@ -89,9 +89,10 @@ adioz-dev/
 │   │   │   ├── StatBanner.astro
 │   │   │   ├── StatCard.astro
 │   │   │   └── Tag.astro
-│   │   └── Workflow/          # Workflows section and workflow pages: cards, the step-through diagram and its dial
+│   │   └── Workflow/          # Workflows section and workflow pages: cards, the step-through's gold-inlay diagram, 3D board and step bar
+│   │       ├── Board3D.astro
 │   │       ├── FlowDiagram.astro
-│   │       ├── StepDial.astro
+│   │       ├── StepBar.astro
 │   │       ├── WorkflowCard.astro
 │   │       ├── WorkflowPage.astro
 │   │       └── WorkflowsSection.astro
@@ -111,7 +112,7 @@ adioz-dev/
 │   │   ├── techStack.json     # Stack section: id, label, headline, intro, skills for the gauges, tools by category
 │   │   ├── terminal.json      # Agent log title, window name, live word and entries
 │   │   ├── types.ts           # TypeScript interfaces for the portfolio content
-│   │   ├── workflows.json     # Workflows section and workflow page copy: headings, labels, dial and back link
+│   │   ├── workflows.json     # Workflows section and workflow page copy: headings, labels, step bar and back link
 │   │   └── workflows/         # System workflows, one file each, named by its slug: nodes in grid cells, edges, steps, compensations
 │   │       ├── mlops-loop.json
 │   │       └── peers/         # Workflows by other engineers, each with its author's name and links
@@ -153,9 +154,10 @@ adioz-dev/
 │   │   ├── robots.txt.ts      # /robots.txt, naming the sitemap
 │   │   └── sitemap.xml.ts     # /sitemap.xml: the home page and every workflow page
 │   ├── scripts/               # 📜 Client scripts
+│   │   ├── board3d.ts         # Workflow 3D board: Three.js circuit board, engraved components, traces and lit steps
 │   │   ├── copy.ts            # Contact copy knob: Clipboard API with a textarea fallback
 │   │   ├── field.ts           # Particle field: metal beads in depth layers, ripples
-│   │   ├── flow.ts            # Workflow step-through: lit hops, wire routing, the step dial and scroll lighting
+│   │   ├── flow.ts            # Workflow step-through: lit hops, wire routing, the step bar, Auto and scroll lighting
 │   │   ├── gauges.ts          # Tech stack gauges: scale geometry, needle sweep and drag
 │   │   ├── light.ts           # Pointer light: highlights, light crosses, panel glow, turning icons
 │   │   ├── menu.ts            # Phone menu: closing the sheet, the knob's label and state
@@ -185,12 +187,13 @@ adioz-dev/
 │   │   └── BareLayout.astro   # Stand-in for Layout.astro in page tests, recording the head props
 │   ├── activity.test.ts       # Activity panel layout, formatting and markup
 │   ├── activityCards.test.ts  # Activity SVG cards and their routes
+│   ├── board3d.test.ts        # Workflow board layout, markings, step states, markup and WebGL fallback
 │   ├── brand.test.ts          # Brand files: sizes, favicon scheme switch, manifest
 │   ├── copy.test.ts           # Copy action, its fallback and the knob's notes
 │   ├── data.test.ts           # Data rules and load-time errors
 │   ├── engraving.test.ts      # Engraving filters and engraved text styles
 │   ├── field.test.ts          # Particle field helpers and drawing
-│   ├── flow.test.ts           # Step-through hops, wire routing, dial and runner
+│   ├── flow.test.ts           # Step-through hops, wire routing, step bar moves, Auto and runner
 │   ├── gauges.test.ts         # Gauge scale, needle springs, sweep and drag
 │   ├── github.test.ts         # GitHub activity reads, streaks, totals and the snapshot fallback
 │   ├── light.test.ts          # Pointer light helpers and frames
