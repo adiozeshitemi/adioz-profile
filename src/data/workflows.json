@@ -1,0 +1,41 @@
+{
+  "id": "workflows",
+  "label": "Workflows",
+  "headline": "Systems, one step at a time.",
+  "intro": "How the systems I build move requests, money, data and models: each one an engraved diagram you step through, every hop captioned with what happens there and what can go wrong.",
+  "peers": "From peers",
+  "contributedBy": "Contributed by",
+  "open": "Step through it",
+  "counts": {
+    "nodes": "parts",
+    "hops": "hops",
+    "steps": "steps"
+  },
+  "page": {
+    "titleSuffix": "Adioz D Eshitemi",
+    "problem": "The problem",
+    "steps": "Step by step",
+    "failure": "What can go wrong:",
+    "hops": "Hops:",
+    "compensations": {
+      "title": "Weak points and compensations",
+      "weakness": "Weak point",
+      "compensation": "Compensation"
+    },
+    "tradeoffs": "Trade-offs",
+    "stack": "Stack",
+    "back": {
+      "title": "All workflows",
+      "url": "#workflows",
+      "icon": "arrow-left"
+    },
+    "dial": {
+      "label": "Step",
+      "of": "of",
+      "previous": "Previous step",
+      "next": "Next step"
+    },
+    "diagram": "Diagram of the workflow's parts and the hops between them",
+    "live": "live"
+  }
+}

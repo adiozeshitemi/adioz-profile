@@ -6,78 +6,178 @@
     {
       "id": "features",
       "label": "Feature engineering",
-      "detail": "Shared definitions"
-    },
-    {
-      "id": "teachers",
-      "label": "Teacher models",
-      "detail": "Video, audio and text"
+      "detail": "Shared definitions",
+      "col": 0,
+      "row": 0
     },
     {
       "id": "cache",
       "label": "Teacher cache",
-      "detail": "Computed once on GPU"
+      "detail": "Computed once on GPU",
+      "col": 1,
+      "row": 0
+    },
+    {
+      "id": "teachers",
+      "label": "Teacher models",
+      "detail": "Video, audio and text",
+      "col": 2,
+      "row": 0
     },
     {
       "id": "tune",
       "label": "Hyperparameter search",
-      "detail": "Every run tracked"
+      "detail": "Every run tracked",
+      "col": 0,
+      "row": 1
     },
     {
       "id": "distill",
       "label": "Multi-teacher distillation",
-      "detail": "One compact student"
+      "detail": "One compact student",
+      "col": 1,
+      "row": 1
     },
     {
       "id": "quantize",
       "label": "Quantization-aware training",
-      "detail": "Ready for INT8"
+      "detail": "Ready for INT8",
+      "col": 1,
+      "row": 2
     },
     {
       "id": "evaluate",
       "label": "Evaluation",
-      "detail": "Accuracy, F1, fairness"
-    },
-    {
-      "id": "sign",
-      "label": "Signed bundle",
-      "detail": "INT8 weights, Ed25519"
-    },
-    {
-      "id": "hub",
-      "label": "Model hub",
-      "detail": "Registry and distribution"
+      "detail": "Accuracy, F1, fairness",
+      "col": 2,
+      "row": 2
     },
     {
       "id": "tenant",
       "label": "Tenant cloud",
-      "detail": "Verifies, then loads"
+      "detail": "Verifies, then loads",
+      "col": 0,
+      "row": 3
     },
-    { "id": "abtest", "label": "A/B test", "detail": "Share of traffic" },
-    { "id": "serve", "label": "CPU inference", "detail": "No GPU runtime" },
+    {
+      "id": "hub",
+      "label": "Model hub",
+      "detail": "Registry and distribution",
+      "col": 1,
+      "row": 3
+    },
+    {
+      "id": "sign",
+      "label": "Signed bundle",
+      "detail": "INT8 weights, Ed25519",
+      "col": 2,
+      "row": 3
+    },
+    {
+      "id": "abtest",
+      "label": "A/B test",
+      "detail": "Share of traffic",
+      "col": 0,
+      "row": 4
+    },
+    {
+      "id": "serve",
+      "label": "CPU inference",
+      "detail": "No GPU runtime",
+      "col": 1,
+      "row": 4
+    },
     {
       "id": "monitor",
       "label": "Drift and latency monitoring",
-      "detail": "Live health checks"
+      "detail": "Live health checks",
+      "col": 2,
+      "row": 4
     },
-    { "id": "alert", "label": "Drift alert", "detail": "Starts the next loop" }
+    {
+      "id": "alert",
+      "label": "Drift alert",
+      "detail": "Starts the next loop",
+      "col": 0,
+      "row": 5
+    }
   ],
   "edges": [
-    { "from": "features", "to": "cache", "label": "training data" },
-    { "from": "teachers", "to": "cache", "label": "soft targets" },
-    { "from": "cache", "to": "distill", "label": "cached outputs" },
-    { "from": "tune", "to": "distill", "label": "settings" },
-    { "from": "distill", "to": "quantize", "label": "student" },
-    { "from": "quantize", "to": "evaluate", "label": "INT8 candidate" },
-    { "from": "evaluate", "to": "features", "label": "rejected" },
-    { "from": "evaluate", "to": "sign", "label": "approved" },
-    { "from": "sign", "to": "hub", "label": "signed bundle" },
-    { "from": "hub", "to": "tenant", "label": "verified pull" },
-    { "from": "tenant", "to": "abtest", "label": "new model" },
-    { "from": "abtest", "to": "serve", "label": "winner" },
-    { "from": "serve", "to": "monitor", "label": "request logs" },
-    { "from": "monitor", "to": "alert", "label": "threshold crossed" },
-    { "from": "alert", "to": "features", "label": "retrain" }
+    {
+      "from": "features",
+      "to": "cache",
+      "label": "training data"
+    },
+    {
+      "from": "teachers",
+      "to": "cache",
+      "label": "soft targets"
+    },
+    {
+      "from": "cache",
+      "to": "distill",
+      "label": "cached outputs"
+    },
+    {
+      "from": "tune",
+      "to": "distill",
+      "label": "settings"
+    },
+    {
+      "from": "distill",
+      "to": "quantize",
+      "label": "student"
+    },
+    {
+      "from": "quantize",
+      "to": "evaluate",
+      "label": "INT8 candidate"
+    },
+    {
+      "from": "evaluate",
+      "to": "features",
+      "label": "rejected"
+    },
+    {
+      "from": "evaluate",
+      "to": "sign",
+      "label": "approved"
+    },
+    {
+      "from": "sign",
+      "to": "hub",
+      "label": "signed bundle"
+    },
+    {
+      "from": "hub",
+      "to": "tenant",
+      "label": "verified pull"
+    },
+    {
+      "from": "tenant",
+      "to": "abtest",
+      "label": "new model"
+    },
+    {
+      "from": "abtest",
+      "to": "serve",
+      "label": "winner"
+    },
+    {
+      "from": "serve",
+      "to": "monitor",
+      "label": "request logs"
+    },
+    {
+      "from": "monitor",
+      "to": "alert",
+      "label": "threshold crossed"
+    },
+    {
+      "from": "alert",
+      "to": "features",
+      "label": "retrain"
+    }
   ],
   "steps": [
     {
@@ -145,6 +245,28 @@
       "text": "Monitoring compares live inputs and predictions with the training data and tracks how long each response takes. When drift stays past its limit, an alert fires and starts the loop again from the features.",
       "lights": ["monitor", "alert", "features"],
       "failure": "A limit set too low causes alert fatigue; set too high, drift is caught late."
+    }
+  ],
+  "compensations": [
+    {
+      "weakness": "A small student keeps less of what the large teachers know, and loses most on rare cases.",
+      "compensation": "Several teachers train it at once through **soft targets**, which carry how sure each teacher is and not just its answer; the student is scored class by class on held-out data, and a class that falls behind gets more of its examples in the next run."
+    },
+    {
+      "weakness": "INT8 weights round away detail that a full-precision model keeps.",
+      "compensation": "**Quantization-aware training** lets the student learn around the rounding while it trains, and the release gate compares the INT8 model with its full-precision copy on the same held-out data, failing a bundle that loses more than an agreed margin."
+    },
+    {
+      "weakness": "A class with little training data caps the accuracy any model can reach on it.",
+      "compensation": "Evaluation reports each class's accuracy beside its **share of the data**, so a weak class is traced to its data rather than to the model, and the fix is more or better examples of it."
+    },
+    {
+      "weakness": "A latency budget on CPU limits how large the model can grow.",
+      "compensation": "**Truncatable embeddings** let one model serve a short, fast vector where speed matters and its full length where precision does, so accuracy is spent only where it pays."
+    },
+    {
+      "weakness": "Accuracy measured offline fades as live data drifts away from the training data.",
+      "compensation": "An **A/B test** confirms the gain on real traffic before a model takes over, and drift monitoring starts retraining before the loss shows in results."
     }
   ],
   "tradeoffs": [

@@ -3,72 +3,162 @@
   "summary": "A model is built, checked, released in stages and watched in production. When the live data drifts away from what it was trained on, an alert starts the loop again.",
   "author": {
     "name": "Ruchita Singla",
-    "url": "https://github.com/ruchitasingla"
+    "links": [
+      {
+        "title": "Portfolio",
+        "url": "https://ruchitasingla.github.io/Portfolio/",
+        "icon": "globe"
+      }
+    ]
   },
   "problem": "Without a loop, a model is trained once, shipped and forgotten. Nobody can reproduce it, nobody checked who it works badly for, and nobody notices when real-world data changes and its predictions quietly get worse.",
   "nodes": [
     {
       "id": "features",
       "label": "Feature engineering",
-      "detail": "Versioned features"
+      "detail": "Versioned features",
+      "col": 0,
+      "row": 0
     },
     {
       "id": "distill",
       "label": "Distillation",
-      "detail": "Small student model"
+      "detail": "Small student model",
+      "col": 1,
+      "row": 0
     },
     {
       "id": "tune",
       "label": "Hyperparameter search",
-      "detail": "Searched settings"
+      "detail": "Searched settings",
+      "col": 2,
+      "row": 0
+    },
+    {
+      "id": "alert",
+      "label": "Drift alert",
+      "detail": "Starts the next loop",
+      "col": 0,
+      "row": 1
     },
     {
       "id": "track",
       "label": "Experiment tracking",
-      "detail": "Reproducible runs"
-    },
-    { "id": "evaluate", "label": "Evaluation", "detail": "Accuracy and F1" },
-    {
-      "id": "fairness",
-      "label": "Fairness checks",
-      "detail": "Per-group results"
-    },
-    {
-      "id": "registry",
-      "label": "Model registry",
-      "detail": "Versioned models"
-    },
-    {
-      "id": "release",
-      "label": "Signed release",
-      "detail": "Verified artifact"
-    },
-    { "id": "abtest", "label": "A/B testing", "detail": "Small traffic share" },
-    {
-      "id": "inference",
-      "label": "Inference",
-      "detail": "Serving predictions"
+      "detail": "Reproducible runs",
+      "col": 2,
+      "row": 1
     },
     {
       "id": "monitor",
       "label": "Drift and latency monitoring",
-      "detail": "Live health checks"
+      "detail": "Live health checks",
+      "col": 0,
+      "row": 2
     },
-    { "id": "alert", "label": "Drift alert", "detail": "Starts the next loop" }
+    {
+      "id": "evaluate",
+      "label": "Evaluation",
+      "detail": "Accuracy and F1",
+      "col": 2,
+      "row": 2
+    },
+    {
+      "id": "inference",
+      "label": "Inference",
+      "detail": "Serving predictions",
+      "col": 0,
+      "row": 3
+    },
+    {
+      "id": "fairness",
+      "label": "Fairness checks",
+      "detail": "Per-group results",
+      "col": 2,
+      "row": 3
+    },
+    {
+      "id": "abtest",
+      "label": "A/B testing",
+      "detail": "Small traffic share",
+      "col": 0,
+      "row": 4
+    },
+    {
+      "id": "release",
+      "label": "Signed release",
+      "detail": "Verified artifact",
+      "col": 1,
+      "row": 4
+    },
+    {
+      "id": "registry",
+      "label": "Model registry",
+      "detail": "Versioned models",
+      "col": 2,
+      "row": 4
+    }
   ],
   "edges": [
-    { "from": "features", "to": "distill", "label": "training data" },
-    { "from": "distill", "to": "tune", "label": "student model" },
-    { "from": "tune", "to": "track", "label": "best settings" },
-    { "from": "track", "to": "evaluate", "label": "candidate" },
-    { "from": "evaluate", "to": "fairness", "label": "metrics" },
-    { "from": "fairness", "to": "registry", "label": "approved" },
-    { "from": "registry", "to": "release", "label": "version" },
-    { "from": "release", "to": "abtest", "label": "signed model" },
-    { "from": "abtest", "to": "inference", "label": "winner" },
-    { "from": "inference", "to": "monitor", "label": "request logs" },
-    { "from": "monitor", "to": "alert", "label": "threshold crossed" },
-    { "from": "alert", "to": "features", "label": "retrain" }
+    {
+      "from": "features",
+      "to": "distill",
+      "label": "training data"
+    },
+    {
+      "from": "distill",
+      "to": "tune",
+      "label": "student model"
+    },
+    {
+      "from": "tune",
+      "to": "track",
+      "label": "best settings"
+    },
+    {
+      "from": "track",
+      "to": "evaluate",
+      "label": "candidate"
+    },
+    {
+      "from": "evaluate",
+      "to": "fairness",
+      "label": "metrics"
+    },
+    {
+      "from": "fairness",
+      "to": "registry",
+      "label": "approved"
+    },
+    {
+      "from": "registry",
+      "to": "release",
+      "label": "version"
+    },
+    {
+      "from": "release",
+      "to": "abtest",
+      "label": "signed model"
+    },
+    {
+      "from": "abtest",
+      "to": "inference",
+      "label": "winner"
+    },
+    {
+      "from": "inference",
+      "to": "monitor",
+      "label": "request logs"
+    },
+    {
+      "from": "monitor",
+      "to": "alert",
+      "label": "threshold crossed"
+    },
+    {
+      "from": "alert",
+      "to": "features",
+      "label": "retrain"
+    }
   ],
   "steps": [
     {
