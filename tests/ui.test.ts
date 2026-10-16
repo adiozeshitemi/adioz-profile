@@ -238,6 +238,22 @@ describe("StatBanner", () => {
     const labels = [...doc.querySelectorAll("dt")].map((dt) => text(dt));
     expect(labels).toEqual(stats.map((stat) => stat.label));
   });
+
+  it("sets more than three stats in pairs, and three or fewer in one row", async () => {
+    const stat = { value: 1, suffix: "+", label: "Stat" };
+    const four = await render(StatBanner, {
+      props: { stats: [stat, stat, stat, stat] },
+    });
+    expect(four.querySelector("dl.stats")?.classList.contains("pairs")).toBe(
+      true,
+    );
+    const three = await render(StatBanner, {
+      props: { stats: [stat, stat, stat] },
+    });
+    expect(three.querySelector("dl.stats")?.classList.contains("pairs")).toBe(
+      false,
+    );
+  });
 });
 
 describe("Screw", () => {
