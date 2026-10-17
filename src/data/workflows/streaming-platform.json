@@ -1,0 +1,607 @@
+{
+  "title": "A subscription streaming platform",
+  "summary": "Sign-in, the home screen, a checkout and a play request from the web, phone and TV apps, each through its own backend for frontend, with Kafka carrying the events, change data, heartbeats, activity and logs behind them.",
+  "problem": "A subscription service lets only paying households stream, on a limited number of screens, from devices as different as a browser and a TV remote. Payments confirm late and out of order, content keys must stop with the session, and every login, heartbeat and log line has to reach the systems that act on it without slowing the stream.",
+  "nodes": [
+    {
+      "id": "lb",
+      "label": "Cloud load balancer",
+      "detail": "Across zones",
+      "col": 1,
+      "row": 0,
+      "kind": "qfp"
+    },
+    {
+      "id": "gw",
+      "label": "Ingress gateway",
+      "detail": "Envoy: TLS, limits, routes",
+      "col": 2,
+      "row": 0,
+      "kind": "rj45"
+    },
+    {
+      "id": "cdn",
+      "label": "CDN edge",
+      "detail": "Signed segments",
+      "col": 3,
+      "row": 0,
+      "kind": "radio"
+    },
+    {
+      "id": "origin",
+      "label": "Origin storage",
+      "detail": "Encrypted media",
+      "col": 3,
+      "row": 1,
+      "kind": "memory"
+    },
+    {
+      "id": "idn",
+      "label": "Identity",
+      "detail": "OIDC, accounts, MFA",
+      "col": 0,
+      "row": 0,
+      "kind": "secure"
+    },
+    {
+      "id": "wbff",
+      "label": "Web BFF",
+      "detail": "Cookie session",
+      "col": 0,
+      "row": 1,
+      "kind": "bga"
+    },
+    {
+      "id": "mbff",
+      "label": "Mobile BFF",
+      "detail": "Lean payloads",
+      "col": 2,
+      "row": 1,
+      "kind": "bga"
+    },
+    {
+      "id": "tbff",
+      "label": "TV BFF",
+      "detail": "Device pairing",
+      "col": 1,
+      "row": 1,
+      "kind": "bga"
+    },
+    {
+      "id": "recs",
+      "label": "Recommendations",
+      "detail": "For you, similar",
+      "col": 2,
+      "row": 4,
+      "kind": "cpu"
+    },
+    {
+      "id": "cat",
+      "label": "Catalog",
+      "detail": "Titles, ratings, search",
+      "col": 1,
+      "row": 4,
+      "kind": "qfp"
+    },
+    {
+      "id": "ent",
+      "label": "Entitlements",
+      "detail": "Plan and limits",
+      "col": 2,
+      "row": 3,
+      "kind": "trimmer"
+    },
+    {
+      "id": "play",
+      "label": "Playback API",
+      "detail": "Issues grants",
+      "col": 1,
+      "row": 2,
+      "kind": "socket"
+    },
+    {
+      "id": "sess",
+      "label": "Play sessions",
+      "detail": "Heartbeats, screen caps",
+      "col": 3,
+      "row": 2,
+      "kind": "qfp"
+    },
+    {
+      "id": "drm",
+      "label": "DRM licenses",
+      "detail": "Keys per session",
+      "col": 3,
+      "row": 3,
+      "kind": "secure"
+    },
+    {
+      "id": "keys",
+      "label": "Key service",
+      "detail": "Content keys",
+      "col": 3,
+      "row": 4,
+      "kind": "secure"
+    },
+    {
+      "id": "bill",
+      "label": "Billing",
+      "detail": "Plans, renewals",
+      "col": 0,
+      "row": 6,
+      "kind": "qfp"
+    },
+    {
+      "id": "pay",
+      "label": "Payment provider",
+      "detail": "Charges, webhooks",
+      "col": 1,
+      "row": 5,
+      "kind": "radio"
+    },
+    {
+      "id": "rabbit",
+      "label": "RabbitMQ",
+      "detail": "Checkout timers",
+      "col": 0,
+      "row": 5,
+      "kind": "toggle"
+    },
+    {
+      "id": "pg",
+      "label": "Postgres",
+      "detail": "Per service, with outbox",
+      "col": 0,
+      "row": 7,
+      "kind": "memory"
+    },
+    {
+      "id": "dbz",
+      "label": "Debezium",
+      "detail": "Outbox to Kafka",
+      "col": 1,
+      "row": 6,
+      "kind": "qfp"
+    },
+    {
+      "id": "kafka",
+      "label": "Kafka",
+      "detail": "Events, CDC, activity, logs",
+      "col": 2,
+      "row": 5,
+      "kind": "die"
+    },
+    {
+      "id": "notif",
+      "label": "Notifications",
+      "detail": "Email, push",
+      "col": 0,
+      "row": 4,
+      "kind": "qfp"
+    },
+    {
+      "id": "mail",
+      "label": "Email and SMS",
+      "detail": "Message gateways",
+      "col": 0,
+      "row": 2,
+      "kind": "radio"
+    },
+    {
+      "id": "redis",
+      "label": "Redis",
+      "detail": "Sessions, limits, hot copies",
+      "col": 2,
+      "row": 2,
+      "kind": "memory"
+    },
+    {
+      "id": "flink",
+      "label": "Flink",
+      "detail": "Windowed streams",
+      "col": 1,
+      "row": 7,
+      "kind": "gpu"
+    },
+    {
+      "id": "ch",
+      "label": "ClickHouse",
+      "detail": "Events, history, logs",
+      "col": 2,
+      "row": 7,
+      "kind": "memory"
+    },
+    {
+      "id": "reports",
+      "label": "Reports",
+      "detail": "Royalties, QoE",
+      "col": 3,
+      "row": 7,
+      "kind": "qfp"
+    },
+    {
+      "id": "fraud",
+      "label": "Fraud detector",
+      "detail": "Revoke, step-up",
+      "col": 3,
+      "row": 5,
+      "kind": "cpu"
+    },
+    {
+      "id": "otel",
+      "label": "OpenTelemetry",
+      "detail": "Logs, traces",
+      "col": 2,
+      "row": 6,
+      "kind": "qfp"
+    },
+    {
+      "id": "prom",
+      "label": "Prometheus",
+      "detail": "Scrapes pods",
+      "col": 2,
+      "row": 8,
+      "kind": "gauge"
+    },
+    {
+      "id": "alert",
+      "label": "Alertmanager",
+      "detail": "SLO burn pages",
+      "col": 1,
+      "row": 8,
+      "kind": "beacon"
+    },
+    {
+      "id": "graf",
+      "label": "Grafana",
+      "detail": "Dashboards",
+      "col": 3,
+      "row": 8,
+      "kind": "gauge"
+    }
+  ],
+  "edges": [
+    {
+      "from": "lb",
+      "to": "gw",
+      "label": "HTTPS, every zone"
+    },
+    {
+      "from": "gw",
+      "to": "redis",
+      "label": "Rate-limit counters"
+    },
+    {
+      "from": "gw",
+      "to": "wbff",
+      "label": "Web host"
+    },
+    {
+      "from": "gw",
+      "to": "mbff",
+      "label": "App host"
+    },
+    {
+      "from": "gw",
+      "to": "tbff",
+      "label": "TV host"
+    },
+    {
+      "from": "gw",
+      "to": "idn",
+      "label": "Sign-in pages"
+    },
+    {
+      "from": "tbff",
+      "to": "idn",
+      "label": "Device code, polled"
+    },
+    {
+      "from": "idn",
+      "to": "pg",
+      "label": "Accounts, devices, outbox"
+    },
+    {
+      "from": "idn",
+      "to": "mail",
+      "label": "MFA codes, new-device alerts"
+    },
+    {
+      "from": "recs",
+      "to": "redis",
+      "label": "Candidate rows"
+    },
+    {
+      "from": "recs",
+      "to": "ent",
+      "label": "Plan and region filter"
+    },
+    {
+      "from": "recs",
+      "to": "cat",
+      "label": "Title details"
+    },
+    {
+      "from": "wbff",
+      "to": "bill",
+      "label": "Checkout"
+    },
+    {
+      "from": "bill",
+      "to": "pg",
+      "label": "Subscription and outbox row"
+    },
+    {
+      "from": "bill",
+      "to": "pay",
+      "label": "Charge, keyed by checkout"
+    },
+    {
+      "from": "pay",
+      "to": "bill",
+      "label": "Signed webhook"
+    },
+    {
+      "from": "rabbit",
+      "to": "bill",
+      "label": "Checkout expiry timer"
+    },
+    {
+      "from": "pg",
+      "to": "dbz",
+      "label": "Write-ahead log"
+    },
+    {
+      "from": "dbz",
+      "to": "kafka",
+      "label": "billing.events, cdc.*"
+    },
+    {
+      "from": "kafka",
+      "to": "ent",
+      "label": "subscription.activated"
+    },
+    {
+      "from": "ent",
+      "to": "redis",
+      "label": "Hot entitlement copy"
+    },
+    {
+      "from": "kafka",
+      "to": "notif",
+      "label": "Receipts, reminders"
+    },
+    {
+      "from": "notif",
+      "to": "mail",
+      "label": "Receipt by email"
+    },
+    {
+      "from": "wbff",
+      "to": "play",
+      "label": "Play request"
+    },
+    {
+      "from": "mbff",
+      "to": "play",
+      "label": "Play request"
+    },
+    {
+      "from": "tbff",
+      "to": "play",
+      "label": "Play request"
+    },
+    {
+      "from": "play",
+      "to": "cat",
+      "label": "Rating, region window"
+    },
+    {
+      "from": "play",
+      "to": "ent",
+      "label": "Plan covers the title?"
+    },
+    {
+      "from": "play",
+      "to": "sess",
+      "label": "Open a session"
+    },
+    {
+      "from": "sess",
+      "to": "redis",
+      "label": "Live streams per household"
+    },
+    {
+      "from": "cdn",
+      "to": "origin",
+      "label": "Cache miss"
+    },
+    {
+      "from": "drm",
+      "to": "sess",
+      "label": "Session still live?"
+    },
+    {
+      "from": "drm",
+      "to": "keys",
+      "label": "Content key"
+    },
+    {
+      "from": "sess",
+      "to": "kafka",
+      "label": "play.heartbeats"
+    },
+    {
+      "from": "kafka",
+      "to": "flink",
+      "label": "Event-time windows"
+    },
+    {
+      "from": "flink",
+      "to": "ch",
+      "label": "QoE per minute"
+    },
+    {
+      "from": "ch",
+      "to": "reports",
+      "label": "Watch minutes, QoE"
+    },
+    {
+      "from": "kafka",
+      "to": "fraud",
+      "label": "Login, device, play events"
+    },
+    {
+      "from": "fraud",
+      "to": "kafka",
+      "label": "risk.actions"
+    },
+    {
+      "from": "kafka",
+      "to": "recs",
+      "label": "Recent activity"
+    },
+    {
+      "from": "otel",
+      "to": "kafka",
+      "label": "logs.raw, spans"
+    },
+    {
+      "from": "kafka",
+      "to": "ch",
+      "label": "Logs and events into tables"
+    },
+    {
+      "from": "prom",
+      "to": "alert",
+      "label": "Burn-rate alerts"
+    },
+    {
+      "from": "prom",
+      "to": "graf",
+      "label": "Dashboards"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Enter at the edge",
+      "text": "A browser, a phone app or a TV app sends every request over HTTPS to the cloud load balancer, which spreads it across the ingress gateway's Envoy pods in every zone; TLS ends at the gateway. Envoy's rate-limit service counts each caller's requests in Redis, shared by every gateway pod, and answers 429 with Retry-After past the limit. The gateway then routes by host, so the web, app and TV hosts each reach their own backend for frontend (BFF).",
+      "lights": ["lb", "gw", "redis"],
+      "failure": "A lost zone takes its gateway pods with it; health checks steer traffic to the other zones, and every service runs as a Helm release with replicas across zones."
+    },
+    {
+      "title": "Sign in through every BFF",
+      "text": "Each BFF is a confidential OIDC client of the identity service, so no token lives in a browser or an app. The web and phone apps send the user to Identity's hosted sign-in page, password then MFA, and an authorisation code with PKCE comes back to the BFF. The TV, with only a remote, asks Identity for a **device code** and shows a short user code and a QR link; the user approves it on a phone, and the TV BFF polls until Identity answers.",
+      "lights": ["gw", "idn", "wbff", "mbff", "tbff"],
+      "failure": "Credential stuffing; the gateway limits attempts per IP, account and device in Redis, and Identity alerts the user to every new device."
+    },
+    {
+      "title": "Record the login",
+      "text": "Identity checks the password hash and MFA factors in its Postgres, sends the MFA code or a new-device alert through the email and SMS gateways, and in one transaction registers the device and writes login.succeeded to its outbox. It returns an access JWT, which carries the profile's maturity level, and a rotating refresh token. The BFF keeps both in Redis under a session ID and gives the device only that session: an HttpOnly cookie on the web, a keychain token on the phone, a device token on the TV.",
+      "lights": ["idn", "pg", "mail", "redis"]
+    },
+    {
+      "title": "Build the home screen",
+      "text": "Each BFF asks Recommendations for the profile's rows, sized for its screen. Recommendations reads the precomputed candidate rows from Redis, keeps the titles the plan and region allow, as Entitlements reports them, and the profile's maturity level permits, and fills in each title from the Catalog. The BFF shapes the response for its client: a server-rendered page for the web, lean JSON for the app, rows built for a remote on the TV.",
+      "lights": ["wbff", "mbff", "tbff", "recs", "cat", "ent", "redis"]
+    },
+    {
+      "title": "Open one web checkout",
+      "text": "Subscribe opens a checkout in Billing, which writes a pending row to Postgres whose ID becomes the **idempotency key** for every charge attempt. The web shows the checkout page; the app opens it in the phone's browser and the TV shows it as a QR code the phone scans, so every client pays through one web checkout, outside app-store billing. The card goes only into the payment provider's hosted fields, and Billing sees a token.",
+      "lights": ["wbff", "mbff", "tbff", "bill", "pg"]
+    },
+    {
+      "title": "Charge once, confirm by webhook",
+      "text": "Billing creates the subscription at the payment provider with the checkout ID as the idempotency key, so a retried request cannot charge twice; when the bank asks for 3-D Secure, the browser completes the challenge with the provider. The provider's **signed webhook**, not the browser's redirect, marks the invoice paid. A RabbitMQ timer fires 30 minutes after the checkout opens: if no webhook has arrived, Billing asks the provider for the payment's state, then activates or expires the checkout.",
+      "lights": ["bill", "pay", "rabbit"],
+      "failure": "A forged or replayed webhook; Billing verifies the provider's signature and stores each webhook ID, dropping one it has already handled."
+    },
+    {
+      "title": "Publish through the outbox",
+      "text": "In one Postgres transaction Billing marks the subscription active and the invoice paid and writes subscription.activated to the outbox table. Debezium reads the outbox from the write-ahead log and publishes the event to billing.events, keyed by household so each household's events stay in order. The commit and its event cannot part: there is no moment where one is written and the other lost.",
+      "lights": ["bill", "pg", "dbz", "kafka"],
+      "failure": "Kafka down; the rows wait in the outbox and the replication slot holds the log, so Debezium publishes them, late but complete, when Kafka is back."
+    },
+    {
+      "title": "Grant the plan, send the receipt",
+      "text": "Entitlements consumes subscription.activated, grants the plan's titles and screen limit to the household, and refreshes its copy in Redis, so the next play request passes. Notifications consumes the same event and sends the receipt and a welcome by email and push. Each reads in its own consumer group at its own pace; a send that keeps failing moves to a retry topic, then a dead-letter topic, instead of holding up its partition.",
+      "lights": ["kafka", "ent", "redis", "notif", "mail"]
+    },
+    {
+      "title": "Ask to play",
+      "text": "Press play reaches the Playback API through the client's BFF, with the access JWT. Playback checks the title's rating and region window in the Catalog against the maturity level in the token's claims, and asks Entitlements whether the household's plan covers the title here and now.",
+      "lights": ["wbff", "mbff", "tbff", "play", "cat", "ent"]
+    },
+    {
+      "title": "Open a play session",
+      "text": "Playback opens a session in Play sessions, which counts the household's live streams in Redis, each with an expiry, and refuses one past the plan's **screen limit**. Playback returns a grant through the BFF: a signed CDN URL and a license token bound to the session.",
+      "lights": ["play", "sess", "redis"],
+      "failure": "A stream left open on a lost device; with no heartbeat its Redis entry expires within minutes and frees the screen."
+    },
+    {
+      "title": "Stream and license",
+      "text": "The player fetches the manifest and the segments from the CDN with the signed URL; a cache miss fetches the encrypted renditions from origin storage. It sends the license token to DRM licenses, which checks with Play sessions that the session is still live, then gets the title's content key from the key service. Licenses are short-lived, Widevine or PlayReady in browsers and FairPlay on Apple devices, so a revoked session stops at the next renewal.",
+      "lights": ["cdn", "origin", "drm", "sess", "keys"]
+    },
+    {
+      "title": "Process the heartbeats",
+      "text": "Every 30 to 60 seconds the player's heartbeat reaches Play sessions through the BFF, which keeps the session alive and publishes play.heartbeats. Flink reads them in event time, with watermarks for late arrivals, and writes quality of experience per minute to ClickHouse: start-up time and rebuffering by CDN, region and device. Reports turns the same history into watch minutes per title for royalties.",
+      "lights": ["sess", "kafka", "flink", "ch", "reports"]
+    },
+    {
+      "title": "Catch abuse as it happens",
+      "text": "The fraud detector consumes the login, device and play events: a new device, travel too fast to be real, one account streaming from many homes. It publishes risk.actions; Identity revokes the refresh-token family, Play sessions ends the flagged streams, and the BFFs ask for MFA on the next request, so a stolen login stops working within minutes.",
+      "lights": ["kafka", "fraud", "idn", "sess"]
+    },
+    {
+      "title": "Track what people watch",
+      "text": "The apps batch impressions, searches, plays and seeks to their BFF, which publishes them to activity topics keyed by profile. Recommendations reads recent activity to re-rank rows such as Continue watching, and Flink groups the rest into viewing sessions for analysts and the nightly training that rebuilds each profile's candidate rows in Redis.",
+      "lights": ["wbff", "mbff", "tbff", "kafka", "recs", "flink"]
+    },
+    {
+      "title": "Watch the platform",
+      "text": "An OpenTelemetry agent on every node collects each pod's logs and spans and publishes them to Kafka, which absorbs bursts; ClickHouse stores them for search and trace views. Prometheus scrapes every pod, Kafka's consumer lag and Flink's business metrics, such as payment declines and failed play starts; Alertmanager pages the on-call when an SLO burns too fast, and Grafana draws the dashboards.",
+      "lights": ["otel", "kafka", "ch", "prom", "alert", "graf"]
+    }
+  ],
+  "compensations": [
+    {
+      "weakness": "Three BFFs call the same services, so a change to a service's API reaches three codebases.",
+      "compensation": "Each service publishes a versioned contract, and **consumer-driven contract tests** run every BFF against it before a release; a breaking change ships as a new version beside the old one."
+    },
+    {
+      "weakness": "Kafka carries events, change data, activity and logs, so one busy use can slow the rest.",
+      "compensation": "Each use has its own topics, partitions and retention, and logs and spans run under a **client quota**, so a burst of logs cannot delay a grant."
+    },
+    {
+      "weakness": "A payment confirmed by webhook can reach Billing minutes after the user paid.",
+      "compensation": "The checkout page follows Billing's state, the **RabbitMQ timer** asks the provider when no webhook arrives, and a push on activation tells every signed-in device as soon as the plan is granted."
+    },
+    {
+      "weakness": "Playback trusts the maturity level in the access token, which can be out of date for the token's lifetime.",
+      "compensation": "Access tokens live **five minutes**, and changing a profile's maturity level revokes its refresh tokens, so the next refresh carries the new level."
+    }
+  ],
+  "tradeoffs": [
+    "A BFF per client gets each device's sign-in and payloads right, at the cost of three services that call the same backends.",
+    "One web checkout for every client keeps a single payment path and avoids app-store fees, but phone and TV users leave the app to pay.",
+    "Kafka as the one spine gives every consumer the same replayable history, but every team now depends on its partitions, retention and upgrades."
+  ],
+  "stack": [
+    "Kubernetes",
+    "Helm",
+    "Istio",
+    "Envoy",
+    "OIDC",
+    "Postgres",
+    "Debezium",
+    "Kafka",
+    "Flink",
+    "RabbitMQ",
+    "Redis",
+    "ClickHouse",
+    "OpenTelemetry",
+    "Prometheus",
+    "Grafana"
+  ]
+}
