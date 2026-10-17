@@ -11,9 +11,17 @@ import {
   boardRoutes,
   CELL_W,
   clearOf,
+  CODE_SCALE,
+  CODE_SIDE_GAP,
+  fitMarking,
+  footprintOf,
   KIND_DEPTH,
   kindOf,
   layoutBoard,
+  MARK_EM,
+  MARK_HOLD,
+  MARK_MAX,
+  markPlans,
   meterCaptions,
   nameSplits,
   nodeAreas,
@@ -26,7 +34,7 @@ import {
   type BoardData,
   type BoardNode,
 } from "../src/scripts/board3d";
-import type { Point } from "../src/scripts/flow";
+import type { Box, Point } from "../src/scripts/flow";
 import { render } from "./render";
 
 const nodesOf = (workflow: { nodes: unknown[] }) =>
@@ -277,6 +285,255 @@ describe("markings", () => {
     });
     expect(text.title).toBe("ADIOZ  MLOPS-LOOP.FLOW");
     expect(text.meta).toMatch(/^REV \d{2} · 14 PARTS · 15 HOPS · ENIG · 6L$/);
+  });
+});
+
+describe("fitMarking", () => {
+  /** A monospace measure in ems: 0.6 a letter, with 0.05 of tracking between letters. */
+  const mono = (text: string) => text.length * 0.65 - 0.05;
+  /** JetBrains Mono's cap height, in ems. */
+  const CAP = 0.73;
+  /** The clearance fitMarking keeps under a block's last baseline, in ems. */
+  const FOOT = 0.04;
+
+  it("sets a name that fits on one line, grown to its room up to MARK_MAX", () => {
+    const fit = fitMarking("CLIENT APPS", "", 4.9, 2, mono, CAP);
+    expect(fit.lines).toEqual(["CLIENT APPS"]);
+    expect(fit.em).toBe(MARK_MAX);
+  });
+
+  it("holds a block at its `max`", () => {
+    const fit = fitMarking("CLIENT APPS", "", 4.9, 2, mono, CAP, {
+      max: MARK_EM,
+    });
+    expect(fit.em).toBe(MARK_EM);
+  });
+
+  it("grows a block until it fills its room's width or height", () => {
+    const wide = fitMarking("CLOUD LOAD BALANCER", "", 4.42, 1.33, mono, CAP);
+    expect(wide.lines).toEqual(["CLOUD LOAD BALANCER"]);
+    expect(wide.em).toBeGreaterThan(MARK_EM);
+    expect(wide.width * wide.em).toBeCloseTo(4.42, 9);
+    const deep = fitMarking(
+      "EVALUATION",
+      "AZ-EV31 · 2507",
+      4.06,
+      0.8,
+      mono,
+      CAP,
+    );
+    expect(deep.code).toBe("AZ-EV31 · 2507");
+    expect(deep.em).toBeGreaterThan(MARK_EM);
+    expect(deep.height * deep.em).toBeCloseTo(0.8, 9);
+  });
+
+  it("keeps a name on one line, shrunk, while it holds MARK_HOLD of MARK_EM", () => {
+    const fit = fitMarking("ORDER SERVICE", "", 2.6, 1.5, mono, CAP);
+    expect(fit.lines).toEqual(["ORDER SERVICE"]);
+    expect(fit.em).toBeLessThan(MARK_EM);
+    expect(fit.em).toBeGreaterThanOrEqual(MARK_EM * MARK_HOLD);
+  });
+
+  it("breaks a name only past MARK_HOLD, at the break that sets it largest, then grows it", () => {
+    const fit = fitMarking("RABBITMQ SCHEDULER", "", 2.87, 1.9, mono, CAP);
+    expect(fit.lines).toEqual(["RABBITMQ", "SCHEDULER"]);
+    expect(fit.em).toBe(MARK_MAX);
+    expect(
+      fitMarking("RABBITMQ SCHEDULER", "", 2.87, 1.9, mono, CAP, {
+        max: MARK_EM,
+      }).em,
+    ).toBe(MARK_EM);
+  });
+
+  it("decides the break at MARK_EM, so growing never breaks a name that fits on one line", () => {
+    const fit = fitMarking("IDENTITY PROVIDER", "", 3.2, 2.36, mono, CAP);
+    expect(fit.lines).toEqual(["IDENTITY PROVIDER"]);
+    expect(fit.em).toBeCloseTo(3.2 / mono("IDENTITY PROVIDER"), 9);
+  });
+
+  it("takes the more even of two breaks that set a name at one size", () => {
+    expect(
+      fitMarking("DRIFT AND LATENCY MONITORING", "", 4, 0.9, mono, CAP).lines,
+    ).toEqual(["DRIFT AND LATENCY", "MONITORING"]);
+  });
+
+  it("shrinks a name that overflows its room on one line and on two", () => {
+    const fit = fitMarking("ALERTMANAGER PAGING", "", 2.1, 1.44, mono, CAP);
+    expect(fit.lines).toEqual(["ALERTMANAGER", "PAGING"]);
+    expect(fit.em).toBeCloseTo(2.1 / mono("ALERTMANAGER"), 9);
+    expect(fit.em).toBeLessThan(MARK_EM);
+  });
+
+  it("shrinks a word it cannot break to the room's width, and any name to its height", () => {
+    const word = fitMarking("ALERTMANAGER", "", 1, 1, mono, CAP);
+    expect(word.lines).toEqual(["ALERTMANAGER"]);
+    expect(word.width * word.em).toBeCloseTo(1, 9);
+    const legend = fitMarking("A", "", 0.6, 0.1, mono, CAP);
+    expect(legend.height * legend.em).toBeCloseTo(0.1, 9);
+  });
+
+  it("sets nothing in a room with no area", () => {
+    expect(
+      fitMarking("KAFKA CLUSTER", "AZ-KC75 · 2649", 0, 1, mono, CAP),
+    ).toMatchObject({ lines: [], code: "", em: 0 });
+  });
+
+  it("sets the part number under the name, cut back a word at a time, and leaves it off before shrinking the name", () => {
+    expect(
+      fitMarking("PAYMENT SERVICE", "AZ-PS47 · 2631", 4.56, 1.9, mono, CAP),
+    ).toMatchObject({
+      lines: ["PAYMENT SERVICE"],
+      code: "AZ-PS47 · 2631",
+      side: false,
+      codeScale: CODE_SCALE,
+      em: MARK_MAX,
+    });
+    expect(fitMarking("CPU", "AZ-CP50 · 2504", 1.5, 1.9, mono, CAP).code).toBe(
+      "AZ-CP50",
+    );
+    expect(
+      fitMarking("TEACHER MODELS", "AZ-TM12 · 2501", 5.5, 0.48, mono, CAP),
+    ).toMatchObject({ lines: ["TEACHER MODELS"], code: "" });
+  });
+
+  it("turns the part number up the room's right edge when asked, or when only that fits", () => {
+    const asked = fitMarking(
+      "CLIENT APPS",
+      "AZ-CA20 · 2531",
+      5.07,
+      1.67,
+      mono,
+      CAP,
+      { side: true },
+    );
+    expect(asked).toMatchObject({
+      lines: ["CLIENT APPS"],
+      code: "AZ-CA20",
+      side: true,
+      em: MARK_MAX,
+    });
+    expect(asked.width * asked.em).toBeCloseTo(5.07, 9);
+    expect(
+      fitMarking("CPU", "AZ-CP50 · 2504", 1.2, 1.5, mono, CAP),
+    ).toMatchObject({ code: "AZ-CP50", side: true, codeScale: CODE_SCALE });
+  });
+
+  it("grows a turned part number with the name only as far as the room's height holds it", () => {
+    const fit = fitMarking(
+      "INGRESS GATEWAY",
+      "AZ-IG62 · 2604",
+      6.8,
+      1.42,
+      mono,
+      CAP,
+      { side: true },
+    );
+    expect(fit).toMatchObject({ code: "AZ-IG62", side: true, em: MARK_MAX });
+    expect(fit.codeScale).toBeLessThan(CODE_SCALE);
+    expect(mono(fit.code) * fit.codeScale * fit.em).toBeCloseTo(
+      1.42 - FOOT * fit.em,
+      9,
+    );
+  });
+
+  it("never sets a block larger than its room nor larger than its `max`, and breaks a name only where one line does not fit", () => {
+    for (const node of allWorkflows.flatMap((workflow) => nodesOf(workflow))) {
+      const name = node.label.toUpperCase();
+      const code = partNumber(node);
+      for (const width of [1.2, 2.1, 3.2, 4.4, 5.5, 7.5]) {
+        for (const height of [0.3, 0.48, 0.9, 1.44, 2.2]) {
+          for (const side of [false, true]) {
+            for (const max of [MARK_EM, MARK_MAX]) {
+              const fit = fitMarking(name, code, width, height, mono, CAP, {
+                side,
+                max,
+              });
+              expect(fit.em).toBeLessThanOrEqual(max);
+              expect(fit.codeScale).toBeLessThanOrEqual(CODE_SCALE);
+              expect(fit.width * fit.em).toBeLessThanOrEqual(width + 1e-9);
+              expect(fit.height * fit.em).toBeLessThanOrEqual(height + 1e-9);
+              const widest = Math.max(0, ...fit.lines.map(mono));
+              expect(widest * fit.em).toBeLessThanOrEqual(width + 1e-9);
+              if (fit.side) {
+                expect(
+                  (widest + CODE_SIDE_GAP + CAP * CODE_SCALE) * fit.em,
+                ).toBeLessThanOrEqual(width + 1e-9);
+              }
+              if (fit.code) {
+                const length = mono(fit.code) * fit.codeScale * fit.em;
+                expect(length).toBeLessThanOrEqual(
+                  (fit.side ? height : width) + 1e-9,
+                );
+              }
+              const hold = MARK_EM * MARK_HOLD;
+              if (mono(name) * hold <= width && (CAP + FOOT) * hold <= height) {
+                expect(fit.lines).toEqual([name]);
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
+describe("markPlans", () => {
+  /** Whether `inner` lies inside `outer`. */
+  const within = (inner: Box, outer: Box) =>
+    inner.left >= outer.left - 1e-9 &&
+    inner.right <= outer.right + 1e-9 &&
+    inner.top >= outer.top - 1e-9 &&
+    inner.bottom <= outer.bottom + 1e-9;
+  /** Whether `a` and `b` do not overlap. */
+  const apart = (a: Box, b: Box) =>
+    a.right <= b.left ||
+    a.left >= b.right ||
+    a.bottom <= b.top ||
+    a.top >= b.bottom;
+  /** Asserts every room and feature of a `kind` part `w` × `d` lies on its face, the rooms clear of the features. */
+  const check = (kind: WorkflowPartKind, w: number, d: number) => {
+    const plans = markPlans(kind, w, d);
+    expect(plans).toHaveLength(kind === "toggle" ? 3 : 1);
+    for (const { face, rooms, clear } of plans) {
+      expect(rooms.length).toBeGreaterThan(0);
+      for (const feature of clear) expect(within(feature, face)).toBe(true);
+      for (const room of rooms) {
+        expect(room.right - room.left).toBeGreaterThan(0.25);
+        expect(room.bottom - room.top).toBeGreaterThan(0.25);
+        expect(within(room, face)).toBe(true);
+        for (const feature of clear) expect(apart(room, feature)).toBe(true);
+      }
+    }
+  };
+
+  it("sets every marking of every part on every workflow's board inside its face, clear of the features on it", () => {
+    const kinds = new Set<WorkflowPartKind>();
+    for (const workflow of allWorkflows) {
+      const nodes = nodesOf(workflow);
+      const { areas } = board(nodes, workflow.edges);
+      nodes.forEach((node, index) => {
+        kinds.add(kindOf(node));
+        const { w, d } = footprintOf(areas[index]!);
+        check(kindOf(node), w, d);
+      });
+    }
+    expect(kinds.size).toBe(Object.keys(KIND_DEPTH).length);
+  });
+
+  it("does so in every row a kind can stand in, and in a trimmer bank grown to three rows", () => {
+    const kinds = Object.keys(KIND_DEPTH) as WorkflowPartKind[];
+    for (const kind of kinds) {
+      const depths = kind === "trimmer" ? [51, 67, 85, 103] : [51, 67];
+      for (const depth of depths) {
+        const { w, d } = footprintOf({
+          left: 0,
+          right: CELL_W,
+          top: 0,
+          bottom: Math.max(depth, KIND_DEPTH[kind]),
+        });
+        check(kind, w, d);
+      }
+    }
   });
 });
 
