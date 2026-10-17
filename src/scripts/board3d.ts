@@ -8,7 +8,8 @@
  * plans through the grid's gutters; the cells no node takes carry
  * board-level parts (boardFills). The current step's parts and traces are
  * lit, glowing softly (ILLUMINATION), earlier steps' passed, following the
- * step-through runner's "flowstep" events.
+ * step-through runner's "flowstep" events. The mouse resting on a part opens
+ * its step's card beside it (cardStep picks the step).
  */
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -45,11 +46,35 @@ export interface BoardEdge {
  * The data Board3D.astro embeds in a .board3d: the silkscreen name, the
  * parts, the hops, and each step's lit part ids.
  */
+/** A step's caption as the board's hover card shows it, `**` pairs marking strong emphasis in its text and failure mode. */
+export interface BoardCard {
+  title: string;
+  text: string;
+  failure?: string;
+}
+
 export interface BoardData {
   name: string;
   nodes: BoardNode[];
   edges: BoardEdge[];
   steps: string[][];
+  /** Each step's card, in step order. */
+  cards: BoardCard[];
+  /** The label before a card's failure mode, e.g. "What can go wrong:". */
+  failure: string;
+}
+
+/**
+ * The board's silkscreen name: its designer's mark, "adioz" for the owner's
+ * workflows and a peer author's name in lower-case letters and digits for
+ * theirs, two spaces, then the workflow's slug, the author's mark taken off
+ * its front, as a .flow file.
+ */
+export function boardName(slug: string, author?: string): string {
+  if (!author) return `adioz  ${slug}.flow`;
+  const mark = author.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const file = slug.startsWith(`${mark}-`) ? slug.slice(mark.length + 1) : slug;
+  return `${mark}  ${file}.flow`;
 }
 
 /** A part's or a trace's state at a step. */
@@ -469,6 +494,21 @@ export function statesAt(
   };
 }
 
+/**
+ * The step whose card a part shows while the mouse rests on it: the current
+ * `step` when it lights the part (and `all` does not light every step), else
+ * the first step that lights it; -1 for a part no step lights.
+ */
+export function cardStep(
+  steps: string[][],
+  id: string,
+  step: number,
+  all: boolean,
+): number {
+  if (!all && steps[step]?.includes(id)) return step;
+  return steps.findIndex((lights) => lights.includes(id));
+}
+
 /* ---------- Markings ---------- */
 
 /** Reference-designator prefixes printed beside each kind of component. */
@@ -528,6 +568,177 @@ export function nameSplits(text: string): string[][] {
       splits.push([text.slice(0, i), text.slice(i)]);
   }
   return splits;
+}
+
+/**
+ * A marking's base size, in units per em: fitMarking decides a name's lines
+ * and its part number's place at this size, before the block grows to its
+ * room.
+ */
+export const MARK_EM = 0.32;
+/** The largest size, in units per em, fitMarking grows a block to where its room holds it. */
+export const MARK_MAX = 0.45;
+/**
+ * The smallest share of MARK_EM a name on one line keeps before fitMarking
+ * breaks it onto two; a name that holds it stays on one line however large
+ * it then grows.
+ */
+export const MARK_HOLD = 0.85;
+/** A marking's line pitch, in ems. */
+const MARK_PITCH = 1.3;
+/** The part-number line's size, in the name's ems. */
+export const CODE_SCALE = 0.86;
+/** The clearance under a block's last baseline, in ems. */
+const MARK_FOOT = 0.04;
+/** The distance from a name's last baseline to the part number's under it, in ems. */
+const CODE_GAP = (MARK_PITCH * (1 + CODE_SCALE)) / 2;
+/** The least gap between the name and a part number turned along the block's right edge, in ems. */
+export const CODE_SIDE_GAP = 0.7;
+/** Sizes closer than this, in units per em, tie when fitMarking picks a break. */
+const MARK_TIE = 1e-9;
+
+/** How fitMarking sets a marking in its room. */
+export interface MarkFit {
+  /** The name's lines, top to bottom; none when the room has no area. */
+  lines: string[];
+  /** The part number, cut back a word at a time to fit, or "" when it is left off. */
+  code: string;
+  /**
+   * Whether `code` is turned to read upward along the block's right edge
+   * instead of sitting under the name. A turned block spans the room's
+   * whole width, so the part number runs along the room's right edge.
+   */
+  side: boolean;
+  /** The name's size, in units per em. */
+  em: number;
+  /** The part number's size, in the name's ems: CODE_SCALE, or less where a turned part number would overrun the room's height. */
+  codeScale: number;
+  /** The block's width and height, in ems; times `em`, never more than the room's. */
+  width: number;
+  height: number;
+}
+
+/** The marking layout a fit may take: a turned part number, and the largest size. */
+export interface MarkLayout {
+  /** Turns the part number along the room's right edge wherever it fits there. */
+  side?: boolean;
+  /** The largest size the block grows to, in units per em; MARK_MAX unless set. */
+  max?: number;
+}
+
+/**
+ * Sets `name`, and its part number `code` when it fits, in a room `width` ×
+ * `height` units, measured by `measure` (a text's width in ems) and `cap`
+ * (the font's cap height in ems), in two passes.
+ *
+ * At the base size (MARK_EM, or `max` when smaller) it decides the lines and
+ * the part number's place: the name takes one line when it holds MARK_HOLD
+ * of the base size there; else it breaks onto the two lines of nameSplits
+ * that set it largest, the most even pair among equals, and shrinks further
+ * only when neither fits. The part number never shrinks the name: at
+ * CODE_SCALE of its size it sits under the name, or with `side` (or when
+ * only that fits) turned along the room's right edge, cut back a word at a
+ * time, and is left off when neither fits.
+ *
+ * Then the block grows, its lines and part number unchanged, until it fills
+ * the room's width or height or reaches `max`. A turned part number grows
+ * with the name only as far as the room's height holds it.
+ */
+export function fitMarking(
+  name: string,
+  code: string,
+  width: number,
+  height: number,
+  measure: (text: string) => number,
+  cap: number,
+  { side = false, max = MARK_MAX }: MarkLayout = {},
+): MarkFit {
+  const widest = (lines: string[]) =>
+    Math.max(...lines.map((line) => measure(line)));
+  const nameHeight = (count: number) =>
+    cap + (count - 1) * MARK_PITCH + MARK_FOOT;
+  const base = Math.min(MARK_EM, max);
+  const sizeOf = (lines: string[]) =>
+    Math.max(
+      0,
+      Math.min(base, width / widest(lines), height / nameHeight(lines.length)),
+    );
+  let lines = [name];
+  let em = sizeOf(lines);
+  if (em < base * MARK_HOLD) {
+    let best: string[] | null = null;
+    let size = 0;
+    for (const split of nameSplits(name)) {
+      if (split.length !== 2) continue;
+      const option = sizeOf(split);
+      const tie = Math.abs(option - size) <= MARK_TIE;
+      if (
+        option > size + MARK_TIE ||
+        (tie && best && widest(split) < widest(best))
+      ) {
+        [best, size] = [split, option];
+      }
+    }
+    if (best && size > em + MARK_TIE) [lines, em] = [best, size];
+  }
+  if (!(em > 0)) {
+    return {
+      lines: [],
+      code: "",
+      side: false,
+      em: 0,
+      codeScale: CODE_SCALE,
+      width: 0,
+      height: 0,
+    };
+  }
+  const nameW = widest(lines);
+  const nameH = nameHeight(lines.length);
+  /** `code` cut back a word at a time until it is at most `room` ems long at CODE_SCALE. */
+  const cut = (room: number) => {
+    const words = code.split(" ").filter(Boolean);
+    while (words.length && measure(words.join(" ")) * CODE_SCALE > room) {
+      words.pop();
+      if (words[words.length - 1] === "·") words.pop();
+    }
+    return words.join(" ");
+  };
+  const belowH = nameH + CODE_GAP;
+  const below = belowH * em <= height ? cut(width / em) : "";
+  const column = CODE_SIDE_GAP + cap * CODE_SCALE;
+  const turned =
+    (nameW + column) * em <= width ? cut(height / em - MARK_FOOT) : "";
+  if (turned && (side || !below)) {
+    const grown = Math.max(
+      em,
+      Math.min(max, width / (nameW + column), height / nameH),
+    );
+    const length = measure(turned);
+    const codeScale = Math.min(
+      CODE_SCALE,
+      (height / grown - MARK_FOOT) / length,
+    );
+    return {
+      lines,
+      code: turned,
+      side: true,
+      em: grown,
+      codeScale,
+      width: width / grown,
+      height: Math.max(nameH, length * codeScale + MARK_FOOT),
+    };
+  }
+  const blockW = Math.max(nameW, below ? measure(below) * CODE_SCALE : 0);
+  const blockH = below ? belowH : nameH;
+  return {
+    lines,
+    code: below,
+    side: false,
+    em: Math.max(em, Math.min(max, width / blockW, height / blockH)),
+    codeScale: CODE_SCALE,
+    width: blockW,
+    height: blockH,
+  };
 }
 
 /** The two captions of a gauge's meters: the first word of its label, and the latency scale. */
@@ -648,15 +859,13 @@ const FILL_D = 0.96;
 const TEX = 2;
 /** How long the board waits for its fonts before painting its markings, in ms. */
 const FONT_WAIT = 3000;
-/** Scales every light the current step adds (trace glow, beads, lit-part lights, under-glow, LED halos): 1 is full, lower is dimmer. */
-const ILLUMINATION = 0.25;
-
 /**
- * Every marking's name has a cap height of MARK_CAP_PX on the reference
- * canvas (REFERENCE_WIDTH CSS px wide), the same on every part.
+ * Scales every glow and light the steps add: the trace glow and its beads,
+ * the lit parts' lights, gold, under-glow and inner glow, their markings'
+ * glow, the status LEDs and their halos, and each part's own lamps. 1 is the
+ * tuned level, lower is dimmer; the beacon and the LIVE LED keep their red.
  */
-const MARK_CAP_PX = 5;
-const REFERENCE_WIDTH = 760;
+const ILLUMINATION = 0.5;
 
 /** A component part: its object, and update(dt, t, lit, energy, passed), which animates it. */
 interface Part {
@@ -685,38 +894,54 @@ interface Placed {
 }
 
 type Spot = [x: number, z: number, turn?: number];
-type Ink = "light" | "dark";
+/** A finish of a marking's ink: its colour, metalness, roughness and glow. */
 interface InkFinish {
   color: THREE.Color;
   metalness: number;
   roughness: number;
   emissive: number;
 }
-type Palette = Record<PartState, InkFinish>;
+/**
+ * A marking's ink: `light` on a dark surface (epoxy, silicon), where the
+ * lit letters glow; `dark` on bare metal, where a laser etch darkens it.
+ */
+type Ink = "light" | "dark";
+
+/** A finish of a part's package: its colour and its roughness. */
+interface Finish {
+  color: THREE.Color;
+  roughness: number;
+}
+/**
+ * A part's package finishes: `metal` its brushed lid, shield, can, plate,
+ * heat spreader or heatsink; `facing` the same metal on a face turned to
+ * the viewer; `lead` its leads, balls, pins, contacts and castellations;
+ * `epoxy` its black moulded package; `silicon` a bare die.
+ */
+type FinishKind = "metal" | "facing" | "lead" | "epoxy" | "silicon";
 
 interface MarkingOptions {
-  /** The room the text block may take, in units. */
+  /**
+   * The room the text block may take on its surface, in units: it reaches
+   * `width` from the anchor toward the block's other edge (both ways, half
+   * each, when centred), and `height` likewise.
+   */
   width: number;
-  height?: number;
+  height: number;
+  /** The finish of the surface the marking lies on, which picks its Ink (INK_ON). */
+  on: FinishKind;
   /** A legend in place of the name, with no part number. */
   text?: string;
-  /** False leaves the part number off. */
-  code?: boolean;
-  ink?: Ink;
+  /** False leaves the part number off; "side" turns it along the room's right edge where it fits there. */
+  code?: boolean | "side";
+  /** The largest size the block grows to, in units per em (fitMarking's `max`). */
+  max?: number;
   /** The share of the room's reflection the ink takes. */
   reflection?: number;
   /** The share of the ink's metalness it keeps. */
   metal?: number;
   align?: "left" | "center" | "right";
   valign?: "top" | "middle" | "bottom";
-  backing?: {
-    material: THREE.Material;
-    field?: THREE.Material;
-    pad?: number;
-    thick?: number;
-    radius?: number;
-    rivets?: boolean;
-  };
 }
 
 interface Marking {
@@ -725,10 +950,16 @@ interface Marking {
   mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>;
   glow: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   options: MarkingOptions;
-  palette: Palette;
+  ink: Record<PartState, InkFinish>;
   metal: number;
   name: boolean;
-  backing?: THREE.Mesh;
+}
+
+/** A node's package material, the finishes it eases between with the node's state, and its glow while lit. */
+interface NodeFinish {
+  material: THREE.MeshPhysicalMaterial;
+  finish: Record<PartState, Finish>;
+  glow: number;
 }
 
 interface ShadingUniforms {
@@ -755,7 +986,7 @@ interface Shade {
 const SHADE: Record<PartState, Shade> = {
   idle: { exposure: 0.5, desaturate: 0.6, rim: 0 },
   passed: { exposure: 0.92, desaturate: 0.06, rim: 0 },
-  lit: { exposure: 1.0, desaturate: 0, rim: ILLUMINATION },
+  lit: { exposure: 1.0, desaturate: 0, rim: 0.25 * ILLUMINATION },
 };
 /** The board-level parts' fixed shading, a step behind every node's part. */
 const FILL_SHADE: Shade = { exposure: 0.72, desaturate: 0.35, rim: 0 };
@@ -836,6 +1067,497 @@ function surface2d(width: number, height: number) {
   surface.width = width;
   surface.height = height;
   return { surface, ctx: surface.getContext("2d")! };
+}
+
+/* ---------- Marking plans ---------- */
+
+/** A part's footprint w × d in units from its area on the stage: FILL_W of the area's width and FILL_D of its depth. */
+export const footprintOf = (area: Box) => ({
+  w: ((area.right - area.left) * FILL_W) / PX,
+  d: ((area.bottom - area.top) * FILL_D) / PX,
+});
+
+/**
+ * A marking's place on a face of its part: the face, the rooms its block
+ * may take there (its builder sets it in the one that fits it best), and
+ * the features standing on the face, each as its bounding box. Lengths are
+ * in units from the footprint's centre, x across the face and y down the
+ * text: +z on a top face.
+ */
+export interface MarkPlan {
+  face: Box;
+  rooms: Box[];
+  clear: Box[];
+}
+
+/** A box `w` × `h` centred on (x, y). */
+const around = (x: number, y: number, w: number, h = w): Box => ({
+  left: x - w / 2,
+  right: x + w / 2,
+  top: y - h / 2,
+  bottom: y + h / 2,
+});
+/** `box` shrunk by `x` at either side, `top` at its top and `bottom` at its bottom. */
+const inside = (box: Box, x: number, top: number, bottom = top): Box => ({
+  left: box.left + x,
+  right: box.right - x,
+  top: box.top + top,
+  bottom: box.bottom - bottom,
+});
+
+/** A gull-wing lead's reach past its package's body. */
+const QFP_REACH = 0.26;
+/** The test socket's lever housing's width along its right end. */
+const SOCKET_LEVER = 1.12;
+/** The processor's heat spreader's chamfer round its top face. */
+const CPU_CHAMFER = 0.035;
+/** A moulded package's pin-1 dimple: its centre's inset from the body's front-left corner, and its radius. */
+const PIN_DIMPLE = { inset: 0.2, r: 0.07 };
+/** The pin-1 dimple's box on a package's top `face`. */
+const dimpleOn = (face: Box) =>
+  around(
+    face.left + PIN_DIMPLE.inset,
+    face.bottom - PIN_DIMPLE.inset,
+    2 * PIN_DIMPLE.r,
+  );
+/** A DIMM's height above its slot. */
+const DIMM = { h: 2.2 };
+/** A DIMM's DRAM packages: their size across and up the module, the pitch between them, and the height of their centres. */
+const DRAM = { w: 0.58, h: 0.8, pitch: 0.66, y: 0.62 };
+/** The graphics card's backplate flange: its depth from the card's back. */
+const GPU_FLANGE = 0.62;
+/** A trimmer bank's 2 × 8 pin header: its body's width and depth, and its centre's inset from the part's right edge. */
+const HEADER = { w: 1.8, d: 0.44, inset: 1.15 };
+/** A trimmer bank's tag: its largest depth, its gap to the pin header, and its rivets' inset from its ends. */
+const TAG = { maxD: 1.3, gap: 0.2, rivet: 0.2 };
+/** A trimmer bank's rows: their pitch, and the first row's centre's inset from the part's back edge. */
+const TRIM_ROW = { pitch: 1.02, back: 0.5 };
+/** How many rows of trimmers a bank `d` deep holds in front of its tag: one to three. */
+const trimmerRows = (d: number) =>
+  clamp(Math.floor((d - 1.45) / TRIM_ROW.pitch), 1, 3);
+/** The bare die: its width and its centre's offset to the right. */
+const DIE = { w: 5.1, x: 0.6 };
+/**
+ * The RJ45 jack's ports and their pitch; the embossed ribs along its
+ * shield's back (their inset from that edge, width and depth); the dimples
+ * along its front (their inset from that edge, offset either side of a
+ * port's centre and radius).
+ */
+const RJ45 = {
+  ports: 4,
+  pitch: 1.84,
+  rib: { inset: 0.22, w: 1.1, d: 0.08 },
+  dimple: { inset: 0.42, x: 0.5, r: 0.07 },
+};
+/** The radio module's antenna end's width, and its shield can's embossed rim: the rim's outer and inner insets from the can's edge. */
+const RADIO = { antenna: 1.05, rim: { outer: 0.08, inner: 0.2 } };
+/** The secure element's package width, and its padlock emblem's size. */
+const SECURE = { w: 4.9, lock: 0.8 };
+/** The toggle panel: the toggle's centre, its lamps' distance either side of it, the fader scale's ticks' depth. */
+const TOGGLE = { x: 1.45, z: 0.05, lamp: 1.55, tickD: 0.1 };
+/** A lamp bezel's outer radius. */
+const BEZEL_R = 0.31;
+/** The panel meters' face's slope toward the viewer. */
+const GAUGE_SLOPE = 20 * DEG;
+
+/** A padlock emblem's geometry, lying flat: its body with a keyhole and its shackle, `size` tall, `thick` deep. */
+function lockGeometry(size = 0.9, thick = 0.03) {
+  const k = size / 0.9;
+  const body = roundedRect(-0.34 * k, -0.45 * k, 0.34 * k, 0.08 * k, 0.07 * k);
+  const keyhole = new THREE.Path();
+  const lean = Math.atan2(0.06, 0.025);
+  keyhole.moveTo(-0.025 * k, -0.33 * k);
+  keyhole.lineTo(0.025 * k, -0.33 * k);
+  keyhole.lineTo(0.025 * k, -0.19 * k);
+  keyhole.absarc(0, -0.13 * k, 0.065 * k, -lean, Math.PI + lean, false);
+  keyhole.closePath();
+  body.holes.push(keyhole);
+  const shackle = new THREE.Shape();
+  shackle.moveTo(-0.24 * k, 0.08 * k);
+  shackle.lineTo(-0.24 * k, 0.2 * k);
+  shackle.absarc(0, 0.2 * k, 0.24 * k, Math.PI, 0, true);
+  shackle.lineTo(0.24 * k, 0.08 * k);
+  shackle.lineTo(0.15 * k, 0.08 * k);
+  shackle.lineTo(0.15 * k, 0.2 * k);
+  shackle.absarc(0, 0.2 * k, 0.15 * k, 0, Math.PI, false);
+  shackle.lineTo(-0.15 * k, 0.08 * k);
+  shackle.closePath();
+  const options = {
+    depth: thick,
+    bevelEnabled: true,
+    bevelThickness: 0.008,
+    bevelSize: 0.008,
+    bevelSegments: 1,
+    curveSegments: 16,
+  };
+  const geometry = mergeGeometries([
+    new THREE.ExtrudeGeometry(body, options),
+    new THREE.ExtrudeGeometry(shackle, options),
+  ]);
+  geometry.rotateX(-Math.PI / 2);
+  geometry.computeBoundingBox();
+  return geometry;
+}
+/** lockExtent's footprints by padlock size. */
+const LOCK_EXTENTS = new Map<number, Box>();
+/** The footprint of lockGeometry(`size`) on its face, about its origin. */
+function lockExtent(size: number): Box {
+  let extent = LOCK_EXTENTS.get(size);
+  if (!extent) {
+    const geometry = lockGeometry(size);
+    const { min, max } = geometry.boundingBox!;
+    extent = { left: min.x, right: max.x, top: min.z, bottom: max.z };
+    geometry.dispose();
+    LOCK_EXTENTS.set(size, extent);
+  }
+  return extent;
+}
+
+/** Where qfp's name lies: on its body's top, behind the pin-1 dimple. */
+function qfpPlans(w: number, d: number): MarkPlan[] {
+  const bw = 4.9;
+  const bd = d - 2 * QFP_REACH - 0.1;
+  const face = around(-w / 2 + 0.1 + QFP_REACH + bw / 2, 0, bw, bd);
+  return [
+    { face, rooms: [inside(face, 0.24, 0.2, 0.3)], clear: [dimpleOn(face)] },
+  ];
+}
+
+/** Where bga's name lies: on its cap's top, behind the pin-1 dimple. */
+function bgaPlans(w: number, d: number): MarkPlan[] {
+  const sw = 5.7;
+  const face = around(-w / 2 + 0.08 + sw / 2, 0, sw - 0.66, d - 0.12 - 0.66);
+  return [
+    { face, rooms: [inside(face, 0.24, 0.2, 0.3)], clear: [dimpleOn(face)] },
+  ];
+}
+
+/** Where socket's name lies: on its chip's top, behind the pin-1 dimple. */
+function socketPlans(w: number, d: number): MarkPlan[] {
+  const sw = w - SOCKET_LEVER - 0.06;
+  const sd = d - 0.06;
+  const face = around(
+    -w / 2 + 0.03 + sw / 2,
+    0,
+    4.5,
+    Math.min(1.95, sd - 2 * QFP_REACH - 0.6),
+  );
+  return [
+    { face, rooms: [inside(face, 0.22, 0.2, 0.3)], clear: [dimpleOn(face)] },
+  ];
+}
+
+/** Where memory's name lies: centred on the front module's spreader band, in the module's frame (y down from its top edge's height). */
+function memoryPlans(w: number): MarkPlan[] {
+  const bandW = w - 0.52 - 0.2;
+  const bandFrom = DRAM.y + DRAM.h / 2 + 0.1;
+  const face = {
+    left: -bandW / 2,
+    right: bandW / 2,
+    top: -DIMM.h,
+    bottom: -bandFrom,
+  };
+  return [{ face, rooms: [inside(face, 0.4, 0.15)], clear: [] }];
+}
+
+/** Where gpu's name lies: along its backplate's flange, left of the power connector. */
+function gpuPlans(w: number, d: number): MarkPlan[] {
+  const back = -(d - 0.1) / 2;
+  const face = {
+    left: -(w - 0.06) / 2,
+    right: (w - 0.06) / 2,
+    top: back,
+    bottom: back + GPU_FLANGE,
+  };
+  const plug = around(w / 2 - 0.95, back + GPU_FLANGE / 2, 0.92, 0.4);
+  const left = -w / 2 + 0.36;
+  return [
+    {
+      face,
+      rooms: [
+        {
+          left,
+          right: left + w - 2.6,
+          top: back + 0.07,
+          bottom: back + GPU_FLANGE - 0.07,
+        },
+      ],
+      clear: [plug],
+    },
+  ];
+}
+
+/** Where trimmer's name lies: centred on its tag, between the tag's rivets. */
+function trimmerPlans(w: number, d: number): MarkPlan[] {
+  const bankFront =
+    -d / 2 + TRIM_ROW.back + (trimmerRows(d) - 1) * TRIM_ROW.pitch + 0.25;
+  const left = -w / 2 + 0.3;
+  const right = w / 2 - HEADER.inset - HEADER.w / 2 - TAG.gap;
+  const front = d / 2 - 0.16;
+  const depth = Math.min(TAG.maxD, front - bankFront - 0.14);
+  const face = { left, right, top: front - depth, bottom: front };
+  const x = (left + right) / 2;
+  const z = front - depth / 2;
+  const reach = (right - left) / 2 - TAG.rivet;
+  return [
+    {
+      face,
+      rooms: [around(x, z, right - left - 4 * TAG.rivet, depth - 0.28)],
+      clear: [around(x - reach, z, 0.14), around(x + reach, z, 0.14)],
+    },
+  ];
+}
+
+/** Where die's name lies: on the die's top. */
+function diePlans(d: number): MarkPlan[] {
+  const face = around(DIE.x, 0, DIE.w, d - 0.12 - 0.62);
+  return [{ face, rooms: [inside(face, 0.22, 0.18)], clear: [] }];
+}
+
+/** Where rj45's name lies: across its shield's top between the ribs and the dimples, its part number along the shield's right edge. */
+function rj45Plans(d: number): MarkPlan[] {
+  const jw = RJ45.ports * RJ45.pitch + 0.12;
+  const jd = d - 0.08;
+  const face = around(0, 0, jw, jd);
+  const ribZ = face.top + RJ45.rib.inset;
+  const dimpleZ = face.bottom - RJ45.dimple.inset;
+  const clear: Box[] = [
+    {
+      left: face.left + 0.12,
+      right: face.right - 0.02,
+      top: face.bottom - 0.14,
+      bottom: face.bottom,
+    },
+  ];
+  for (let i = 0; i < RJ45.ports; i++) {
+    const cx = face.left + 0.06 + RJ45.pitch * (i + 0.5);
+    clear.push(
+      around(cx, ribZ, RJ45.rib.w, RJ45.rib.d),
+      around(cx - RJ45.dimple.x, dimpleZ, 2 * RJ45.dimple.r),
+      around(cx + RJ45.dimple.x, dimpleZ, 2 * RJ45.dimple.r),
+    );
+  }
+  const gap = 0.1;
+  return [
+    {
+      face,
+      rooms: [
+        {
+          left: face.left + 0.34,
+          right: face.right - 0.34,
+          top: ribZ + RJ45.rib.d / 2 + gap,
+          bottom: dimpleZ - RJ45.dimple.r - gap,
+        },
+      ],
+      clear,
+    },
+  ];
+}
+
+/** Where radio's name lies: on its shield can's top inside the embossed rim, its part number along the can's right edge. */
+function radioPlans(w: number, d: number): MarkPlan[] {
+  const mw = w - RADIO.antenna - 0.05;
+  const canW = mw - 1.3;
+  const face = around(-w / 2 + 0.1 + canW / 2, 0, canW, d - 0.18);
+  const { outer, inner } = RADIO.rim;
+  const rim = inside(face, outer, outer);
+  return [
+    {
+      face,
+      rooms: [inside(face, 0.32, 0.3)],
+      clear: [
+        { ...rim, bottom: rim.top + inner - outer },
+        { ...rim, top: rim.bottom - inner + outer },
+        { ...rim, right: rim.left + inner - outer },
+        { ...rim, left: rim.right - inner + outer },
+      ],
+    },
+  ];
+}
+
+/**
+ * Where secure's name lies: on its lid, beside the padlock in the lid's
+ * front-right corner (the lid's full depth) or behind it (the lid's full
+ * width), as far in from the lid's edges as the padlock.
+ */
+function securePlans(w: number, d: number): MarkPlan[] {
+  const face = around(-w / 2 + 0.1 + SECURE.w / 2, 0, SECURE.w - 0.36, d - 0.5);
+  const inX = 0.22;
+  const inZ = 0.18;
+  const lock = lockExtent(SECURE.lock);
+  const padlock = {
+    left: face.right - inX - (lock.right - lock.left),
+    right: face.right - inX,
+    top: face.bottom - inZ - (lock.bottom - lock.top),
+    bottom: face.bottom - inZ,
+  };
+  const room = inside(face, inX, inZ);
+  const gap = 0.15;
+  return [
+    {
+      face,
+      rooms: [
+        { ...room, right: padlock.left - gap },
+        { ...room, bottom: padlock.top - gap },
+      ],
+      clear: [padlock],
+    },
+  ];
+}
+
+/**
+ * Where toggle's markings lie on its panel: the name at the top-left, left
+ * of lamp A and behind the fader's scale; each lamp's A or B legend in
+ * front of its bezel.
+ */
+function togglePlans(w: number, d: number): MarkPlan[] {
+  const pw = w - 0.06;
+  const pd = d - 0.06;
+  const face = around(0, 0, pw - 0.08, pd - 0.08);
+  const { x, z, lamp, tickD } = TOGGLE;
+  const left = -pw / 2 + 0.6;
+  const fz = pd / 2 - 0.62;
+  const slotTo = x - lamp - 0.55;
+  const clear: Box[] = [
+    around(x, z, 0.88),
+    around(x, z - 0.48, 0.12, 0.1),
+    around(x - lamp, z, 2 * BEZEL_R),
+    around(x + lamp, z, 2 * BEZEL_R),
+    {
+      left: left - 0.17,
+      right: slotTo + 0.17,
+      top: fz - 0.26,
+      bottom: fz + 0.26,
+    },
+    {
+      left: left - 0.01,
+      right: slotTo + 0.01,
+      top: fz - 0.24 - tickD / 2,
+      bottom: fz - 0.2 + tickD / 2,
+    },
+  ];
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      clear.push(around(sx * (pw / 2 - 0.32), sz * (pd / 2 - 0.32), 0.24));
+    }
+  }
+  return [
+    {
+      face,
+      rooms: [
+        {
+          left,
+          right: x - lamp - BEZEL_R - 0.15,
+          top: -pd / 2 + 0.26,
+          bottom: fz - 0.24 - tickD / 2 - 0.06,
+        },
+      ],
+      clear,
+    },
+    ...[-1, 1].map((side) => ({
+      face,
+      rooms: [around(x + side * lamp, z + 0.53, 0.6, 0.3)],
+      clear,
+    })),
+  ];
+}
+
+/** Where cpu's name lies: on its heat spreader's top, inside its chamfer. */
+function cpuPlans(w: number, d: number): MarkPlan[] {
+  const sw = 4.6;
+  const half = Math.min(1.42, (d - 0.06) / 2 - 0.12);
+  const spreader = around(
+    -w / 2 + 0.05 + sw / 2 - 0.08,
+    0,
+    2.9,
+    2.5 * (half / 1.42),
+  );
+  return [
+    {
+      face: inside(spreader, CPU_CHAMFER, CPU_CHAMFER),
+      rooms: [inside(spreader, 0.15, 0.2)],
+      clear: [],
+    },
+  ];
+}
+
+/** Where gauge's name lies: centred on its bezel under the meters' windows, in the sloped face's frame (y down its slope). */
+function gaugePlans(w: number, d: number): MarkPlan[] {
+  const faceL = d / Math.cos(GAUGE_SLOPE);
+  const face = around(0, 0, w - 0.04, faceL - 0.04);
+  const gap = 0.14;
+  const winW = (w - 0.04 - 3 * gap) / 2;
+  const winBottom = -faceL / 2 + 0.8;
+  const winTop = faceL / 2 - 0.16;
+  const windows = [-1, 1].map((side) => ({
+    left: side * (winW / 2 + gap / 2) - winW / 2,
+    right: side * (winW / 2 + gap / 2) + winW / 2,
+    top: -winTop,
+    bottom: -winBottom,
+  }));
+  return [
+    {
+      face,
+      rooms: [around(0, -(-faceL / 2 + winBottom) / 2, w - 0.6, 0.62)],
+      clear: windows,
+    },
+  ];
+}
+
+/** Where beacon's name lies: on its alarm relay's top. */
+function beaconPlans(w: number, d: number): MarkPlan[] {
+  const rw = 2.5;
+  const rd = 1.8;
+  const face = around(
+    -w / 2 + 1.1 + 2.0 + 0.9 + rw / 2,
+    -d / 2 + 0.1 + rd / 2,
+    rw,
+    rd,
+  );
+  return [{ face, rooms: [inside(face, 0.2, 0.18)], clear: [] }];
+}
+
+/**
+ * Where each marking of a `kind` part with a footprint `w` × `d` lies: its
+ * face, its rooms and the features on the face, as MarkPlan. Every room
+ * lies inside its face and clear of every feature; each builder sizes its
+ * face and sets its markings from these.
+ */
+export function markPlans(
+  kind: WorkflowPartKind,
+  w: number,
+  d: number,
+): MarkPlan[] {
+  switch (kind) {
+    case "qfp":
+      return qfpPlans(w, d);
+    case "bga":
+      return bgaPlans(w, d);
+    case "socket":
+      return socketPlans(w, d);
+    case "memory":
+      return memoryPlans(w);
+    case "gpu":
+      return gpuPlans(w, d);
+    case "trimmer":
+      return trimmerPlans(w, d);
+    case "die":
+      return diePlans(d);
+    case "rj45":
+      return rj45Plans(d);
+    case "radio":
+      return radioPlans(w, d);
+    case "secure":
+      return securePlans(w, d);
+    case "toggle":
+      return togglePlans(w, d);
+    case "cpu":
+      return cpuPlans(w, d);
+    case "gauge":
+      return gaugePlans(w, d);
+    case "beacon":
+      return beaconPlans(w, d);
+  }
 }
 
 /**
@@ -937,16 +1659,10 @@ function build(
   /** The LIVE status LED's centre in stage pixels, after the silkscreen title; paintBoard sets it. */
   const LIVE_LED = { x: 0, y: 0 };
   const STAGE_ASPECT = boardAspect(layout);
-  /** The reference canvas the markings are sized for. */
-  const REFERENCE = {
-    width: REFERENCE_WIDTH,
-    height: REFERENCE_WIDTH / STAGE_ASPECT,
-  };
 
   const NODES: Placed[] = data.nodes.map((node, index) => {
     const area = areas[index]!;
-    const w = ((area.right - area.left) * FILL_W) / PX;
-    const d = ((area.bottom - area.top) * FILL_D) / PX;
+    const { w, d } = footprintOf(area);
     const cx = (area.left + area.right) / 2;
     const cy = (area.top + area.bottom) / 2;
     const padX = (w / 2 + PLINTH_PAD) * PX;
@@ -1309,6 +2025,205 @@ function build(
     }
   }
 
+  /** The net labels' font size, their offset across their trace from its centreline, and their clearance, in stage pixels. */
+  const NET_FONT = 4.6;
+  const NET_OFFSET = 5.4;
+  const NET_CLEAR = 1.5;
+  /** The silkscreen's reference designators' font. */
+  const REF_FONT = `600 6.2px "JetBrains Mono", monospace`;
+  /** A courtyard's corner brackets: their gap outside the plinth and their arms' length, in stage pixels. */
+  const COURTYARD = { gap: 3, arm: 5 };
+  /** Each courtyard corner as the way its arms run: [1, 1] the top-left corner, its arms toward +x and +y. */
+  const COURTYARD_CORNERS = [
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1],
+  ] as const;
+  /** A status LED's centre, in units: in from its plinth's right edge and out past its front edge. */
+  const LED_SPOT = { inset: 0.34, out: 0.24 };
+  /**
+   * Each kind's height standing at its plinth's back edge, in units, for
+   * how far it hides the board behind it in the view (a leaning DIMM's top
+   * counts less its setback from that edge).
+   */
+  const KIND_RISE: Record<WorkflowPartKind, number> = {
+    qfp: 0.5,
+    bga: 0.55,
+    socket: 0.5,
+    memory: 1.55,
+    gpu: 2.8,
+    trimmer: 0.5,
+    die: 0.5,
+    rj45: 1.45,
+    radio: 0.6,
+    secure: 0.6,
+    toggle: 0.6,
+    cpu: 1.1,
+    gauge: 1.75,
+    beacon: 1.2,
+  };
+  /** Each board-level part's height standing at its back edge, in units, as KIND_RISE. */
+  const FILL_RISE: Record<FillKind, number> = { vrm: 1.0, rtc: 0.5, bulk: 1.1 };
+  /** How far a height `rise` in units hides the board behind it in the view, in stage pixels. */
+  const hidden = (rise: number) => (rise / Math.tan(VIEW.elevation)) * PX;
+  /** A net label: its text, its centre on its trace, its turn, and its offset across the trace in the turned frame. */
+  interface NetLabel {
+    text: string;
+    x: number;
+    y: number;
+    turn: number;
+    offset: number;
+  }
+
+  /**
+   * Each trace's net label, set NET_OFFSET to one side of a straight run of
+   * its trace and turned along it, never reading right to left, where its
+   * box keeps NET_CLEAR from every part's plinth and the board its height
+   * hides behind it (KIND_RISE), its courtyard's corners, its reference
+   * designator and its status LED, every board-level part, its designator
+   * and the board it hides (FILL_RISE), every mounting hole, every other
+   * run of a trace and every label already placed. The longest level or
+   * upright run comes first, its side above or left of it first, at the
+   * free place nearest its middle; then its other side; then the next run.
+   * A trace with no such place has no label. `ctx`, set to the label font,
+   * measures the text.
+   */
+  function netLabels(ctx: CanvasRenderingContext2D): NetLabel[] {
+    const half = NET_FONT * 0.55;
+    ctx.save();
+    ctx.font = REF_FONT;
+    const refWidth = (text: string) => ctx.measureText(text).width;
+    const keepOut: Box[] = [
+      ...NODES.flatMap((node) => {
+        const { left, top, right, bottom } = node.plinth;
+        const ledX = right - LED_SPOT.inset * PX;
+        const ledY = bottom + LED_SPOT.out * PX;
+        const ref = `${REF_PREFIX[node.kind]}${node.index + 1}`;
+        return [
+          {
+            left: left - 1,
+            right: right + 1,
+            top: top - 1 - hidden(KIND_RISE[node.kind]),
+            bottom: bottom + 1,
+          },
+          ...COURTYARD_CORNERS.map(([sx, sy]) => {
+            const x = sx > 0 ? left - COURTYARD.gap : right + COURTYARD.gap;
+            const y = sy > 0 ? top - COURTYARD.gap : bottom + COURTYARD.gap;
+            const arm = COURTYARD.arm;
+            return {
+              left: Math.min(x, x + sx * arm) - 0.5,
+              right: Math.max(x, x + sx * arm) + 0.5,
+              top: Math.min(y, y + sy * arm) - 0.5,
+              bottom: Math.max(y, y + sy * arm) + 0.5,
+            };
+          }),
+          {
+            left: left - COURTYARD.gap - 4,
+            right: left + 1 + refWidth(ref),
+            top: top - 11,
+            bottom: top - 4,
+          },
+          {
+            left: ledX - 4,
+            right: ledX + 4,
+            top: ledY - 3,
+            bottom: ledY + 3,
+          },
+        ];
+      }),
+      ...fills.map(({ kind, ref, rect }) => ({
+        left: rect.left - 3,
+        right: Math.max(rect.right + 3, rect.left + 2 + refWidth(ref)),
+        top: Math.min(rect.top - 11, rect.top - 3 - hidden(FILL_RISE[kind])),
+        bottom: rect.bottom + 3,
+      })),
+      ...HOLES.map(([x, y]) => ({
+        left: x - 10,
+        right: x + 10,
+        top: y - 10,
+        bottom: y + 10,
+      })),
+    ];
+    ctx.restore();
+    const traceHalf = (TRACE_W * PX) / 2;
+    const traceRuns = runsOf(TRACES.map((trace) => trace.points));
+    const labels: NetLabel[] = [];
+    for (const trace of TRACES) {
+      const name = trace.label.toUpperCase();
+      const width = ctx.measureText(`${name} ▸`).width;
+      const reach = width / 2 + NET_CLEAR;
+      const runs = runsOf([trace.points])
+        .map(([a, b]) => ({
+          a,
+          b,
+          length: Math.hypot(b[0] - a[0], b[1] - a[1]),
+        }))
+        .filter((run) => run.length >= width + 14)
+        .sort((p, q) => q.length - p.length);
+      search: for (const { a, b } of runs) {
+        const level = Math.abs(b[1] - a[1]) < 0.01;
+        if (!level && Math.abs(b[0] - a[0]) >= 0.01) continue;
+        const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        const upright = Math.abs(angle) > Math.PI / 2;
+        const turn = upright ? angle + Math.PI : angle;
+        /** `box`'s extent along the run and across it. */
+        const frame = (box: Box) =>
+          level
+            ? { from: box.left, to: box.right, low: box.top, high: box.bottom }
+            : { from: box.top, to: box.bottom, low: box.left, high: box.right };
+        const others = traceRuns
+          .filter(([p, q]) => p !== a || q !== b)
+          .map(([p, q]) => ({
+            left: Math.min(p[0], q[0]) - traceHalf,
+            right: Math.max(p[0], q[0]) + traceHalf,
+            top: Math.min(p[1], q[1]) - traceHalf,
+            bottom: Math.max(p[1], q[1]) + traceHalf,
+          }));
+        const line = level ? a[1] : a[0];
+        const ends = level ? [a[0], b[0]] : [a[1], b[1]];
+        const first = Math.min(...ends) + 7 + width / 2;
+        const last = Math.max(...ends) - 7 - width / 2;
+        const middle = (first + last) / 2;
+        for (const offset of [-NET_OFFSET, NET_OFFSET]) {
+          const across =
+            line + (level ? Math.cos(turn) : -Math.sin(turn)) * offset;
+          const low = across - half - NET_CLEAR;
+          const high = across + half + NET_CLEAR;
+          const blocked = [...keepOut, ...others]
+            .map(frame)
+            .filter((out) => out.high > low && out.low < high)
+            .map((out) => [out.from - reach, out.to + reach] as const);
+          const free = (at: number) =>
+            at >= first &&
+            at <= last &&
+            blocked.every(([from, to]) => at <= from || at >= to);
+          const at = [middle, ...blocked.flat()]
+            .map((at) => clamp(at, first, last))
+            .filter(free)
+            .sort((p, q) => Math.abs(p - middle) - Math.abs(q - middle))[0];
+          if (at === undefined) continue;
+          const x = level ? at : a[0];
+          const y = level ? a[1] : at;
+          keepOut.push(
+            level
+              ? { left: at - reach, right: at + reach, top: low, bottom: high }
+              : { left: low, right: high, top: at - reach, bottom: at + reach },
+          );
+          labels.push({
+            text: upright ? `◂ ${name}` : `${name} ▸`,
+            x,
+            y,
+            turn,
+            offset,
+          });
+          break search;
+        }
+      }
+    }
+    return labels;
+  }
+
   /**
    * Paints the board's top face onto `ctx` in stage pixels: solder mask over
    * a copper pour with clearances around every trace, plinth and hole,
@@ -1508,18 +2423,15 @@ function build(
     ctx.lineWidth = 0.9;
     ctx.lineCap = "square";
     for (const node of NODES) {
-      const left = node.plinth.left - 3;
-      const right = node.plinth.right + 3;
-      const top = node.plinth.top - 3;
-      const bottom = node.plinth.bottom + 3;
-      const arm = 5;
+      const left = node.plinth.left - COURTYARD.gap;
+      const right = node.plinth.right + COURTYARD.gap;
+      const top = node.plinth.top - COURTYARD.gap;
+      const bottom = node.plinth.bottom + COURTYARD.gap;
+      const arm = COURTYARD.arm;
       ctx.beginPath();
-      for (const [x, y, sx, sy] of [
-        [left, top, 1, 1],
-        [right, top, -1, 1],
-        [left, bottom, 1, -1],
-        [right, bottom, -1, -1],
-      ] as const) {
+      for (const [sx, sy] of COURTYARD_CORNERS) {
+        const x = sx > 0 ? left : right;
+        const y = sy > 0 ? top : bottom;
         ctx.moveTo(x + sx * arm, y);
         ctx.lineTo(x, y);
         ctx.lineTo(x, y + sy * arm);
@@ -1528,7 +2440,7 @@ function build(
       ctx.beginPath();
       ctx.arc(left - 2.5, top - 2.5, 1.1, 0, Math.PI * 2);
       ctx.fill();
-      ctx.font = `600 6.2px "JetBrains Mono", monospace`;
+      ctx.font = REF_FONT;
       ctx.textBaseline = "alphabetic";
       ctx.fillText(
         `${REF_PREFIX[node.kind]}${node.index + 1}`,
@@ -1545,32 +2457,14 @@ function build(
       );
       ctx.fillText(ref, rect.left + 1, rect.top - 4);
     }
-    ctx.font = `600 4.6px "JetBrains Mono", monospace`;
+    ctx.font = `600 ${NET_FONT}px "JetBrains Mono", monospace`;
     ctx.textBaseline = "middle";
-    for (const trace of TRACES) {
-      const text = `${trace.label.toUpperCase()} ▸`;
-      const width = ctx.measureText(text).width;
-      let best: {
-        x0: number;
-        y0: number;
-        x1: number;
-        y1: number;
-        length: number;
-      } | null = null;
-      for (let i = 1; i < trace.points.length; i++) {
-        const [x0, y0] = trace.points[i - 1]!;
-        const [x1, y1] = trace.points[i]!;
-        const length = Math.hypot(x1 - x0, y1 - y0);
-        if (!best || length > best.length) best = { x0, y0, x1, y1, length };
-      }
-      if (!best || best.length < width + 14) continue;
-      const angle = Math.atan2(best.y1 - best.y0, best.x1 - best.x0);
-      const upright = Math.abs(angle) > Math.PI / 2;
+    ctx.textAlign = "center";
+    for (const label of netLabels(ctx)) {
       ctx.save();
-      ctx.translate((best.x0 + best.x1) / 2, (best.y0 + best.y1) / 2);
-      ctx.rotate(upright ? angle + Math.PI : angle);
-      ctx.textAlign = "center";
-      ctx.fillText(upright ? `◂ ${trace.label.toUpperCase()}` : text, 0, -5.4);
+      ctx.translate(label.x, label.y);
+      ctx.rotate(label.turn);
+      ctx.fillText(label.text, 0, label.offset);
       ctx.restore();
     }
     ctx.textAlign = "left";
@@ -1745,14 +2639,15 @@ function build(
    * the materials that take less of the room's reflection carry
    * roomEnvironment.
    */
+  /** Bright tin plating: the small parts' leads and terminations. */
   const tin = new THREE.MeshPhysicalMaterial({
-    color: 0x9ea4ab,
+    color: 0xc4c9cf,
     metalness: 1,
-    roughness: 0.42,
+    roughness: 0.28,
     envMap: roomEnvironment,
-    envMapIntensity: 0.7,
+    envMapIntensity: 1,
   });
-  /** Brushed nickel: heat spreaders, lids, stiffeners and heat pipes, a mid grey that keeps an etched marking legible. */
+  /** Brushed nickel: the processor socket's loading frame and the clock's coin cell. */
   const nickel = new THREE.MeshPhysicalMaterial({
     color: 0x969ca3,
     metalness: 1,
@@ -1770,15 +2665,6 @@ function build(
     map: brushTexture,
     clearcoat: 0.6,
     clearcoatRoughness: 0.2,
-  });
-  /** Black anodised aluminium: the graphics card's backplate. */
-  const anodised = new THREE.MeshPhysicalMaterial({
-    color: 0x1c1f24,
-    metalness: 0.7,
-    roughness: 0.44,
-    map: brushTexture,
-    clearcoat: 0.35,
-    clearcoatRoughness: 0.3,
   });
   const blackPlastic = new THREE.MeshPhysicalMaterial({
     color: 0x111215,
@@ -1800,18 +2686,6 @@ function build(
     envMap: roomEnvironment,
     envMapIntensity: 0.45,
   });
-  const silicon = new THREE.MeshPhysicalMaterial({
-    color: 0x161a2a,
-    metalness: 0.6,
-    roughness: 0.24,
-    iridescence: 0.7,
-    iridescenceIOR: 1.45,
-    iridescenceThicknessRange: [120, 320],
-    clearcoat: 1,
-    clearcoatRoughness: 0.1,
-    envMap: roomEnvironment,
-    envMapIntensity: 0.55,
-  });
   const aluminium = new THREE.MeshPhysicalMaterial({
     color: 0xaab0b7,
     metalness: 1,
@@ -1828,12 +2702,6 @@ function build(
     metalness: 0.2,
     roughness: 0.68,
   });
-  const trimBlue = new THREE.MeshPhysicalMaterial({
-    color: 0x2a4d7d,
-    roughness: 0.42,
-    clearcoat: 0.35,
-    clearcoatRoughness: 0.3,
-  });
   const ceramic = new THREE.MeshPhysicalMaterial({
     color: 0x24252a,
     roughness: 0.42,
@@ -1843,19 +2711,6 @@ function build(
   const rubber = new THREE.MeshStandardMaterial({
     color: 0x151619,
     roughness: 0.82,
-  });
-  const labelBlack = new THREE.MeshStandardMaterial({
-    color: 0x08090b,
-    roughness: 0.86,
-    envMap: roomEnvironment,
-    envMapIntensity: 0.3,
-  });
-  /** A matte label on a face turned to the viewer, which would otherwise mirror the room's lights. */
-  const stickerBlack = new THREE.MeshStandardMaterial({
-    color: 0x08090b,
-    roughness: 0.9,
-    envMap: roomEnvironment,
-    envMapIntensity: 0.05,
   });
   const sleeve = new THREE.MeshPhysicalMaterial({
     color: 0x15171b,
@@ -1877,16 +2732,6 @@ function build(
     clearcoat: 0.1,
     clearcoatRoughness: 0.55,
   });
-  /** A moulded body's glossier ejector-pin mark. */
-  const ejectorFinish = new THREE.MeshPhysicalMaterial({
-    color: 0x18191d,
-    roughness: 0.34,
-    clearcoat: 0.45,
-    clearcoatRoughness: 0.22,
-    polygonOffset: true,
-    polygonOffsetFactor: -1,
-    polygonOffsetUnits: -1,
-  });
   /** A moulded body's pin-1 dimple. */
   const dimple = new THREE.MeshStandardMaterial({
     color: 0x07080a,
@@ -1906,56 +2751,16 @@ function build(
     envMap: roomEnvironment,
     envMapIntensity: 0.6,
   });
-  /** Brushed tin-plated steel: the shield cans and the jack's shield. */
-  const shieldMetal = new THREE.MeshPhysicalMaterial({
-    color: 0x8c9299,
-    metalness: 1,
-    roughness: 0.42,
-    map: brushTexture,
-    clearcoat: 0.12,
-    clearcoatRoughness: 0.3,
-    envMap: roomEnvironment,
-    envMapIntensity: 0.7,
-  });
   /**
-   * A module's solder mask and moulded packages on a face turned to the
-   * viewer: rough enough that the fill light's highlight spreads instead of
-   * mirroring into the view.
+   * A module's solder mask on a face turned to the viewer: rough enough
+   * that the fill light's highlight spreads instead of mirroring into the
+   * view.
    */
   const facingGreen = new THREE.MeshStandardMaterial({
     color: 0x184a2c,
     roughness: 0.8,
     envMap: roomEnvironment,
     envMapIntensity: 0.25,
-  });
-  const facingMould = new THREE.MeshStandardMaterial({
-    color: 0x0c0d0f,
-    roughness: 0.88,
-    roughnessMap: grainTexture,
-    envMap: roomEnvironment,
-    envMapIntensity: 0.25,
-  });
-  /** Black enamel: the field of a brass tag, round the marking. */
-  const enamel = new THREE.MeshPhysicalMaterial({
-    color: 0x0a0b0d,
-    roughness: 0.3,
-    clearcoat: 0.8,
-    clearcoatRoughness: 0.12,
-    envMap: roomEnvironment,
-    envMapIntensity: 0.4,
-  });
-  /** Smoked polyimide: the jack's pick-up pad. */
-  const kapton = new THREE.MeshPhysicalMaterial({
-    color: 0x2c1606,
-    roughness: 0.28,
-    clearcoat: 1,
-    clearcoatRoughness: 0.08,
-  });
-  const relayBlue = new THREE.MeshPhysicalMaterial({
-    color: 0x1d3a66,
-    roughness: 0.4,
-    clearcoat: 0.4,
-    clearcoatRoughness: 0.25,
   });
   const terminalGreen = new THREE.MeshPhysicalMaterial({
     color: 0x1f5a3a,
@@ -1981,6 +2786,147 @@ function build(
     envMap: roomEnvironment,
     envMapIntensity: 1.4,
   });
+
+  /* ---------- Node finishes ---------- */
+  /**
+   * Each FinishKind's finish per state. The metals are brushed silver when
+   * idle, silver with a gold cast once passed and gold while lit; `facing`
+   * is darker and rougher and takes less of the room's reflection (its own
+   * envMap in FINISH_PARAMETERS), so a face turned to the viewer reads as
+   * the same metal instead of mirroring the room and the fill light.
+   * `epoxy` stays black, a shade warmer and rougher once passed and while
+   * lit, so the lit part's lights spread across it instead of glinting; its
+   * marking's light ink and its gold leads carry the light. `silicon` is a
+   * dark blue-grey mirror that warms faintly from within (FINISH_GLOW)
+   * while lit.
+   */
+  const FINISHES: Record<FinishKind, Record<PartState, Finish>> = {
+    metal: {
+      idle: { color: new THREE.Color(0xc6cbd2), roughness: 0.3 },
+      passed: { color: new THREE.Color(0xb4b0a4), roughness: 0.28 },
+      lit: { color: new THREE.Color(0xf0bd58), roughness: 0.22 },
+    },
+    facing: {
+      idle: { color: new THREE.Color(0x7a8089), roughness: 0.5 },
+      passed: { color: new THREE.Color(0x837e6e), roughness: 0.5 },
+      lit: { color: new THREE.Color(0xb68a3c), roughness: 0.44 },
+    },
+    lead: {
+      idle: { color: new THREE.Color(0xe2e6eb), roughness: 0.16 },
+      passed: { color: new THREE.Color(0xd4cdb6), roughness: 0.16 },
+      lit: { color: new THREE.Color(0xffcf6a), roughness: 0.12 },
+    },
+    epoxy: {
+      idle: { color: new THREE.Color(0x141518), roughness: 0.74 },
+      passed: { color: new THREE.Color(0x171513), roughness: 0.78 },
+      lit: { color: new THREE.Color(0x161411), roughness: 0.84 },
+    },
+    silicon: {
+      idle: { color: new THREE.Color(0x161a2a), roughness: 0.22 },
+      passed: { color: new THREE.Color(0x1e1d22), roughness: 0.22 },
+      lit: { color: new THREE.Color(0x2a2219), roughness: 0.22 },
+    },
+  };
+  /** Each FinishKind's fixed material parameters; setFinish changes colour, roughness and glow only, so no program recompiles. */
+  const FINISH_PARAMETERS: Record<
+    FinishKind,
+    THREE.MeshPhysicalMaterialParameters
+  > = {
+    metal: {
+      metalness: 1,
+      map: brushTexture,
+      clearcoat: 0.25,
+      clearcoatRoughness: 0.3,
+    },
+    facing: {
+      metalness: 1,
+      map: brushTexture,
+      clearcoat: 0.05,
+      clearcoatRoughness: 0.6,
+      envMap: roomEnvironment,
+      envMapIntensity: 0.35,
+    },
+    lead: { metalness: 1, clearcoat: 0.3, clearcoatRoughness: 0.15 },
+    epoxy: {
+      metalness: 0,
+      roughnessMap: grainTexture,
+      bumpMap: grainTexture,
+      bumpScale: 0.5,
+      clearcoat: 0.1,
+      clearcoatRoughness: 0.55,
+      envMap: roomEnvironment,
+      envMapIntensity: 0.45,
+    },
+    silicon: {
+      metalness: 0.6,
+      iridescence: 0.5,
+      iridescenceIOR: 1.45,
+      iridescenceThicknessRange: [120, 320],
+      clearcoat: 1,
+      clearcoatRoughness: 0.1,
+      envMap: roomEnvironment,
+      envMapIntensity: 0.55,
+    },
+  };
+  /** Each FinishKind's glow from within while lit, before the pulse and a landing pulse's energy. */
+  const FINISH_GLOW: Record<FinishKind, number> = {
+    metal: 0.04,
+    facing: 0.04,
+    lead: 0.04,
+    epoxy: 0,
+    silicon: 0.03,
+  };
+  /** Every node's package finishes by node id, driven by setFinish. */
+  const NODE_FINISHES = new Map<string, NodeFinish[]>();
+  /**
+   * A new `kind` material for `node`'s part, idle, with `extra` parameters
+   * (such as a `map`), registered in NODE_FINISHES. A builder uses one per
+   * kind across its meshes; no other part shares it, so the state shading
+   * applies to it in place.
+   */
+  function partFinish(
+    node: Placed,
+    kind: FinishKind,
+    extra: THREE.MeshPhysicalMaterialParameters = {},
+  ) {
+    const finish = FINISHES[kind];
+    const material = new THREE.MeshPhysicalMaterial({
+      ...FINISH_PARAMETERS[kind],
+      color: finish.idle.color.clone(),
+      roughness: finish.idle.roughness,
+      emissive: new THREE.Color(0xffb54a),
+      emissiveIntensity: 0,
+      ...extra,
+    });
+    const finishes = NODE_FINISHES.get(node.id) ?? [];
+    finishes.push({ material, finish, glow: FINISH_GLOW[kind] });
+    NODE_FINISHES.set(node.id, finishes);
+    return material;
+  }
+  /**
+   * Eases a node's package material between its idle, passed and lit
+   * finishes; while lit it glows from within by its `glow`, with `pulse`
+   * (0 to 1) and `energy`.
+   */
+  function setFinish(
+    { material, finish, glow }: NodeFinish,
+    passed: number,
+    lit: number,
+    pulse: number,
+    energy: number,
+  ) {
+    material.color
+      .copy(finish.idle.color)
+      .lerp(finish.passed.color, passed)
+      .lerp(finish.lit.color, lit);
+    material.roughness = mix(
+      mix(finish.idle.roughness, finish.passed.roughness, passed),
+      finish.lit.roughness,
+      lit,
+    );
+    material.emissiveIntensity =
+      lit * glow * (1 + pulse + 2 * energy) * ILLUMINATION;
+  }
 
   /** A mesh at (x, y, z) that casts and receives shadows. */
   function solid(
@@ -2257,9 +3203,11 @@ function build(
   }
 
   const BALL = new THREE.SphereGeometry(0.06, 10, 6);
-  const PIN_ONE = new THREE.CircleGeometry(0.07, 20).rotateX(-Math.PI / 2);
+  const PIN_ONE = new THREE.CircleGeometry(PIN_DIMPLE.r, 20).rotateX(
+    -Math.PI / 2,
+  );
   const SMALL_DOT = new THREE.CircleGeometry(0.035, 14).rotateX(-Math.PI / 2);
-  const EJECTOR = new THREE.CircleGeometry(0.17, 28).rotateX(-Math.PI / 2);
+  /** A domed rivet head standing on y = 0. */
   const RIVET = new THREE.SphereGeometry(
     0.07,
     16,
@@ -2268,51 +3216,55 @@ function build(
     Math.PI * 2,
     0,
     Math.PI / 2,
-  )
-    .rotateX(Math.PI / 2)
-    .scale(1, 1, 0.55);
+  ).scale(1, 0.55, 1);
 
   /**
-   * A quad flat package: a moulded epoxy body `bw` × `bd`, `bh` tall, held up
-   * by gull-wing leads at `pitch` round all four sides that reach `reach`
-   * past it, a pin-1 dimple at its front-left corner and an ejector mark at
-   * its front-right. `top` is the height of its top face.
+   * A quad flat package: a body `bw` × `bd` in `body`, `bh` tall, held up by
+   * gull-wing leads in `lead` at `pitch` round all four sides that reach
+   * `reach` past it, and a pin-1 dimple at its front-left corner. `top` is
+   * the height of its top face.
    */
   function qfp(
     bw: number,
     bd: number,
+    body: THREE.Material,
+    lead: THREE.Material,
     { bh = 0.3, pitch = 0.15, reach = 0.26 } = {},
   ) {
     const group = new THREE.Group();
     const lift = 0.05;
-    group.add(solid(mouldGeometry(bw, bh, bd), mould, 0, lift, 0));
+    group.add(solid(mouldGeometry(bw, bh, bd), body, 0, lift, 0));
     group.add(
       instances(
         leadGeometry(reach, lift + bh * 0.4),
-        tin,
+        lead,
         leadSpots(bw, bd, pitch, 0.22),
       ),
     );
     const top = lift + bh;
     const dot = new THREE.Mesh(PIN_ONE, dimple);
-    dot.position.set(-bw / 2 + 0.2, top + 0.001, bd / 2 - 0.2);
-    const ejector = new THREE.Mesh(EJECTOR, ejectorFinish);
-    ejector.position.set(bw / 2 - 0.34, top + 0.001, bd / 2 - 0.34);
-    group.add(dot, ejector);
+    dot.position.set(
+      -bw / 2 + PIN_DIMPLE.inset,
+      top + 0.001,
+      bd / 2 - PIN_DIMPLE.inset,
+    );
+    group.add(dot);
     return { group, top };
   }
 
   /**
    * A ball grid array: an organic substrate `sw` × `sd` on a ring of solder
-   * balls, a moulded cap `cw` × `cd` over its die, a row of capacitors in the
-   * margin in front of and behind the cap, and a pin-1 dimple. `top` is the
-   * height of the cap's top face.
+   * balls in `ball`, a cap `cw` × `cd` in `body` over its die, a row of
+   * capacitors in the margin in front of and behind the cap, and a pin-1
+   * dimple. `top` is the height of the cap's top face.
    */
   function bga(
     sw: number,
     sd: number,
     cw: number,
     cd: number,
+    body: THREE.Material,
+    ball: THREE.Material,
     { ch = 0.3 } = {},
   ) {
     const group = new THREE.Group();
@@ -2328,11 +3280,11 @@ function build(
     ) {
       balls.push([sw / 2 - 0.12, z], [-sw / 2 + 0.12, z]);
     }
-    group.add(instances(BALL, tin, balls, 0.06));
+    group.add(instances(BALL, ball, balls, 0.06));
     const deck = 0.11;
     group.add(slab(sw, 0.1, sd, 0.02, substrate, 0, deck));
     const capY = deck + 0.1;
-    group.add(solid(mouldGeometry(cw, ch, cd, 0.04), mould, 0, capY, 0));
+    group.add(solid(mouldGeometry(cw, ch, cd, 0.04), body, 0, capY, 0));
     const margin = (sd - cd) / 4;
     const caps: Spot[] = [];
     for (let x = -cw / 2 + 0.25; x <= cw / 2 - 0.2; x += 0.36) {
@@ -2343,7 +3295,11 @@ function build(
     group.add(row);
     const top = capY + ch;
     const dot = new THREE.Mesh(PIN_ONE, dimple);
-    dot.position.set(-cw / 2 + 0.2, top + 0.001, cd / 2 - 0.2);
+    dot.position.set(
+      -cw / 2 + PIN_DIMPLE.inset,
+      top + 0.001,
+      cd / 2 - PIN_DIMPLE.inset,
+    );
     group.add(dot);
     return { group, top };
   }
@@ -2511,29 +3467,24 @@ function build(
   /* ---------- Markings ---------- */
   /*
    * Every part carries its node's name as a manufacturer's marking:
-   * JetBrains Mono 600 in capitals, on one line or, broken after a space or
-   * a hyphen, on two, with at most one part-number line (partNumber) under
-   * it at CODE_SCALE of its size. The ink eases between three finishes with
-   * its node's state: etched (idle), gold inlay (passed) and gold lit from
-   * within under a glow layer (lit).
+   * JetBrains Mono 600 in capitals, set by fitMarking in a room on the
+   * surface it lies on, with its part number (partNumber) under it or turned
+   * along the room's right edge. Its ink (INK_ON) eases between three
+   * finishes with its node's state. Light ink on epoxy and silicon is pale
+   * grey (idle), gold (passed) and glowing pale gold under a bloom (lit);
+   * dark ink etched into metal is a dark etch (idle), a bronze fill (passed)
+   * and a deep amber etch over a warm halo (lit).
    */
   const MARK_FONT = (px: number) =>
     `600 ${px}px "JetBrains Mono", ui-monospace, monospace`;
-  /** The part-number line's size, in the name's ems. */
-  const CODE_SCALE = 0.86;
-  /** A marking's letter spacing, line pitch and clear margin, in ems. */
+  /** A marking's letter spacing, and its texture's clear margin round the block, in ems. */
   const MARK_TRACKING = 0.05;
-  const MARK_PITCH = 1.3;
   const MARK_MARGIN = 0.45;
   /** Texture pixels per em of a marking, and the glow layer's share of them. */
   const MARK_TEXEL = 64;
   const GLOW_SCALE = 0.5;
-  /**
-   * The ink's finish per state: `light` for dark faces (epoxy, silicon,
-   * labels, enamel), `dark` for bare nickel, where a laser etch darkens the
-   * metal and a gold fill reads deeper.
-   */
-  const INKS: Record<Ink, Palette> = {
+  /** Each Ink's finish per state. */
+  const INKS: Record<Ink, Record<PartState, InkFinish>> = {
     light: {
       idle: {
         color: new THREE.Color(0xc4cad2),
@@ -2562,32 +3513,42 @@ function build(
         emissive: 0,
       },
       passed: {
-        color: new THREE.Color(0x7a4c0e),
+        color: new THREE.Color(0x5a3a12),
         metalness: 0.55,
-        roughness: 0.42,
-        emissive: 0.05,
+        roughness: 0.46,
+        emissive: 0.03,
       },
       lit: {
-        color: new THREE.Color(0xffe0a0),
-        metalness: 0.45,
-        roughness: 0.26,
-        emissive: 1.45,
+        color: new THREE.Color(0x2a1803),
+        metalness: 0.3,
+        roughness: 0.55,
+        emissive: 0.04,
       },
     },
   };
-  /** Every marking, painted by paintMarkings once the reference framing is known. */
+  /** The Ink a marking takes on each FinishKind of surface. */
+  const INK_ON: Record<FinishKind, Ink> = {
+    metal: "dark",
+    facing: "dark",
+    lead: "dark",
+    epoxy: "light",
+    silicon: "light",
+  };
+  /** Every marking, painted by paintMarkings once the fonts have loaded. */
   const MARKINGS: Marking[] = [];
   const UNIT_PLANE = new THREE.PlaneGeometry(1, 1);
 
   /**
    * A marking for `node`: an anchor whose local +z faces out of the surface
    * it lies on and whose +y runs up the text, its text block meeting the
-   * anchor at the block's `align` and `valign` edges. A `backing` (a label
-   * or tag fitted round the block) has its face on the anchor's plane, so a
-   * builder sets the anchor `thick` above the surface.
+   * anchor at the block's `align` and `valign` edges, inside the room
+   * `width` × `height` that reaches from the anchor across the surface. Its
+   * name's glow draws over light ink, so the lit letters bloom, and under
+   * dark ink, so the etched letters stay dark over it.
    */
   function marking(node: Placed, options: MarkingOptions) {
-    const palette = INKS[options.ink ?? "light"];
+    const ink = INK_ON[options.on];
+    const palette = INKS[ink];
     const material = new THREE.MeshStandardMaterial({
       color: palette.idle.color.clone(),
       metalness: palette.idle.metalness,
@@ -2607,7 +3568,7 @@ function build(
     mesh.position.z = 0.002;
     mesh.scale.setScalar(0.001);
     mesh.receiveShadow = true;
-    mesh.renderOrder = 1;
+    mesh.renderOrder = 2;
     const glowMaterial = new THREE.MeshBasicMaterial({
       color: 0xffa83a,
       transparent: true,
@@ -2619,7 +3580,7 @@ function build(
     glowMaterial.visible = false;
     const glow = new THREE.Mesh(UNIT_PLANE, glowMaterial);
     glow.position.z = 0.01;
-    glow.renderOrder = 3;
+    glow.renderOrder = ink === "light" ? 3 : 1;
     mesh.add(glow);
     const anchor = new THREE.Group();
     anchor.add(mesh);
@@ -2629,7 +3590,7 @@ function build(
       mesh,
       glow,
       options,
-      palette,
+      ink: palette,
       metal: options.metal ?? 1,
       name: options.text === undefined,
     });
@@ -2643,18 +3604,67 @@ function build(
     return anchor;
   }
 
+  /** The coordinate of a span `from` to `to` at `edge`: its start, its middle or its end. */
+  const edgeAt = (
+    from: number,
+    to: number,
+    edge: "left" | "center" | "right" | "top" | "middle" | "bottom",
+  ) =>
+    edge === "center" || edge === "middle"
+      ? (from + to) / 2
+      : edge === "right" || edge === "bottom"
+        ? to
+        : from;
+  /** A marking's options without its room, which markIn takes from a MarkPlan's room. */
+  type RoomOptions = Omit<MarkingOptions, "width" | "height">;
+  /** Sets a marking's block in the middle of its room, its lines centred. */
+  const CENTRED = { align: "center", valign: "middle" } as const;
+  /**
+   * A marking for `node` set in `room` (a box on its face, y down the
+   * text): its anchor, and the point of the room its block meets at its
+   * `align` and `valign` edges, in the room's frame.
+   */
+  function markIn(node: Placed, room: Box, options: RoomOptions) {
+    const align = options.align ?? "left";
+    const valign = options.valign ?? "top";
+    const anchor = marking(node, {
+      ...options,
+      width: room.right - room.left,
+      height: room.bottom - room.top,
+    });
+    return {
+      anchor,
+      x: edgeAt(room.left, room.right, align),
+      y: edgeAt(room.top, room.bottom, valign),
+    };
+  }
+  /** A marking for `node` in `room` on a top face at height y (MarkPlan's y running toward the viewer). */
+  function markOnTop(node: Placed, room: Box, y: number, options: RoomOptions) {
+    const { anchor, x, y: z } = markIn(node, room, options);
+    return onTop(anchor, x, y, z);
+  }
+  /** A marking for `node` in `room` on an upright face at depth z in its frame (MarkPlan's y running down the face). */
+  function markOnFace(
+    node: Placed,
+    room: Box,
+    z: number,
+    options: RoomOptions,
+  ) {
+    const { anchor, x, y } = markIn(node, room, options);
+    anchor.position.set(x, -y, z);
+    return anchor;
+  }
+
   const measurer = surface2d(1, 1).ctx;
   /** Sets `ctx` to the marking font at `px`, tracked. */
   function setMarkFont(ctx: CanvasRenderingContext2D, px: number) {
     ctx.font = MARK_FONT(px);
     ctx.letterSpacing = `${MARK_TRACKING * px}px`;
   }
-  /** The width of `text` set `size` ems tall, in ems, short of the tracking after its last letter. */
-  function markWidth(text: string, size = 1) {
+  /** The width of `text` set one em tall, in ems, short of the tracking after its last letter. */
+  function markWidth(text: string) {
     setMarkFont(measurer, 100);
-    return (
-      ((measurer.measureText(text).width - MARK_TRACKING * 100) / 100) * size
-    );
+    return (measurer.measureText(text).width - MARK_TRACKING * 100) / 100;
   }
   let capRatio = 0;
   /** The marking font's cap height, in ems. */
@@ -2667,53 +3677,14 @@ function build(
     return capRatio;
   }
 
-  /**
-   * The lines of `entry` in a block at most `room` ems wide and `tall` ems
-   * high: its name on one line when that fits, else on two at the break that
-   * keeps the longer line shortest; then its part number, cut back a word at
-   * a time to fit `room`, and left off when the block would be taller than
-   * `tall`.
-   */
-  function markLayout(entry: Marking, room: number, tall: number) {
-    const { options } = entry;
-    const node = NODE.get(entry.node)!;
-    const name = (options.text ?? node.label).toUpperCase();
-    const widest = (lines: string[]) =>
-      Math.max(...lines.map((line) => markWidth(line)));
-    let lines = [name];
-    if (markWidth(name) > room) {
-      for (const split of nameSplits(name)) {
-        if (split.length === 2 && widest(split) < widest(lines)) lines = split;
-      }
-    }
-    const cap = markCap();
-    const nameH = cap + (lines.length - 1) * MARK_PITCH;
-    const codeGap = (MARK_PITCH * (1 + CODE_SCALE)) / 2;
-    const words = (entry.name && options.code !== false ? partNumber(node) : "")
-      .split(" ")
-      .filter(Boolean);
-    while (words.length && markWidth(words.join(" "), CODE_SCALE) > room) {
-      words.pop();
-      if (words[words.length - 1] === "·") words.pop();
-    }
-    let code = words.join(" ");
-    if (code && nameH + codeGap + 0.04 > tall) code = "";
-    return {
-      lines,
-      code,
-      codeGap,
-      width: Math.max(widest(lines), code ? markWidth(code, CODE_SCALE) : 0),
-      height: (code ? nameH + codeGap : nameH) + 0.04,
-    };
-  }
-
+  /** A line of a marking's texture: its text, size and baseline start in texels, whether it is a name line, and whether it is turned to read upward. */
   interface InkItem {
     text: string;
     size: number;
     x: number;
-    width: number;
     y: number;
     name: boolean;
+    turned: boolean;
   }
 
   /**
@@ -2733,16 +3704,15 @@ function build(
     ctx.textAlign = "left";
     for (const item of items) {
       setMarkFont(ctx, item.size);
-      const shade = ctx.createLinearGradient(
-        0,
-        item.y - item.size * 0.74,
-        0,
-        item.y,
-      );
+      ctx.save();
+      ctx.translate(item.x, item.y);
+      if (item.turned) ctx.rotate(-Math.PI / 2);
+      const shade = ctx.createLinearGradient(0, -item.size * 0.74, 0, 0);
       shade.addColorStop(0, "#d6d6d6");
       shade.addColorStop(1, "#ffffff");
       ctx.fillStyle = shade;
-      ctx.fillText(item.text, item.x, item.y);
+      ctx.fillText(item.text, 0, 0);
+      ctx.restore();
     }
     const random = seeded(seed);
     ctx.globalCompositeOperation = "source-atop";
@@ -2777,77 +3747,92 @@ function build(
     ctx.shadowColor = "transparent";
   }
 
-  /** Screen pixels per world unit along `object`'s local +y, seen by `cam` on a canvas `width` × `height`. */
-  function screenScale(
-    object: THREE.Object3D,
-    cam: THREE.Camera,
-    width: number,
-    height: number,
-  ) {
-    const a = new THREE.Vector3().applyMatrix4(object.matrixWorld).project(cam);
-    const b = new THREE.Vector3(0, 1, 0)
-      .applyMatrix4(object.matrixWorld)
-      .project(cam);
-    return Math.hypot(((b.x - a.x) * width) / 2, ((b.y - a.y) * height) / 2);
-  }
+  /** Where a length `inner` starts inside a span `outer` set at `edge`. */
+  const inset = (
+    outer: number,
+    inner: number,
+    edge: "left" | "center" | "right" | "top" | "middle" | "bottom",
+  ) =>
+    edge === "center" || edge === "middle"
+      ? (outer - inner) / 2
+      : edge === "right" || edge === "bottom"
+        ? outer - inner
+        : 0;
 
   /**
-   * Paints every marking for `cam` on a canvas `width` × `height`: sets its
-   * text so that its name's cap height is MARK_CAP_PX there, paints its ink
-   * and glow, and fits its backing round it.
+   * Paints every marking: sets its name and part number in its room
+   * (fitMarking), paints its ink and its name's glow, and sizes and places
+   * its plane so the block meets the anchor at its `align` and `valign`
+   * edges.
    */
-  function paintMarkings(cam: THREE.Camera, width: number, height: number) {
+  function paintMarkings() {
     const cap = markCap();
     const margin = MARK_MARGIN * MARK_TEXEL;
     MARKINGS.forEach((entry, order) => {
-      const { anchor, mesh, glow, options } = entry;
-      anchor.updateWorldMatrix(true, false);
-      const em = MARK_CAP_PX / (cap * screenScale(anchor, cam, width, height));
-      const layout = markLayout(
-        entry,
-        options.width / em,
-        (options.height ?? Infinity) / em,
+      const { mesh, glow, options } = entry;
+      const node = NODE.get(entry.node)!;
+      const fit = fitMarking(
+        (options.text ?? node.label).toUpperCase(),
+        entry.name && options.code !== false ? partNumber(node) : "",
+        options.width,
+        options.height,
+        markWidth,
+        cap,
+        { side: options.code === "side", max: options.max },
       );
-      const blockW = layout.width * MARK_TEXEL;
-      const blockH = layout.height * MARK_TEXEL;
-      const cw = Math.ceil(blockW + 2 * margin);
-      const ch = Math.ceil(blockH + 2 * margin);
+      if (!fit.lines.length) return;
       const align = options.align ?? "left";
       const valign = options.valign ?? "top";
+      const blockW = fit.width * MARK_TEXEL;
+      const blockH = fit.height * MARK_TEXEL;
+      const cw = Math.ceil(blockW + 2 * margin);
+      const ch = Math.ceil(blockH + 2 * margin);
       const items: InkItem[] = [];
+      /** Adds `text` at `size` ems, its baseline starting `x`, `y` ems into the block. */
       const place = (
         text: string,
         size: number,
-        baseline: number,
+        x: number,
+        y: number,
         name: boolean,
-      ) => {
-        const lineW = markWidth(text, size) * MARK_TEXEL;
-        const x =
-          margin +
-          (align === "center"
-            ? (blockW - lineW) / 2
-            : align === "right"
-              ? blockW - lineW
-              : 0);
+        turned = false,
+      ) =>
         items.push({
           text,
           size: size * MARK_TEXEL,
-          x,
-          width: lineW,
-          y: margin + baseline * MARK_TEXEL,
+          x: margin + x * MARK_TEXEL,
+          y: margin + y * MARK_TEXEL,
           name,
+          turned,
         });
-      };
-      layout.lines.forEach((line, i) =>
-        place(line, 1, cap + i * MARK_PITCH, true),
-      );
-      if (layout.code) {
+      const nameH = cap + (fit.lines.length - 1) * MARK_PITCH + MARK_FOOT;
+      const nameW = fit.side
+        ? fit.width - CODE_SIDE_GAP - cap * fit.codeScale
+        : fit.width;
+      const nameTop = fit.side ? inset(fit.height, nameH, valign) : 0;
+      fit.lines.forEach((line, i) =>
         place(
-          layout.code,
-          CODE_SCALE,
-          cap + (layout.lines.length - 1) * MARK_PITCH + layout.codeGap,
-          false,
-        );
+          line,
+          1,
+          inset(nameW, markWidth(line), align),
+          nameTop + cap + i * MARK_PITCH,
+          true,
+        ),
+      );
+      if (fit.code) {
+        const length = markWidth(fit.code) * fit.codeScale;
+        if (fit.side) {
+          const top = inset(fit.height - MARK_FOOT, length, valign);
+          place(fit.code, fit.codeScale, fit.width, top + length, false, true);
+        } else {
+          place(
+            fit.code,
+            fit.codeScale,
+            inset(fit.width, length, align),
+            nameTop + nameH - MARK_FOOT + CODE_GAP,
+            false,
+          );
+        }
       }
 
       const ink = surface2d(cw, ch);
@@ -2866,11 +3851,9 @@ function build(
       glow.material.visible = true;
       glow.material.needsUpdate = true;
 
-      // The plane's unit coordinates of a canvas point, and the anchor's place on the block.
-      const local = (x: number, y: number) =>
-        new THREE.Vector3(x / cw - 0.5, 0.5 - y / ch, 0);
-      const sizeX = (cw / MARK_TEXEL) * em;
-      const sizeY = (ch / MARK_TEXEL) * em;
+      // The plane's size in units, and the anchor's place on the block in texels.
+      const sizeX = (cw / MARK_TEXEL) * fit.em;
+      const sizeY = (ch / MARK_TEXEL) * fit.em;
       const ax =
         margin +
         (align === "center" ? blockW / 2 : align === "right" ? blockW : 0);
@@ -2883,67 +3866,18 @@ function build(
         -(0.5 - ay / ch) * sizeY,
         0.002,
       );
-      if (options.backing && !entry.backing) {
-        const {
-          material,
-          field,
-          pad = 0.1,
-          thick = 0.006,
-          radius = 0.025,
-          rivets = false,
-        } = options.backing;
-        const room = rivets ? 0.24 : 0;
-        const bw = layout.width * em + 2 * pad + 2 * room;
-        const bh = layout.height * em + 2 * pad;
-        const centre = local(margin + blockW / 2, margin + blockH / 2)
-          .multiply(mesh.scale)
-          .add(mesh.position);
-        entry.backing = solid(
-          rbox(bw, bh, thick, radius),
-          material,
-          centre.x,
-          centre.y,
-          -thick / 2,
-        );
-        anchor.add(entry.backing);
-        if (field) {
-          const inset = Math.min(0.07, pad / 2);
-          anchor.add(
-            solid(
-              rbox(bw - 2 * room - 2 * inset, bh - 2 * inset, 0.01, 0.02),
-              field,
-              centre.x,
-              centre.y,
-              -0.004,
-            ),
-          );
-        }
-        if (rivets) {
-          for (const side of [-1, 1]) {
-            anchor.add(
-              solid(
-                RIVET,
-                steel,
-                centre.x + side * (bw / 2 - room / 2 - 0.03),
-                centre.y,
-                0,
-              ),
-            );
-          }
-        }
-      }
       mesh.updateMatrixWorld(true);
     });
   }
 
   /**
-   * Sets a marking's ink between its palette's idle, passed and lit
-   * finishes; `pulse` (0 to 1) pulses the lit ink and its glow. Its `metal`
-   * share scales the metalness: ink on a face turned to the viewer keeps
-   * less, so it does not mirror the fill light.
+   * Sets a marking's ink between its idle, passed and lit finishes; `pulse`
+   * (0 to 1) pulses the lit ink and its glow. Its `metal` share scales the
+   * metalness: ink on a face turned to the viewer keeps less, so it does not
+   * mirror the fill light.
    */
   function setInk(entry: Marking, passed: number, lit: number, pulse: number) {
-    const { idle, passed: inlay, lit: hot } = entry.palette;
+    const { idle, passed: inlay, lit: hot } = entry.ink;
     const material = entry.mesh.material;
     material.color
       .copy(idle.color)
@@ -2955,39 +3889,48 @@ function build(
     material.roughness =
       mix(mix(idle.roughness, inlay.roughness, passed), hot.roughness, lit) +
       0.3 * (1 - entry.metal);
-    material.emissiveIntensity = mix(
-      mix(idle.emissive, inlay.emissive, passed),
-      hot.emissive * (0.75 + 0.35 * pulse),
-      lit,
-    );
-    entry.glow.material.opacity = lit * (0.65 + 0.35 * pulse);
+    material.emissiveIntensity =
+      mix(
+        mix(idle.emissive, inlay.emissive, passed),
+        hot.emissive * (0.75 + 0.35 * pulse),
+        lit,
+      ) * ILLUMINATION;
+    entry.glow.material.opacity = lit * (0.65 + 0.35 * pulse) * ILLUMINATION;
   }
 
   /* ---------- Parts ---------- */
   const none = () => {};
 
   /**
-   * qfp: a QFP controller, its marking at its top-left, beside its crystal
-   * and load capacitors, a SOIC flash, a SOT-23 regulator and its
+   * qfp: a QFP controller in a black moulded body on metal gull-wing leads,
+   * its marking at its top-left clear of the pin-1 dimple, beside its
+   * crystal and load capacitors, a SOIC flash, a SOT-23 regulator and its
    * decoupling capacitors.
    */
   function buildQfp(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
-    const reach = 0.26;
-    const bw = 4.9;
-    const bd = d - 2 * reach - 0.1;
-    const bx = -w / 2 + 0.1 + reach + bw / 2;
-    const chip = qfp(bw, bd, { reach });
+    const [plan] = markPlans("qfp", w, d);
+    const { face } = plan!;
+    const reach = QFP_REACH;
+    const bw = face.right - face.left;
+    const bd = face.bottom - face.top;
+    const bx = (face.left + face.right) / 2;
+    const chip = qfp(
+      bw,
+      bd,
+      partFinish(node, "epoxy"),
+      partFinish(node, "lead"),
+      { reach },
+    );
     chip.group.position.x = bx;
     object.add(contactShadow(bw + 0.3, bd + 0.3, bx, 0), chip.group);
     object.add(
-      onTop(
-        marking(node, { width: bw - 0.5, height: bd - 0.3 }),
-        bx - bw / 2 + 0.24,
-        chip.top,
-        -bd / 2 + 0.18,
-      ),
+      markOnTop(node, plan!.rooms[0]!, chip.top, {
+        on: "epoxy",
+        max: MARK_EM,
+        ...CENTRED,
+      }),
     );
     const rx = bx + bw / 2 + reach + 0.24;
     const right = w / 2 - 0.12;
@@ -3021,28 +3964,33 @@ function build(
   }
 
   /**
-   * bga: a BGA accelerator, its moulded cap over an organic substrate on a
-   * ring of solder balls, its marking at the cap's top-left, beside two
-   * power chokes, a polymer capacitor and decoupling.
+   * bga: a BGA accelerator, its black moulded cap over an organic substrate
+   * on a ring of metal solder balls, its marking at the cap's top-left clear
+   * of the pin-1 dimple, beside two power chokes, a polymer capacitor and
+   * decoupling.
    */
   function buildBga(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
-    const sw = 5.7;
-    const sd = d - 0.12;
-    const sx = -w / 2 + 0.08 + sw / 2;
-    const cw = sw - 0.66;
-    const cd = sd - 0.66;
-    const chip = bga(sw, sd, cw, cd);
+    const [plan] = markPlans("bga", w, d);
+    const { face } = plan!;
+    const cw = face.right - face.left;
+    const cd = face.bottom - face.top;
+    const sx = (face.left + face.right) / 2;
+    const sw = cw + 0.66;
+    const sd = cd + 0.66;
+    const chip = bga(
+      sw,
+      sd,
+      cw,
+      cd,
+      partFinish(node, "epoxy"),
+      partFinish(node, "lead"),
+    );
     chip.group.position.x = sx;
     object.add(contactShadow(sw + 0.1, sd + 0.1, sx, 0), chip.group);
     object.add(
-      onTop(
-        marking(node, { width: cw - 0.5, height: cd - 0.44 }),
-        sx - cw / 2 + 0.24,
-        chip.top,
-        -cd / 2 + 0.22,
-      ),
+      markOnTop(node, plan!.rooms[0]!, chip.top, { on: "epoxy", ...CENTRED }),
     );
     const px = sx + sw / 2 + 0.28;
     const cx = px + 0.55;
@@ -3066,23 +4014,28 @@ function build(
   }
 
   /**
-   * socket: a QFP in an open-top test socket, its amber frame round the
-   * package, gold contacts under every lead, screws and alignment pins at
-   * its corners, and the socket's steel lever along its right end.
+   * socket: a black moulded QFP in an open-top test socket, its amber frame
+   * round the package, metal contacts under every lead, screws and
+   * alignment pins at its corners, and the socket's steel lever along its
+   * right end.
    */
   function buildSocket(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
-    const lever = 1.12;
+    const body = partFinish(node, "epoxy");
+    const lead = partFinish(node, "lead");
+    const [plan] = markPlans("socket", w, d);
+    const { face } = plan!;
+    const lever = SOCKET_LEVER;
     const sw = w - lever - 0.06;
     const sd = d - 0.06;
-    const sx = -w / 2 + 0.03 + sw / 2;
+    const sx = (face.left + face.right) / 2;
     const baseH = 0.2;
     object.add(contactShadow(sw, sd, sx, 0, 0.6));
     object.add(slab(sw, baseH, sd, 0.05, blackPlastic, sx, 0));
-    const reach = 0.26;
-    const bw = 4.5;
-    const bd = Math.min(1.95, sd - 2 * reach - 0.6);
+    const reach = QFP_REACH;
+    const bw = face.right - face.left;
+    const bd = face.bottom - face.top;
     const windowW = bw + 2 * reach + 0.16;
     const windowD = bd + 2 * reach + 0.16;
     const frameH = 0.22;
@@ -3111,7 +4064,7 @@ function build(
     object.add(
       instances(
         contact,
-        gold,
+        lead,
         leadSpots(bw, bd, 0.15, 0.22).map(([x, z, turn]): Spot => [
           sx + x,
           z,
@@ -3120,17 +4073,12 @@ function build(
         baseH,
       ),
     );
-    const chip = qfp(bw, bd, { reach });
+    const chip = qfp(bw, bd, body, lead, { reach });
     chip.group.position.set(sx, baseH + 0.026, 0);
     object.add(chip.group);
     const top = baseH + 0.026 + chip.top;
     object.add(
-      onTop(
-        marking(node, { width: bw - 0.45, height: bd - 0.42 }),
-        sx - bw / 2 + 0.22,
-        top,
-        -bd / 2 + 0.2,
-      ),
+      markOnTop(node, plan!.rooms[0]!, top, { on: "epoxy", ...CENTRED }),
     );
     const frameTop = baseH + frameH;
     for (const ix of [-1, 1]) {
@@ -3152,7 +4100,7 @@ function build(
       object.add(
         solid(
           new THREE.CylinderGeometry(0.06, 0.07, 0.12, 16),
-          brass,
+          lead,
           sx + ix * (windowW / 2 + 0.22),
           frameTop + 0.06,
           iz * 0.62,
@@ -3192,13 +4140,15 @@ function build(
   }
 
   /**
-   * die: a bare iridescent die flip-chipped onto an organic substrate
-   * inside a nickel stiffener ring, capacitor arrays either side, the
-   * package on its interposer socket, the marking on the die.
+   * die: a bare iridescent die flip-chipped onto a black moulded substrate
+   * on metal solder balls, inside a brushed metal stiffener ring, capacitor
+   * arrays either side, the package on its interposer socket, the marking
+   * on the die.
    */
   function buildDie(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
+    const body = partFinish(node, "metal");
     const baseH = 0.24;
     object.add(contactShadow(w, d, 0, 0, 0.55));
     object.add(slab(w, baseH, d, 0.05, blackPlastic));
@@ -3208,8 +4158,10 @@ function build(
     for (let x = -sw / 2 + 0.12; x <= sw / 2 - 0.11; x += 0.17) {
       balls.push([x, sd / 2 - 0.12], [x, -sd / 2 + 0.12]);
     }
-    object.add(instances(BALL, tin, balls, baseH + 0.06));
-    object.add(slab(sw, 0.1, sd, 0.02, substrate, 0, baseH + 0.11));
+    object.add(instances(BALL, partFinish(node, "lead"), balls, baseH + 0.06));
+    object.add(
+      slab(sw, 0.1, sd, 0.02, partFinish(node, "epoxy"), 0, baseH + 0.11),
+    );
     const deck = baseH + 0.21;
     const ring = roundedRect(
       -sw / 2 + 0.04,
@@ -3236,20 +4188,27 @@ function build(
       curveSegments: 6,
     });
     ringGeometry.rotateX(-Math.PI / 2);
-    object.add(solid(ringGeometry, nickel, 0, deck + 0.015, 0));
-    const dieW = 5.1;
-    const dieD = sd - 0.62;
-    const dx = 0.6;
+    object.add(solid(ringGeometry, body, 0, deck + 0.015, 0));
+    const [plan] = markPlans("die", w, d);
+    const { face } = plan!;
+    const dieW = face.right - face.left;
+    const dieD = face.bottom - face.top;
+    const dx = (face.left + face.right) / 2;
     object.add(slab(dieW + 0.14, 0.04, dieD + 0.14, 0.03, mould, dx, deck));
-    object.add(slab(dieW, 0.12, dieD, 0.012, silicon, dx, deck + 0.035));
+    object.add(
+      slab(
+        dieW,
+        0.12,
+        dieD,
+        0.012,
+        partFinish(node, "silicon"),
+        dx,
+        deck + 0.035,
+      ),
+    );
     const top = deck + 0.155;
     object.add(
-      onTop(
-        marking(node, { width: dieW - 0.45, height: dieD - 0.28 }),
-        dx - dieW / 2 + 0.22,
-        top,
-        -dieD / 2 + 0.16,
-      ),
+      markOnTop(node, plan!.rooms[0]!, top, { on: "silicon", ...CENTRED }),
     );
     const spots: Spot[] = [];
     const inner = sw / 2 - 0.3;
@@ -3282,28 +4241,42 @@ function build(
 
   /**
    * memory: two registered DIMMs in latching slots, leaning back LEAN so
-   * their faces turn to the viewer: each a green module with ten DRAM
-   * packages, five either side of its register chip, a PMIC at its top
-   * right and gold fingers at its slot; the front module's dark label along
-   * its top edge carries the marking.
+   * their faces turn to the viewer: each a green module with ten black DRAM
+   * packages, five either side of its register chip, a brushed metal heat
+   * spreader band clipped over its top edge above them, and metal contact
+   * fingers at its slot; the marking centred on the front module's band.
    */
   function buildMemory(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
     const LEAN = 40 * DEG;
     const stickW = w - 0.52;
-    const stickH = 2.2;
-    const fingers = gold.clone();
-    fingers.map = fingerTexture(80);
-    const dram = mouldGeometry(0.58, 0.07, 0.8, 0.012, 0.01).rotateX(
+    const stickH = DIMM.h;
+    const [plan] = markPlans("memory", w, d);
+    const { face } = plan!;
+    const fingers = partFinish(node, "lead", { map: fingerTexture(80) });
+    const spreader = partFinish(node, "facing");
+    const chip = partFinish(node, "epoxy", {
+      envMap: roomEnvironment,
+      envMapIntensity: 0.25,
+    });
+    /** The spreader band's span up the module, from a gap above the DRAMs to the module's top edge, and its width. */
+    const bandFrom = -face.bottom;
+    const bandH = face.bottom - face.top;
+    const bandW = face.right - face.left;
+    const plate = rbox(bandW, bandH, 0.035, 0.015);
+    const clip = rbox(bandW, 0.05, 0.12, 0.015);
+    const dram = mouldGeometry(DRAM.w, 0.07, DRAM.h, 0.012, 0.01).rotateX(
       Math.PI / 2,
     );
     const register = mouldGeometry(0.5, 0.07, 0.5, 0.012, 0.01).rotateX(
       Math.PI / 2,
     );
-    const pmic = mouldGeometry(0.36, 0.06, 0.36, 0.01, 0.01).rotateX(
-      Math.PI / 2,
-    );
+    const chips: Spot[] = [];
+    for (let i = 0; i < 5; i++) {
+      const x = DRAM.pitch * (i + 1);
+      chips.push([-x, DRAM.y], [x, DRAM.y]);
+    }
     [d / 2 - 0.68, d / 2 - 0.22].forEach((z, row) => {
       object.add(slab(w - 0.04, 0.28, 0.34, 0.04, blackPlastic, 0, 0, z));
       for (const side of [-1, 1]) {
@@ -3314,6 +4287,13 @@ function build(
       const stick = new THREE.Group();
       stick.position.set(0, 0.2, z);
       stick.rotation.x = -LEAN;
+      const drams = new THREE.InstancedMesh(dram, chip, chips.length);
+      const matrix = new THREE.Matrix4();
+      chips.forEach(([x, y], index) =>
+        drams.setMatrixAt(index, matrix.makeTranslation(x, y, 0.025)),
+      );
+      drams.castShadow = true;
+      drams.receiveShadow = true;
       stick.add(
         solid(
           new THREE.BoxGeometry(stickW, stickH, 0.05),
@@ -3322,8 +4302,6 @@ function build(
           stickH / 2,
           0,
         ),
-      );
-      stick.add(
         solid(
           new THREE.BoxGeometry(stickW - 0.26, 0.12, 0.054),
           fingers,
@@ -3331,36 +4309,21 @@ function build(
           0.1,
           0,
         ),
-      );
-      const chips: number[] = [];
-      for (let i = 0; i < 5; i++) chips.push(-3.24 + i * 0.66, 3.24 - i * 0.66);
-      const front = new THREE.InstancedMesh(dram, facingMould, chips.length);
-      const matrix = new THREE.Matrix4();
-      chips.forEach((x, index) =>
-        front.setMatrixAt(index, matrix.makeTranslation(x, 0.62, 0.025)),
-      );
-      front.castShadow = true;
-      front.receiveShadow = true;
-      stick.add(
-        front,
-        solid(register, facingMould, 0, 0.62, 0.025),
-        solid(pmic, facingMould, stickW / 2 - 0.45, stickH - 0.42, 0.025),
+        drams,
+        solid(register, chip, 0, DRAM.y, 0.025),
+        solid(plate, spreader, 0, bandFrom + bandH / 2, 0.0425),
+        solid(clip, spreader, 0, stickH + 0.02, 0.005),
       );
       if (row === 1) {
-        const label = marking(node, {
-          width: 4.6,
-          height: 0.92,
-          reflection: 0.15,
-          metal: 0.6,
-          backing: {
-            material: stickerBlack,
-            pad: 0.1,
-            thick: 0.004,
-            radius: 0.02,
-          },
-        });
-        label.position.set(-stickW / 2 + 0.42, stickH - 0.16, 0.025 + 0.004);
-        stick.add(label);
+        stick.add(
+          markOnFace(node, plan!.rooms[0]!, 0.06, {
+            on: "facing",
+            align: "center",
+            valign: "middle",
+            reflection: 0.15,
+            metal: 0.6,
+          }),
+        );
       }
       object.add(stick);
     });
@@ -3369,14 +4332,16 @@ function build(
 
   /**
    * gpu: a triple-fan graphics card standing in its PCIe slot. From above:
-   * the anodised backplate's top flange carrying the marking, the fin stack
-   * through the shroud's open top with four nickel heat pipes looped in
+   * the brushed metal backplate's top flange carrying the marking, the metal
+   * fin stack through the shroud's open top with four heat pipes looped in
    * U-bends across it, the power connector, and the shroud's front face
    * with its three fans toward the viewer.
    */
   function buildGpu(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
+    const body = partFinish(node, "metal");
+    const lead = partFinish(node, "lead");
     const thick = d - 0.1;
     const front = thick / 2;
     const height = 2.4;
@@ -3402,20 +4367,22 @@ function build(
         height - 0.1,
         0.06,
         0.02,
-        anodised,
+        body,
         0,
         lift + 0.02,
         -front + 0.04,
       ),
     );
-    const flangeD = 0.62;
+    const [plan] = markPlans("gpu", w, d);
+    const flangeD = GPU_FLANGE;
+    const [plugBox] = plan!.clear;
     object.add(
       slab(
         w - 0.06,
         0.06,
         flangeD,
         0.025,
-        anodised,
+        body,
         0,
         top - 0.06,
         -front + flangeD / 2,
@@ -3427,7 +4394,7 @@ function build(
     const finCount = Math.round((w - 1.0) / 0.1);
     const fins = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.022, finH, finTo - finFrom),
-      aluminium,
+      body,
       finCount,
     );
     const matrix = new THREE.Matrix4();
@@ -3451,7 +4418,7 @@ function build(
     const pipe = new THREE.CylinderGeometry(0.07, 0.07, pipeTo - pipeFrom, 18);
     pipe.rotateZ(Math.PI / 2);
     for (const z of lanes)
-      object.add(solid(pipe, nickel, (pipeFrom + pipeTo) / 2, pipeY, z));
+      object.add(solid(pipe, lead, (pipeFrom + pipeTo) / 2, pipeY, z));
     for (const [a, b] of [
       [0, 3],
       [1, 2],
@@ -3459,9 +4426,7 @@ function build(
       const radius = (lanes[b]! - lanes[a]!) / 2;
       const bend = new THREE.TorusGeometry(radius, 0.07, 12, 24, Math.PI);
       bend.rotateX(Math.PI / 2).rotateY(Math.PI / 2);
-      object.add(
-        solid(bend, nickel, pipeTo, pipeY, (lanes[a]! + lanes[b]!) / 2),
-      );
+      object.add(solid(bend, lead, pipeTo, pipeY, (lanes[a]! + lanes[b]!) / 2));
     }
     const radius = (height - 0.5) / 2;
     const fanX = [-w / 3, 0, w / 3];
@@ -3512,8 +4477,20 @@ function build(
       ),
     );
     const plug = new THREE.Group();
-    plug.position.set(w / 2 - 0.95, top, -front + flangeD / 2);
-    plug.add(slab(0.92, 0.28, 0.4, 0.04, blackPlastic));
+    plug.position.set(
+      (plugBox!.left + plugBox!.right) / 2,
+      top,
+      (plugBox!.top + plugBox!.bottom) / 2,
+    );
+    plug.add(
+      slab(
+        plugBox!.right - plugBox!.left,
+        0.28,
+        plugBox!.bottom - plugBox!.top,
+        0.04,
+        blackPlastic,
+      ),
+    );
     const pinHoleGeometry = new THREE.PlaneGeometry(0.09, 0.09);
     for (let i = 0; i < 6; i++) {
       for (const row of [-1, 1]) {
@@ -3564,16 +4541,11 @@ function build(
       return rotor;
     });
     object.add(
-      onTop(
-        marking(node, {
-          width: w - 2.6,
-          height: flangeD - 0.14,
-          valign: "middle",
-        }),
-        -w / 2 + 0.36,
-        top,
-        -front + flangeD / 2,
-      ),
+      markOnTop(node, plan!.rooms[0]!, top, {
+        on: "metal",
+        max: MARK_EM,
+        valign: "middle",
+      }),
     );
     let speed = 0;
     return {
@@ -3586,7 +4558,8 @@ function build(
               (rotor.rotation.y -= dt * speed * (1 + index * 0.04)),
           );
         }
-        accent.emissiveIntensity = passed * 0.06 + lit * (0.55 + energy * 0.5);
+        accent.emissiveIntensity =
+          (passed * 0.06 + lit * (0.55 + energy * 0.5)) * ILLUMINATION;
       },
     };
   }
@@ -3597,16 +4570,20 @@ function build(
     0,
   );
   /**
-   * trimmer: a bank of multi-turn trimmers, five to a row and as many rows
-   * (up to three) as the part's depth holds in front of its tag, their brass
-   * screws turning while lit; beside them, where the part is at least 4
-   * units deep, the search controller (a QFN with its crystal); the marking
-   * on a riveted brass tag along the front, by a 2 × 8 pin header.
+   * trimmer: a bank of multi-turn trimmers in black moulded cases, five to
+   * a row and as many rows (up to three) as the part's depth holds in front
+   * of its tag, their metal adjusting screws turning while lit; beside
+   * them, where the part is at least 4 units deep, the search controller (a
+   * QFN with its crystal); the marking centred on a riveted metal tag along
+   * the front, left of a 2 × 8 pin header.
    */
   function buildTrimmer(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
-    const rows = clamp(Math.floor((d - 1.45) / 1.02), 1, 3);
+    const body = partFinish(node, "metal");
+    const lead = partFinish(node, "lead");
+    const cased = partFinish(node, "epoxy");
+    const rows = trimmerRows(d);
     const roomy = d >= 4;
     if (roomy) {
       const qx = -w / 2 + 0.95;
@@ -3618,7 +4595,7 @@ function build(
       object.add(
         instances(
           QFN_PAD,
-          tin,
+          lead,
           leadSpots(1.3, 1.3, 0.13, 0.2).map(([x, z, turn]): Spot => [
             qx + x,
             qz + z,
@@ -3646,36 +4623,37 @@ function build(
       );
     }
     const x0 = roomy ? -w / 2 + 2.45 : -w / 2 + 0.75;
-    const z0 = -d / 2 + 0.5;
+    const z0 = -d / 2 + TRIM_ROW.back;
     const slot = new THREE.BoxGeometry(0.2, 0.03, 0.035);
     const head = new THREE.CylinderGeometry(0.13, 0.13, 0.08, 24);
-    const body = rbox(0.95, 0.95, 0.5, 0.04);
-    const valueMark = markingTexture([["103", 44, 700]], {
-      width: 192,
-      height: 96,
-      ink: "rgba(228,232,238,0.78)",
+    const valueMaterial = new THREE.MeshStandardMaterial({
+      map: markingTexture([["103", 44, 700]], { width: 192, height: 96 }),
+      transparent: true,
+      depthWrite: false,
+      roughness: 0.6,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
     });
     const screws: THREE.Group[] = [];
+    const cases: Spot[] = [];
     object.add(
       contactShadow(
         5.2 + 0.95,
-        (rows - 1) * 1.02 + 0.5,
+        (rows - 1) * TRIM_ROW.pitch + 0.5,
         x0 + 2.6,
-        z0 + (rows - 1) * 0.51,
+        z0 + ((rows - 1) * TRIM_ROW.pitch) / 2,
         0.45,
       ),
     );
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < 5; col++) {
         const x = x0 + col * 1.3;
-        const z = z0 + row * 1.02;
-        object.add(solid(body, trimBlue, x, 0.475, z));
-        const value = decal(valueMark, 0.36, 0.18, 0.952);
-        value.position.set(x - 0.16, 0.952, z);
-        object.add(value);
+        const z = z0 + row * TRIM_ROW.pitch;
+        cases.push([x, z]);
         const screwHead = new THREE.Group();
         screwHead.position.set(x + 0.26, 0.95, z);
-        screwHead.add(solid(head, brass, 0, 0.04, 0));
+        screwHead.add(solid(head, lead, 0, 0.04, 0));
         const cut = new THREE.Mesh(slot, darkness);
         cut.position.y = 0.082;
         cut.rotation.y = (row * 5 + col) * 0.7;
@@ -3684,29 +4662,50 @@ function build(
         screws.push(screwHead);
       }
     }
-    // Without the controller, the tag's text keeps to the strip between the
-    // bank's front row and the tag's front edge.
-    const tagFront = d / 2 - 0.34;
-    const bankFront = z0 + (rows - 1) * 1.02 + 0.25;
-    const tag = marking(node, {
-      width: 4.8,
-      height: roomy
-        ? undefined
-        : Math.max(0.5, tagFront - bankFront - 2 * 0.16 - 0.08),
-      valign: "bottom",
-      backing: {
-        material: brass,
-        field: enamel,
-        pad: 0.16,
-        thick: 0.05,
-        radius: 0.04,
-        rivets: true,
-      },
-    });
-    object.add(onTop(tag, -w / 2 + 0.62, 0.05, tagFront));
-    const hx = w / 2 - 1.15;
+    object.add(instances(rbox(0.95, 0.95, 0.5, 0.04), cased, cases, 0.475));
+    const values = instances(
+      new THREE.PlaneGeometry(0.36, 0.18).rotateX(-Math.PI / 2),
+      valueMaterial,
+      cases.map(([x, z]): Spot => [x - 0.16, z]),
+      0.952,
+    );
+    values.castShadow = false;
+    object.add(values);
+    const hx = w / 2 - HEADER.inset;
     const hz = d / 2 - 0.7;
-    object.add(slab(1.8, 0.24, 0.44, 0.02, blackPlastic, hx, 0, hz));
+    // The tag fills the strip between the bank's front row and the part's
+    // front edge, from the part's left edge to TAG.gap short of the HEADER.
+    const [plan] = markPlans("trimmer", w, d);
+    const { face: tag } = plan!;
+    const tagW = tag.right - tag.left;
+    const tagD = tag.bottom - tag.top;
+    const tagX = (tag.left + tag.right) / 2;
+    const tagZ = (tag.top + tag.bottom) / 2;
+    const tagH = 0.05;
+    object.add(
+      contactShadow(tagW, tagD, tagX, tagZ, 0.35),
+      slab(tagW, tagH, tagD, 0.04, body, tagX, 0, tagZ),
+    );
+    for (const rivet of plan!.clear) {
+      object.add(
+        solid(
+          RIVET,
+          lead,
+          (rivet.left + rivet.right) / 2,
+          tagH,
+          (rivet.top + rivet.bottom) / 2,
+        ),
+      );
+    }
+    object.add(
+      markOnTop(node, plan!.rooms[0]!, tagH, {
+        on: "metal",
+        max: MARK_EM,
+        align: "center",
+        valign: "middle",
+      }),
+    );
+    object.add(slab(HEADER.w, 0.24, HEADER.d, 0.02, blackPlastic, hx, 0, hz));
     const pins: Spot[] = [];
     for (let i = 0; i < 8; i++) {
       pins.push(
@@ -3717,7 +4716,7 @@ function build(
     object.add(
       instances(
         new THREE.BoxGeometry(0.06, 0.6, 0.06).translate(0, 0.3, 0),
-        gold,
+        lead,
         pins,
         0,
       ),
@@ -3746,18 +4745,22 @@ function build(
   }
 
   /**
-   * rj45: a ganged 1 × 4 RJ45 jack under one brushed shield, each port with
-   * its gold contacts and its link and activity LEDs in the shield's front,
-   * spring fingers along the front edge, embossed ribs and dimples on top,
-   * and the marking on a smoked polyimide pick-up pad.
+   * rj45: a ganged 1 × 4 RJ45 jack under one brushed metal shield, each
+   * port with its contacts and its link and activity LEDs in the shield's
+   * front, spring fingers along the front edge, embossed ribs and dimples
+   * on top, and the marking etched into the shield's top between them, its
+   * part number turned along the shield's right edge.
    */
   function buildRj45(node: Placed): Part {
     const { d } = node;
     const object = new THREE.Group();
-    const PORTS = 4;
-    const pitch = 1.84;
-    const jw = PORTS * pitch + 0.12;
-    const jd = d - 0.08;
+    const shield = partFinish(node, "metal");
+    const [plan] = markPlans("rj45", node.w, d);
+    const { face } = plan!;
+    const PORTS = RJ45.ports;
+    const pitch = RJ45.pitch;
+    const jw = face.right - face.left;
+    const jd = face.bottom - face.top;
     const jh = 1.36;
     const front = jd / 2;
     object.add(contactShadow(jw, jd, 0, 0, 0.6));
@@ -3767,24 +4770,13 @@ function build(
     object.add(
       slab(jw - 0.08, 0.14, 0.44, 0.02, blackPlastic, 0, 0, front - 0.24),
     );
-    object.add(slab(jw, 0.04, jd, 0.015, shieldMetal, 0, jh - 0.04, 0));
+    object.add(slab(jw, 0.04, jd, 0.015, shield, 0, jh - 0.04, 0));
     for (const side of [-1, 1]) {
       object.add(
-        slab(
-          0.04,
-          jh - 0.04,
-          jd,
-          0.012,
-          shieldMetal,
-          side * (jw / 2 - 0.02),
-          0,
-          0,
-        ),
+        slab(0.04, jh - 0.04, jd, 0.012, shield, side * (jw / 2 - 0.02), 0, 0),
       );
     }
-    object.add(
-      slab(jw, jh - 0.02, 0.04, 0.012, shieldMetal, 0, 0, -jd / 2 + 0.02),
-    );
+    object.add(slab(jw, jh - 0.02, 0.04, 0.012, shield, 0, 0, -jd / 2 + 0.02));
     const plate = roundedRect(
       -jw / 2 + 0.04,
       0,
@@ -3801,7 +4793,12 @@ function build(
       0xffb54a,
     );
     const activity: THREE.MeshPhysicalMaterial[] = [];
-    const contact = new THREE.BoxGeometry(0.04, 0.014, 0.22);
+    const contacts = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(0.04, 0.014, 0.22).rotateX(0.55),
+      partFinish(node, "lead"),
+      PORTS * 8,
+    );
+    const place = new THREE.Matrix4();
     const lamp = new THREE.BoxGeometry(0.26, 0.14, 0.04);
     for (let i = 0; i < PORTS; i++) {
       const cx = -jw / 2 + 0.06 + pitch * (i + 0.5);
@@ -3828,10 +4825,10 @@ function build(
         );
       }
       for (let k = 0; k < 8; k++) {
-        const pin = new THREE.Mesh(contact, gold);
-        pin.position.set(cx - 0.42 + k * 0.12, 0.92, front - 0.2);
-        pin.rotation.x = 0.55;
-        object.add(pin);
+        contacts.setMatrixAt(
+          i * 8 + k,
+          place.makeTranslation(cx - 0.42 + k * 0.12, 0.92, front - 0.2),
+        );
       }
       const blink = glowing(
         new THREE.MeshPhysicalMaterial({
@@ -3849,31 +4846,35 @@ function build(
         object.add(solid(lamp, material, cx + side * 0.55, 1.16, front - 0.04));
       }
     }
+    object.add(contacts);
     const plateGeometry = new THREE.ExtrudeGeometry(plate, {
       depth: 0.04,
       bevelEnabled: false,
       curveSegments: 6,
     });
-    object.add(solid(plateGeometry, shieldMetal, 0, 0, front - 0.04));
+    object.add(solid(plateGeometry, shield, 0, 0, front - 0.04));
     const fingers: Spot[] = [];
     for (let x = -jw / 2 + 0.2; x < jw / 2 - 0.1; x += 0.3)
       fingers.push([x, front - 0.07]);
     const finger = new THREE.BoxGeometry(0.16, 0.025, 0.12);
     finger.rotateX(0.35);
-    object.add(instances(finger, shieldMetal, fingers, jh + 0.004));
+    object.add(instances(finger, shield, fingers, jh + 0.004));
+    const ribZ = face.top + RJ45.rib.inset;
+    const dimpleZ = face.bottom - RJ45.dimple.inset;
     const ribs: Spot[] = [];
     const dimples: Spot[] = [];
     for (let i = 0; i < PORTS; i++) {
       const cx = -jw / 2 + 0.06 + pitch * (i + 0.5);
-      ribs.push([cx, -jd / 2 + 0.22]);
-      dimples.push([cx - 0.5, front - 0.42], [cx + 0.5, front - 0.42]);
-      if (i === PORTS - 1)
-        dimples.push([cx - pitch / 2, -0.1], [cx - pitch / 2, 0.35]);
+      ribs.push([cx, ribZ]);
+      dimples.push(
+        [cx - RJ45.dimple.x, dimpleZ],
+        [cx + RJ45.dimple.x, dimpleZ],
+      );
     }
     object.add(
       instances(
-        new THREE.BoxGeometry(1.1, 0.014, 0.08),
-        shieldMetal,
+        new THREE.BoxGeometry(RJ45.rib.w, 0.014, RJ45.rib.d),
+        shield,
         ribs,
         jh + 0.007,
       ),
@@ -3881,7 +4882,7 @@ function build(
     object.add(
       instances(
         new THREE.SphereGeometry(
-          0.07,
+          RJ45.dimple.r,
           14,
           6,
           0,
@@ -3889,46 +4890,48 @@ function build(
           0,
           Math.PI / 2,
         ).scale(1, 0.3, 1),
-        shieldMetal,
+        shield,
         dimples,
         jh,
       ),
     );
     object.add(
-      onTop(
-        marking(node, {
-          width: 4.8,
-          backing: { material: kapton, pad: 0.1, thick: 0.006, radius: 0.02 },
-        }),
-        -jw / 2 + 0.34,
-        jh + 0.006,
-        -jd / 2 + 0.56,
-      ),
+      markOnTop(node, plan!.rooms[0]!, jh, {
+        on: "metal",
+        code: "side",
+        ...CENTRED,
+      }),
     );
     return {
       object,
       update(_dt, t, lit, _energy, passed) {
-        link.emissiveIntensity = passed * 0.8 + lit * 2.2;
+        link.emissiveIntensity = (passed * 0.8 + lit * 2.2) * ILLUMINATION;
         activity.forEach((material, index) => {
           const phase = t * (11 + index * 2.3) + index * 1.7;
           const blink =
             Math.sin(phase) > 0.2 || Math.sin(phase * 0.31) > 0.7 ? 1 : 0.15;
-          material.emissiveIntensity = lit * (still ? 1.4 : blink * 2.2);
+          material.emissiveIntensity =
+            lit * (still ? 1.4 : blink * 2.2) * ILLUMINATION;
         });
       },
     };
   }
 
   /**
-   * radio: a radio module on its header, castellated in gold, a brushed
-   * shield can with an embossed rim and the marking on its black label, a
-   * gold meander antenna and a u.FL socket on the module's free end, beside
-   * an SMA jack and a rubber whip antenna standing on it.
+   * radio: a radio module on its header, castellated along both long edges,
+   * a brushed metal shield can with an embossed rim and the marking etched
+   * inside it, its part number turned along the marking's right edge, a
+   * meander antenna and a u.FL socket on the module's free end, beside an
+   * SMA jack and a rubber whip antenna standing on it.
    */
   function buildRadio(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
-    const antennaW = 1.05;
+    const can = partFinish(node, "metal");
+    const lead = partFinish(node, "lead");
+    const [plan] = markPlans("radio", w, d);
+    const { face } = plan!;
+    const antennaW = RADIO.antenna;
     const mw = w - antennaW - 0.05;
     const mx = -w / 2 + mw / 2;
     object.add(contactShadow(mw, d, mx, 0, 0.6));
@@ -3938,34 +4941,34 @@ function build(
     const castellations: Spot[] = [];
     for (let i = 0; i < count; i++) {
       const x = mx - mw / 2 + 0.2 + (i * (mw - 0.4)) / (count - 1);
-      castellations.push([x, d / 2 + 0.004], [x, -d / 2 - 0.004]);
+      castellations.push([x, d / 2 + 0.01], [x, -d / 2 - 0.01]);
     }
     object.add(
       instances(
-        new THREE.BoxGeometry(0.1, 0.075, 0.03),
-        gold,
+        new THREE.BoxGeometry(0.12, 0.09, 0.05),
+        lead,
         castellations,
         0.235,
       ),
     );
-    const canW = mw - 1.3;
-    const canD = d - 0.18;
-    const cx = mx - mw / 2 + 0.1 + canW / 2;
-    const can = glowing(shieldMetal, 0xffb24a);
+    const canW = face.right - face.left;
+    const canD = face.bottom - face.top;
+    const cx = (face.left + face.right) / 2;
     object.add(slab(canW, 0.4, canD, 0.04, can, cx, 0.27));
+    const { outer, inner } = RADIO.rim;
     const rim = roundedRect(
-      -canW / 2 + 0.08,
-      -canD / 2 + 0.08,
-      canW / 2 - 0.08,
-      canD / 2 - 0.08,
+      -canW / 2 + outer,
+      -canD / 2 + outer,
+      canW / 2 - outer,
+      canD / 2 - outer,
       0.06,
     );
     rim.holes.push(
       roundedHole(
-        -canW / 2 + 0.2,
-        -canD / 2 + 0.2,
-        canW / 2 - 0.2,
-        canD / 2 - 0.2,
+        -canW / 2 + inner,
+        -canD / 2 + inner,
+        canW / 2 - inner,
+        canD / 2 - inner,
         0.04,
       ),
     );
@@ -3977,20 +4980,11 @@ function build(
     rimGeometry.rotateX(-Math.PI / 2);
     object.add(solid(rimGeometry, can, cx, 0.67, 0));
     object.add(
-      onTop(
-        marking(node, {
-          width: canW - 0.8,
-          backing: {
-            material: labelBlack,
-            pad: 0.1,
-            thick: 0.006,
-            radius: 0.02,
-          },
-        }),
-        cx - canW / 2 + 0.36,
-        0.67 + 0.006,
-        -canD / 2 + 0.36,
-      ),
+      markOnTop(node, plan!.rooms[0]!, 0.67, {
+        on: "metal",
+        code: "side",
+        ...CENTRED,
+      }),
     );
     const freeLeft = cx + canW / 2 + 0.14;
     const freeRight = mx + mw / 2 - 0.1;
@@ -4002,13 +4996,13 @@ function build(
         k % 2 ? [d / 2 - 0.35, -d / 2 + 0.35] : [-d / 2 + 0.35, d / 2 - 0.35];
       meander.push(new THREE.Vector2(x, z0), new THREE.Vector2(x, z1));
     }
-    object.add(solid(ribbonGeometry(meander, 0.06, 0.008, 0.27), gold));
+    object.add(solid(ribbonGeometry(meander, 0.06, 0.008, 0.27), lead));
     const ux = freeRight - 0.18;
-    object.add(slab(0.3, 0.05, 0.3, 0.01, tin, ux, 0.27, d / 2 - 0.4));
+    object.add(slab(0.3, 0.05, 0.3, 0.01, lead, ux, 0.27, d / 2 - 0.4));
     object.add(
       solid(
         new THREE.CylinderGeometry(0.1, 0.1, 0.1, 20),
-        gold,
+        lead,
         ux,
         0.37,
         d / 2 - 0.4,
@@ -4016,10 +5010,10 @@ function build(
     );
     const ax = w / 2 - antennaW / 2;
     object.add(
-      solid(new THREE.CylinderGeometry(0.34, 0.34, 0.16, 6), gold, ax, 0.08, 0),
+      solid(new THREE.CylinderGeometry(0.34, 0.34, 0.16, 6), lead, ax, 0.08, 0),
     );
     object.add(
-      solid(new THREE.CylinderGeometry(0.2, 0.2, 0.3, 24), gold, ax, 0.31, 0),
+      solid(new THREE.CylinderGeometry(0.2, 0.2, 0.3, 24), lead, ax, 0.31, 0),
     );
     object.add(
       solid(
@@ -4051,67 +5045,25 @@ function build(
     return {
       object,
       update(_dt, _t, lit, energy, passed) {
-        can.emissiveIntensity = lit * (0.03 + energy * 0.04);
-        tip.emissiveIntensity = passed * 0.4 + lit * (1.6 + energy);
+        tip.emissiveIntensity =
+          (passed * 0.4 + lit * (1.6 + energy)) * ILLUMINATION;
       },
     };
   }
 
-  /** A padlock emblem's geometry, lying flat: its body with a keyhole and its shackle, `size` tall, `thick` deep. */
-  function lockGeometry(size = 0.9, thick = 0.03) {
-    const k = size / 0.9;
-    const body = roundedRect(
-      -0.34 * k,
-      -0.45 * k,
-      0.34 * k,
-      0.08 * k,
-      0.07 * k,
-    );
-    const keyhole = new THREE.Path();
-    const lean = Math.atan2(0.06, 0.025);
-    keyhole.moveTo(-0.025 * k, -0.33 * k);
-    keyhole.lineTo(0.025 * k, -0.33 * k);
-    keyhole.lineTo(0.025 * k, -0.19 * k);
-    keyhole.absarc(0, -0.13 * k, 0.065 * k, -lean, Math.PI + lean, false);
-    keyhole.closePath();
-    body.holes.push(keyhole);
-    const shackle = new THREE.Shape();
-    shackle.moveTo(-0.24 * k, 0.08 * k);
-    shackle.lineTo(-0.24 * k, 0.2 * k);
-    shackle.absarc(0, 0.2 * k, 0.24 * k, Math.PI, 0, true);
-    shackle.lineTo(0.24 * k, 0.08 * k);
-    shackle.lineTo(0.15 * k, 0.08 * k);
-    shackle.lineTo(0.15 * k, 0.2 * k);
-    shackle.absarc(0, 0.2 * k, 0.15 * k, 0, Math.PI, false);
-    shackle.lineTo(-0.15 * k, 0.08 * k);
-    shackle.closePath();
-    const options = {
-      depth: thick,
-      bevelEnabled: true,
-      bevelThickness: 0.008,
-      bevelSize: 0.008,
-      bevelSegments: 1,
-      curveSegments: 16,
-    };
-    const geometry = mergeGeometries([
-      new THREE.ExtrudeGeometry(body, options),
-      new THREE.ExtrudeGeometry(shackle, options),
-    ]);
-    geometry.rotateX(-Math.PI / 2);
-    return geometry;
-  }
-
   /**
    * secure: a secure element in a sealed ceramic package on its socket,
-   * castellated in gold, its dark brushed metal lid seam-welded inside a
-   * gold seal ring, the marking at the lid's top-left and a gold padlock
-   * emblem at its right; beside it, two SOIC flash packages and their
-   * decoupling.
+   * castellated along its long sides, its brushed metal lid seam-welded
+   * inside a polished seal ring, the marking at the lid's top-left and a
+   * bronze padlock emblem in its front-right corner, glowing faintly while
+   * lit; beside it, two SOIC flash packages and their decoupling.
    */
   function buildSecure(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
-    const pw = 4.9;
+    const lid = partFinish(node, "metal");
+    const lead = partFinish(node, "lead");
+    const pw = SECURE.w;
     const pd = d - 0.14;
     const px = -w / 2 + 0.1 + pw / 2;
     const baseH = 0.22;
@@ -4123,12 +5075,12 @@ function build(
     const castellations: Spot[] = [];
     for (let i = 0; i < count; i++) {
       const x = px - pw / 2 + 0.24 + (i * (pw - 0.48)) / (count - 1);
-      castellations.push([x, pd / 2 + 0.006], [x, -pd / 2 - 0.006]);
+      castellations.push([x, pd / 2 + 0.012], [x, -pd / 2 - 0.012]);
     }
     object.add(
       instances(
-        new THREE.BoxGeometry(0.1, bh - 0.04, 0.03),
-        gold,
+        new THREE.BoxGeometry(0.14, bh - 0.02, 0.05),
+        lead,
         castellations,
         baseH + bh / 2,
       ),
@@ -4156,23 +5108,47 @@ function build(
       curveSegments: 6,
     });
     sealGeometry.rotateX(-Math.PI / 2);
-    const sealGold = glowing(gold, 0xffb54a);
-    object.add(solid(sealGeometry, sealGold, px, top, 0));
+    object.add(solid(sealGeometry, lead, px, top, 0));
     const lidW = pw - 0.36;
     const lidD = pd - 0.36;
-    object.add(slab(lidW, 0.06, lidD, 0.03, gunmetal, px, top));
+    object.add(slab(lidW, 0.06, lidD, 0.03, lid, px, top));
     const lidTop = top + 0.06;
-    const emblem = glowing(gold, 0xffb54a);
+    const emblem = new THREE.MeshPhysicalMaterial({
+      color: 0x7a4c1a,
+      metalness: 1,
+      roughness: 0.32,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.2,
+      emissive: new THREE.Color(0xff9a2a),
+      emissiveIntensity: 0,
+    });
+    const [plan] = markPlans("secure", w, d);
+    const [padlock] = plan!.clear;
+    const lock = lockGeometry(SECURE.lock);
+    const { min } = lock.boundingBox!;
     object.add(
-      solid(lockGeometry(0.92), emblem, px + lidW / 2 - 0.62, lidTop, 0.02),
+      solid(lock, emblem, padlock!.left - min.x, lidTop, padlock!.top - min.z),
+    );
+    // The marking takes the room of the plan's that sets it larger, keeping
+    // its part number where either does.
+    const fits = plan!.rooms.map((room) =>
+      fitMarking(
+        node.label.toUpperCase(),
+        partNumber(node),
+        room.right - room.left,
+        room.bottom - room.top,
+        markWidth,
+        markCap(),
+      ),
+    );
+    const rank = (fit: MarkFit) => Number(!!fit.code) * 10 + fit.em;
+    const best = fits.reduce(
+      (chosen, fit, index) =>
+        rank(fit) > rank(fits[chosen]!) ? index : chosen,
+      0,
     );
     object.add(
-      onTop(
-        marking(node, { width: lidW - 1.35, height: lidD - 0.34 }),
-        px - lidW / 2 + 0.22,
-        lidTop,
-        -lidD / 2 + 0.18,
-      ),
+      markOnTop(node, plan!.rooms[best]!, lidTop, { on: "metal", ...CENTRED }),
     );
     const fx = px + pw / 2 + 0.25;
     for (const [x, z] of [
@@ -4201,18 +5177,18 @@ function build(
     return {
       object,
       update(_dt, _t, lit, energy, passed) {
-        sealGold.emissiveIntensity = passed * 0.05 + lit * (0.4 + energy * 0.5);
-        emblem.emissiveIntensity = passed * 0.12 + lit * (0.7 + energy * 0.6);
+        emblem.emissiveIntensity =
+          (passed * 0.03 + lit * (0.12 + energy * 0.2)) * ILLUMINATION;
       },
     };
   }
 
-  /** A lamp bezel's turned profile: a chromed ring round the lens, standing on y = 0. */
+  /** A lamp bezel's turned profile: a chromed ring BEZEL_R round the lens, standing on y = 0. */
   const BEZEL = new THREE.LatheGeometry(
     [
       [0.17, 0],
       [0.3, 0],
-      [0.31, 0.02],
+      [BEZEL_R, 0.02],
       [0.3, 0.09],
       [0.26, 0.12],
       [0.2, 0.12],
@@ -4221,16 +5197,18 @@ function build(
     40,
   );
   /**
-   * toggle: a bat-handle toggle through a chamfered gunmetal panel on brass
-   * standoffs: hex nut, keyed washer and threaded bushing; an indicator
-   * lamp in a chromed bezel either side, the one the toggle selects lit,
-   * with its A or B legend; a slide fader along the front over a gold scale;
-   * cap screws at the corners, a gold inlay line along the front edge and
-   * the marking at the panel's top-left.
+   * toggle: a bat-handle toggle through a chamfered brushed metal panel on
+   * polished standoffs: hex nut, keyed washer and threaded bushing; an
+   * indicator lamp in a chromed bezel either side, the one the toggle
+   * selects lit, with its A or B legend; a slide fader along the front over
+   * an engraved scale; cap screws at the corners and the marking at the
+   * panel's top-left.
    */
   function buildToggle(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
+    const body = partFinish(node, "metal");
+    const lead = partFinish(node, "lead");
     const pw = w - 0.06;
     const pd = d - 0.06;
     const rise = 0.26;
@@ -4242,7 +5220,7 @@ function build(
         object.add(
           solid(
             post,
-            brass,
+            lead,
             sx * (pw / 2 - 0.32),
             rise / 2,
             sz * (pd / 2 - 0.32),
@@ -4266,7 +5244,7 @@ function build(
       curveSegments: 8,
     });
     panelGeometry.rotateX(-Math.PI / 2);
-    object.add(solid(panelGeometry, gunmetal, 0, rise + 0.04, 0));
+    object.add(solid(panelGeometry, body, 0, rise + 0.04, 0));
     const top = rise + thick;
     const capScrew = new THREE.CylinderGeometry(0.12, 0.12, 0.07, 24);
     const socketGeometry = new THREE.CircleGeometry(0.05, 6).rotateX(
@@ -4282,18 +5260,8 @@ function build(
         object.add(socket);
       }
     }
-    const inlay = glowing(gold, 0xffb24a);
-    object.add(
-      solid(
-        new THREE.BoxGeometry(pw - 1.0, 0.012, 0.04),
-        inlay,
-        0,
-        top + 0.004,
-        pd / 2 - 0.2,
-      ),
-    );
-    const tx = 1.45;
-    const tz = 0.05;
+    const [name, ...legends] = markPlans("toggle", w, d);
+    const { x: tx, z: tz, lamp: lampX, tickD } = TOGGLE;
     object.add(
       solid(
         new THREE.CylinderGeometry(0.44, 0.44, 0.02, 40),
@@ -4351,11 +5319,11 @@ function build(
       Math.PI / 2,
     );
     dome.scale(1, 0.6, 1);
-    for (const [text, side] of [
-      ["A", -1],
-      ["B", 1],
+    for (const [text, side, legend] of [
+      ["A", -1, legends[0]!],
+      ["B", 1, legends[1]!],
     ] as const) {
-      const lx = tx + side * 1.55;
+      const lx = tx + side * lampX;
       object.add(solid(BEZEL, steel, lx, top, tz));
       const lens = glowing(
         new THREE.MeshPhysicalMaterial({
@@ -4372,26 +5340,21 @@ function build(
       object.add(halo);
       lamps.push({ lens, halo, side });
       object.add(
-        onTop(
-          marking(node, { text, width: 0.6, align: "center" }),
-          lx,
-          top,
-          tz + 0.42,
-        ),
+        markOnTop(node, legend.rooms[0]!, top, {
+          text,
+          on: "metal",
+          max: MARK_EM,
+          align: "center",
+        }),
       );
     }
     const left = -pw / 2 + 0.6;
+    const fz = pd / 2 - 0.62;
     object.add(
-      onTop(
-        marking(node, { width: tx - 1.55 - 0.45 - left, height: 1.4 }),
-        left,
-        top,
-        -pd / 2 + 0.26,
-      ),
+      markOnTop(node, name!.rooms[0]!, top, { on: "metal", max: MARK_EM }),
     );
     const slotFrom = left;
-    const slotTo = tx - 1.55 - 0.55;
-    const fz = pd / 2 - 0.62;
+    const slotTo = tx - lampX - 0.55;
     object.add(
       solid(
         new THREE.BoxGeometry(slotTo - slotFrom + 0.12, 0.012, 0.16),
@@ -4419,8 +5382,8 @@ function build(
     }
     object.add(
       instances(
-        new THREE.BoxGeometry(0.018, 0.006, 0.1),
-        gold,
+        new THREE.BoxGeometry(0.018, 0.006, tickD),
+        darkness,
         ticks,
         top + 0.003,
       ),
@@ -4462,12 +5425,14 @@ function build(
             : 0.1 + 0.4 * power;
         share = still ? want : share + (want - share) * (1 - Math.exp(-dt * 4));
         fader.position.x = slotFrom + share * (slotTo - slotFrom);
-        pointer.emissiveIntensity = passed * 0.08 + lit * (0.6 + energy * 0.5);
+        pointer.emissiveIntensity =
+          (passed * 0.08 + lit * (0.6 + energy * 0.5)) * ILLUMINATION;
         for (const lamp of lamps) {
           const chosen = clamp(0.5 + (lamp.side * angle) / 0.84, 0, 1);
           lamp.lens.emissiveIntensity =
-            power * chosen * (0.9 + lit * (1.2 + energy));
-          lamp.halo.material.opacity = power * chosen * (0.12 + lit * 0.3);
+            power * chosen * (0.9 + lit * (1.2 + energy)) * ILLUMINATION;
+          lamp.halo.material.opacity =
+            power * chosen * (0.12 + lit * 0.3) * ILLUMINATION;
         }
       },
     };
@@ -4475,13 +5440,14 @@ function build(
 
   /**
    * cpu: a processor in its LGA socket under a nickel loading frame and
-   * steel load lever, its brushed nickel heat spreader carrying the etched
-   * marking; beside it, the voltage regulator under a finned aluminium
-   * heatsink and its row of chokes.
+   * steel load lever, its brushed metal heat spreader carrying the etched
+   * marking; beside it, the voltage regulator under a finned heatsink in
+   * the same metal and its row of chokes.
    */
   function buildCpu(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
+    const body = partFinish(node, "metal");
     const sw = 4.6;
     const sd = d - 0.06;
     const sx = -w / 2 + 0.05 + sw / 2;
@@ -4529,19 +5495,26 @@ function build(
     const landCaps = passives(lands, [0.14, 0.06, 0.07]);
     landCaps.position.y = 0.24;
     object.add(landCaps);
-    object.add(slab(3.3, 0.05, 2.15 * scale, 0.02, nickel, cx, 0.24));
-    const ihsD = 2.5 * scale;
+    object.add(slab(3.3, 0.05, 2.15 * scale, 0.02, body, cx, 0.24));
+    const [plan] = markPlans("cpu", w, d);
+    const { face } = plan!;
+    const ihsW = face.right - face.left + 2 * CPU_CHAMFER;
+    const ihsD = face.bottom - face.top + 2 * CPU_CHAMFER;
+    const ihsH = 0.15;
     object.add(
-      solid(mouldGeometry(2.9, 0.15, ihsD, 0.035, 0.06), nickel, cx, 0.24),
-    );
-    const ihsTop = 0.39;
-    object.add(
-      onTop(
-        marking(node, { width: 2.9 - 0.3, height: ihsD - 0.4, ink: "dark" }),
-        cx - 1.45 + 0.15,
-        ihsTop,
-        -ihsD / 2 + 0.2,
+      solid(
+        mouldGeometry(ihsW, ihsH, ihsD, CPU_CHAMFER, 0.06),
+        body,
+        (face.left + face.right) / 2,
+        0.24,
       ),
+    );
+    object.add(
+      markOnTop(node, plan!.rooms[0]!, 0.24 + ihsH, {
+        on: "metal",
+        max: MARK_EM,
+        ...CENTRED,
+      }),
     );
     const hl = sx + sw / 2 + 0.2;
     const hr = w / 2 - 0.06;
@@ -4550,11 +5523,11 @@ function build(
     const hd = Math.min(2.0, d - 1.0);
     const hz = -d / 2 + 0.06 + hd / 2;
     object.add(contactShadow(hw, hd, hx, hz, 0.55));
-    object.add(slab(hw, 0.14, hd, 0.03, aluminium, hx, 0, hz));
+    object.add(slab(hw, 0.14, hd, 0.03, body, hx, 0, hz));
     const finCount = Math.floor((hw - 0.2) / 0.16) + 1;
     const fins = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.05, 0.86, hd - 0.1),
-      aluminium,
+      body,
       finCount,
     );
     const matrix = new THREE.Matrix4();
@@ -4577,11 +5550,30 @@ function build(
     return { object, update: none };
   }
 
+  /** A meter's hub's reach above its pivot, in units: the needle's domed hub and its steel ring. */
+  const HUB_REACH = 0.15;
+  /**
+   * The room for a meter's caption between its hub and its scale, in units:
+   * as wide as the scale arc's chord less a clearance either side, and as
+   * tall as the gap from the hub's top to the arc's ends less a clearance
+   * above and below; `middle` is the room's centre above the pivot.
+   */
+  function captionRoom(radius: number, sweep: number) {
+    const clear = 0.15;
+    const low = HUB_REACH + clear;
+    const high = radius * Math.cos(sweep) - clear;
+    return {
+      width: 2 * radius * Math.sin(sweep) - 2 * clear,
+      height: Math.max(0, high - low),
+      middle: (low + high) / 2,
+    };
+  }
   /**
    * A meter's dial `winW` × `winL` units: a dark face with a gold scale arc
    * from 0 to 100, red past 80, round a pivot `pivot` units above the
    * dial's lower edge, `radius` out and `sweep` either side of upright,
-   * numbered every 25, `caption` printed between the arc and the pivot.
+   * numbered every 25, `caption` printed `size` units per em in the
+   * marking font, centred in its captionRoom.
    */
   function meterTexture(
     winW: number,
@@ -4590,6 +5582,7 @@ function build(
     radius: number,
     sweep: number,
     caption: string,
+    size: number,
   ) {
     const cw = 1024;
     const ch = Math.round((cw * winL) / winW);
@@ -4640,22 +5633,26 @@ function build(
         ctx.restore();
       }
     }
-    ctx.fillStyle = "#8b94a0";
-    ctx.font = `600 ${0.12 * k}px "JetBrains Mono", monospace`;
-    ctx.fillText(caption, px, py - radius * 0.5 * k);
+    ctx.fillStyle = "#9aa3ae";
+    setMarkFont(ctx, size * k);
+    const room = captionRoom(radius, sweep);
+    ctx.fillText(caption, px, py - (room.middle - (markCap() * size) / 2) * k);
     return canvasTexture(surface);
   }
 
   /**
    * gauge: twin panel meters in a wedge housing, the face sloped SLOPE
-   * toward the viewer: a gunmetal bezel with two windows under cover glass,
-   * each with its dial (captioned by meterCaptions), its needle and the
-   * needle's domed hub, and the marking centred on the bezel under the hubs.
+   * toward the viewer: a brushed metal bezel with two windows under cover glass,
+   * each with its dial (captioned by meterCaptions, both captions at one
+   * size: the largest at which the wider fits its captionRoom, at most
+   * MARK_EM), its needle and the needle's domed hub, and the marking
+   * centred on the bezel under the hubs.
    */
   function buildGauge(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
-    const SLOPE = 20 * DEG;
+    const bezelMetal = partFinish(node, "facing");
+    const SLOPE = GAUGE_SLOPE;
     const front = 0.5;
     const back = front + d * Math.tan(SLOPE);
     object.add(contactShadow(w, d, 0, 0, 0.6));
@@ -4683,12 +5680,13 @@ function build(
     );
     face.rotation.x = -Math.PI / 2 + SLOPE;
     object.add(face);
-    const gap = 0.14;
-    const winW = (w - 0.04 - 3 * gap) / 2;
-    const winBottom = -faceL / 2 + 0.8;
-    const winTop = faceL / 2 - 0.16;
+    const [plan] = markPlans("gauge", w, d);
+    const windows = plan!.clear;
+    const winW = windows[0]!.right - windows[0]!.left;
+    const winBottom = -windows[0]!.bottom;
+    const winTop = -windows[0]!.top;
     const winL = winTop - winBottom;
-    const centres = [-(winW / 2 + gap / 2), winW / 2 + gap / 2];
+    const centres = windows.map((window) => (window.left + window.right) / 2);
     const bezel = roundedRect(
       -w / 2 + 0.02,
       -faceL / 2 + 0.02,
@@ -4711,13 +5709,19 @@ function build(
           bevelSegments: 2,
           curveSegments: 8,
         }),
-        gunmetal,
+        bezelMetal,
       ),
     );
     const pivot = 0.3;
     const radius = winL - pivot - 0.42;
     const sweep = 46 * DEG;
     const captions = meterCaptions(node.label);
+    const room = captionRoom(radius, sweep);
+    const captionSize = Math.min(
+      MARK_EM,
+      room.width / Math.max(...captions.map(markWidth)),
+      room.height / markCap(),
+    );
     const hub = new THREE.SphereGeometry(
       0.12,
       24,
@@ -4733,7 +5737,15 @@ function build(
       const dial = new THREE.Mesh(
         new THREE.PlaneGeometry(winW, winL),
         new THREE.MeshStandardMaterial({
-          map: meterTexture(winW, winL, pivot, radius, sweep, captions[index]!),
+          map: meterTexture(
+            winW,
+            winL,
+            pivot,
+            radius,
+            sweep,
+            captions[index]!,
+            captionSize,
+          ),
           roughness: 0.75,
           envMap: roomEnvironment,
           envMapIntensity: 0.4,
@@ -4764,15 +5776,15 @@ function build(
       face.add(cover);
       return { needle, value: 0.08, seed: index * 1.9 };
     });
-    const label = marking(node, {
-      width: w - 0.6,
-      height: 0.62,
-      align: "center",
-      valign: "middle",
-      reflection: 0.4,
-    });
-    label.position.set(0, (-faceL / 2 + winBottom) / 2, 0.07);
-    face.add(label);
+    face.add(
+      markOnFace(node, plan!.rooms[0]!, 0.07, {
+        on: "facing",
+        max: MARK_EM,
+        align: "center",
+        valign: "middle",
+        reflection: 0.4,
+      }),
+    );
     return {
       object,
       update(dt, t, lit, energy, passed) {
@@ -4802,11 +5814,13 @@ function build(
   /**
    * beacon: a tall red warning beacon on its base, its gold reflector
    * turning and its dome flashing while lit, beside a piezo siren, the alarm
-   * relay carrying the marking on its top, and a two-way screw terminal.
+   * relay in a brushed metal can carrying the marking on its top, and a
+   * two-way screw terminal.
    */
   function buildBeacon(node: Placed): Part {
     const { w, d } = node;
     const object = new THREE.Group();
+    const body = partFinish(node, "metal");
     const bx = -w / 2 + 1.1;
     object.add(contactShadow(2.1, 2.1, bx, 0, 0.6));
     object.add(
@@ -4836,7 +5850,7 @@ function build(
     const y0 = 0.6;
     const collar = new THREE.TorusGeometry(0.71, 0.035, 8, 48);
     collar.rotateX(Math.PI / 2);
-    object.add(solid(collar, steel, bx, y0, 0));
+    object.add(solid(collar, partFinish(node, "lead"), bx, y0, 0));
     // Red warning glass: deep red, lit faintly from within when idle
     // (BEACON_IDLE), flashing BEACON_RED when current; not tone mapped, so
     // its red holds at any brightness.
@@ -4931,19 +5945,21 @@ function build(
     );
     port.position.set(sx, 0.622, 0);
     object.add(port);
-    const rw = 2.5;
-    const rd = 1.8;
-    const rx = sx + 0.9 + rw / 2;
-    const rz = -d / 2 + 0.1 + rd / 2;
+    const [plan] = markPlans("beacon", w, d);
+    const { face: relay } = plan!;
+    const rw = relay.right - relay.left;
+    const rd = relay.bottom - relay.top;
+    const rx = (relay.left + relay.right) / 2;
+    const rz = (relay.top + relay.bottom) / 2;
+    const rh = 1.05;
     object.add(contactShadow(rw, rd, rx, rz, 0.55));
-    object.add(slab(rw, 1.05, rd, 0.05, relayBlue, rx, 0, rz));
+    object.add(slab(rw, rh, rd, 0.05, body, rx, 0, rz));
     object.add(
-      onTop(
-        marking(node, { width: rw - 0.4, height: rd - 0.36 }),
-        rx - rw / 2 + 0.2,
-        1.05,
-        rz - rd / 2 + 0.18,
-      ),
+      markOnTop(node, plan!.rooms[0]!, rh, {
+        on: "metal",
+        max: MARK_EM,
+        ...CENTRED,
+      }),
     );
     const tw = w / 2 - 0.1 - (rx + rw / 2 + 0.2);
     const tx = w / 2 - 0.1 - tw / 2;
@@ -5115,7 +6131,6 @@ function build(
     );
     cellMark.position.set(cx, 0.322, 0);
     group.add(cellMark);
-    group.add(slab(0.24, 0.06, 1.9, 0.02, steel, cx + 0.3, 0.32, 0));
     const xx = cx + 1.75;
     group.add(slab(1.3, 0.48, 0.5, 0.22, tin, xx, 0, 0));
     const value = decal(
@@ -5496,7 +6511,7 @@ function build(
   /** A status LED's glow sprite's size at rest, in units; a lit node's swells with the pulse. */
   const LED_GLOW = 1.1;
   const ledGeometry = new RoundedBoxGeometry(0.3, 0.12, 0.16, 1, 0.03);
-  /** One node in the scene: its part, plinth, status LED, light pool and markings. */
+  /** One node in the scene: its part, plinth, status LED, light pool, markings and package finishes. */
   const sceneNodes = NODES.map((node) => {
     const group = new THREE.Group();
     group.position.set(wx(node.cx), 0, wz(node.cy));
@@ -5542,7 +6557,11 @@ function build(
       emissiveIntensity: 0,
     });
     const led = new THREE.Mesh(ledGeometry, ledMaterial);
-    led.position.set(plinthWidth / 2 - 0.34, 0.06, plinthDepth / 2 + 0.24);
+    led.position.set(
+      plinthWidth / 2 - LED_SPOT.inset,
+      0.06,
+      plinthDepth / 2 + LED_SPOT.out,
+    );
     const ledGlow = glowSprite(GOLD, LED_GLOW);
     ledGlow.position.copy(led.position).y += 0.12;
     group.add(led, ledGlow);
@@ -5577,6 +6596,7 @@ function build(
       ledGlow,
       poolMaterial,
       markings: MARKINGS.filter((entry) => entry.node === node.id),
+      finishes: NODE_FINISHES.get(node.id) ?? [],
       shading: shadingUniforms(SHADE.idle),
       state: "idle" as PartState,
       level: 0,
@@ -5665,7 +6685,7 @@ function build(
         uHalf: { value: GLOW_HALF },
         uOn: { value: 0 },
         uBase: { value: 0.55 },
-        uGain: { value: ILLUMINATION },
+        uGain: { value: 0.25 * ILLUMINATION },
         uHeads: { value: new THREE.Vector4(-1, -1, -1, -1) },
         uColor: { value: new THREE.Color(0xffa62e) },
         uHot: { value: HOT.clone() },
@@ -6057,22 +7077,14 @@ function build(
     });
   }
 
-  // The markings are laid out for the reference canvas.
+  paintMarkings();
+  /** The camera resize() frames the board and each step's view with, at the canvas's aspect. */
   const probe = new THREE.PerspectiveCamera(
     camera.fov,
-    REFERENCE.width / REFERENCE.height,
+    camera.aspect,
     camera.near,
     camera.far,
   );
-  const referenceFrame = frameBoard(probe);
-  placeCamera(
-    probe,
-    referenceFrame.target,
-    referenceFrame.distance,
-    VIEW.yaw,
-    VIEW.elevation,
-  );
-  paintMarkings(probe, REFERENCE.width, REFERENCE.height);
 
   let framing: Resting = { target: new THREE.Vector3(), distance: 50 };
   let views: Resting[] = [];
@@ -6093,6 +7105,180 @@ function build(
   /* ---------- Steps ---------- */
   let current = 0;
   let lightAll = false;
+
+  /* ---------- Hover card ---------- */
+  const canvas = renderer.domElement;
+  const hover = matchMedia("(hover: hover)").matches;
+  /** The card of the part under the mouse: its step's number, title, text and failure mode, beside the part. */
+  const card = document.createElement("div");
+  card.className = "board-card";
+  card.setAttribute("aria-hidden", "true");
+  card.hidden = true;
+  if (hover) host.append(card);
+  /** The part under the mouse, the step its card shows, and each part's bounds, taken at the first hover. */
+  let hovered: (typeof sceneNodes)[number] | null = null;
+  let cardIndex = -1;
+  let partBoxes: THREE.Box3[] | null = null;
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const hit = new THREE.Vector3();
+  const corner = new THREE.Vector3();
+  const boxOf = (entry: (typeof sceneNodes)[number]) => {
+    if (!partBoxes) {
+      scene.updateMatrixWorld(true);
+      partBoxes = sceneNodes.map((each) =>
+        new THREE.Box3().setFromObject(each.lift),
+      );
+    }
+    return partBoxes[sceneNodes.indexOf(entry)]!;
+  };
+
+  /** Appends `text` to `parent`, its `**` pairs as <strong>. */
+  function appendEmphasis(parent: HTMLElement, text: string) {
+    text.split("**").forEach((part, index) => {
+      if (index % 2 === 0) parent.append(part);
+      else {
+        const strong = document.createElement("strong");
+        strong.textContent = part;
+        parent.append(strong);
+      }
+    });
+  }
+
+  /** Fills the card with step `index`'s number plate, title, text and failure mode. */
+  function fillCard(index: number) {
+    const entry = data.cards[index]!;
+    const plate = document.createElement("span");
+    plate.className = "eyebrow-no";
+    plate.textContent = String(index + 1).padStart(2, "0");
+    const title = document.createElement("b");
+    title.className = "board-card-title";
+    title.textContent = entry.title;
+    const head = document.createElement("div");
+    head.className = "board-card-head";
+    head.append(plate, title);
+    const text = document.createElement("p");
+    text.className = "board-card-text";
+    appendEmphasis(text, entry.text);
+    card.replaceChildren(head, text);
+    if (entry.failure) {
+      const failure = document.createElement("p");
+      failure.className = "board-card-failure";
+      const key = document.createElement("span");
+      key.textContent = data.failure;
+      failure.append(key, " ");
+      appendEmphasis(failure, entry.failure);
+      card.append(failure);
+    }
+  }
+
+  /** Places the card beside `entry`'s part as the camera sees it, or above or below it when neither side has room, inside the board. */
+  function placeCard(entry: (typeof sceneNodes)[number]) {
+    const box = boxOf(entry);
+    const w = host.clientWidth;
+    const h = host.clientHeight;
+    let left = Infinity;
+    let right = -Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
+    for (let i = 0; i < 8; i++) {
+      corner
+        .set(
+          i & 1 ? box.max.x : box.min.x,
+          i & 2 ? box.max.y : box.min.y,
+          i & 4 ? box.max.z : box.min.z,
+        )
+        .project(camera);
+      const x = ((corner.x + 1) / 2) * w;
+      const y = ((1 - corner.y) / 2) * h;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+      top = Math.min(top, y);
+      bottom = Math.max(bottom, y);
+    }
+    const cw = card.offsetWidth;
+    const ch = card.offsetHeight;
+    const gap = 12;
+    const edge = 8;
+    let x: number;
+    let y: number;
+    if (right + gap + cw <= w - edge) {
+      x = right + gap;
+      y = top;
+    } else if (left - gap - cw >= edge) {
+      x = left - gap - cw;
+      y = top;
+    } else {
+      x = (left + right) / 2 - cw / 2;
+      y = bottom + gap + ch <= h - edge ? bottom + gap : top - gap - ch;
+    }
+    card.style.left = `${clamp(x, edge, Math.max(edge, w - cw - edge))}px`;
+    card.style.top = `${clamp(y, edge, Math.max(edge, h - ch - edge))}px`;
+  }
+
+  /** Shows `entry`'s card with a hand pointer over its part, or hides it for null. */
+  function showCard(entry: (typeof sceneNodes)[number] | null) {
+    hovered = entry;
+    const index = entry
+      ? cardStep(data.steps, entry.node.id, current, lightAll)
+      : -1;
+    canvas.style.cursor = index >= 0 ? "pointer" : "";
+    if (index < 0 || !data.cards?.[index]) {
+      card.hidden = true;
+      cardIndex = -1;
+      return;
+    }
+    if (index !== cardIndex) fillCard(index);
+    cardIndex = index;
+    card.hidden = false;
+    placeCard(entry!);
+  }
+
+  /** The pointer's last place on the canvas, tested for a part once per frame. */
+  let aim: { x: number; y: number } | null = null;
+  let aimFrame = 0;
+  const hits: THREE.Intersection[] = [];
+  /** The part whose surface is nearest under `aim`: its bounds pick the candidates, then its meshes decide. */
+  function partUnderAim() {
+    aimFrame = 0;
+    if (!aim) return;
+    const box = canvas.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    ndc.set(
+      ((aim.x - box.left) / box.width) * 2 - 1,
+      -((aim.y - box.top) / box.height) * 2 + 1,
+    );
+    raycaster.setFromCamera(ndc, camera);
+    let nearest: (typeof sceneNodes)[number] | null = null;
+    let distance = Infinity;
+    for (const entry of sceneNodes) {
+      if (!raycaster.ray.intersectBox(boxOf(entry), hit)) continue;
+      hits.length = 0;
+      raycaster.intersectObject(entry.lift, true, hits);
+      const first = hits.find((each) => !(each.object instanceof THREE.Sprite));
+      if (first && first.distance < distance) {
+        distance = first.distance;
+        nearest = entry;
+      }
+    }
+    showCard(nearest);
+  }
+  /** Tests the part under the mouse at `event` on the next frame. */
+  const onHover = (event: PointerEvent) => {
+    if (event.pointerType !== "mouse") return;
+    aim = { x: event.clientX, y: event.clientY };
+    if (!aimFrame) aimFrame = requestAnimationFrame(partUnderAim);
+  };
+  const onLeave = () => {
+    aim = null;
+    cancelAnimationFrame(aimFrame);
+    aimFrame = 0;
+    showCard(null);
+  };
+  if (hover) {
+    canvas.addEventListener("pointermove", onHover);
+    canvas.addEventListener("pointerleave", onLeave);
+  }
   /** Whether the next frame snaps every eased value to its target. */
   let settle = true;
   /** Whether the board has framed itself and drawn, so a step change renders. */
@@ -6142,6 +7328,7 @@ function build(
     });
     updateFocus();
     shadowFrames = 45;
+    if (hovered) showCard(hovered);
     if (!booted) return;
     if (still) {
       pause();
@@ -6201,7 +7388,7 @@ function build(
 
     // The current step's pulse, 0 to 1 on a 2.1s cycle; held still it rests at 0.7.
     const pulse = still ? 0.7 : 0.5 + 0.5 * Math.sin(t * 3);
-    goldLit.emissiveIntensity = (0.42 + 0.38 * pulse) * ILLUMINATION;
+    goldLit.emissiveIntensity = (0.105 + 0.095 * pulse) * ILLUMINATION;
     // The LIVE LED breathes on a 2.6s cycle; held still it stays lit.
     const live = still ? 1 : 0.5 + 0.5 * Math.sin(t * 2.4);
     liveLed.material.emissiveIntensity = 1.1 + 1.6 * live;
@@ -6217,10 +7404,10 @@ function build(
       const lit = clamp(entry.level - 1, 0, 1);
       const passed = clamp(entry.level, 0, 1);
       entry.lift.position.y = smooth(lit) * 0.07;
-      const [from, to, share] =
-        entry.level < 1
-          ? [SHADE.idle, SHADE.passed, entry.level]
-          : [SHADE.passed, SHADE.lit, entry.level - 1];
+      const upper = entry.level >= 1;
+      const from = upper ? SHADE.passed : SHADE.idle;
+      const to = upper ? SHADE.lit : SHADE.passed;
+      const share = upper ? entry.level - 1 : entry.level;
       entry.shading.uExposure.value = mix(from.exposure, to.exposure, share);
       entry.shading.uDesaturate.value = mix(
         from.desaturate,
@@ -6231,17 +7418,20 @@ function build(
         mix(from.rim, to.rim, share) * (0.7 + 0.5 * pulse);
       entry.ledMaterial.emissive.copy(GOLD).lerp(HOT, lit);
       entry.ledMaterial.emissiveIntensity =
-        passed * 0.9 + lit * (2 + 2.6 * pulse + entry.energy * 1.5);
+        (passed * 0.9 + lit * (2 + 2.6 * pulse + entry.energy * 1.5)) *
+        ILLUMINATION;
       entry.ledGlow.material.opacity =
-        (passed * 0.22 + lit * (0.45 + 0.4 * pulse + entry.energy * 0.3)) *
+        (passed * 0.055 + lit * (0.1125 + 0.1 * pulse + entry.energy * 0.075)) *
         ILLUMINATION;
       entry.ledGlow.scale.setScalar(
         LED_GLOW * (1 + lit * (0.55 + 0.45 * pulse)),
       );
       entry.poolMaterial.opacity =
-        lit * (0.75 + 0.25 * pulse + entry.energy * 0.3) * ILLUMINATION;
+        lit * (0.1875 + 0.0625 * pulse + entry.energy * 0.075) * ILLUMINATION;
       for (const entryMarking of entry.markings)
         setInk(entryMarking, passed, lit, pulse);
+      for (const finish of entry.finishes)
+        setFinish(finish, passed, lit, pulse, entry.energy);
       entry.part.update(dt, t, lit, entry.energy, passed);
     }
     for (const light of litLights) {
@@ -6249,8 +7439,8 @@ function build(
       const lit = entry ? clamp(entry.level - 1, 0, 1) : 0;
       const energy = entry?.energy ?? 0;
       light.key.intensity =
-        lit * (30 + 12 * pulse + energy * 10) * ILLUMINATION;
-      light.rim.intensity = lit * (16 + 8 * pulse + energy * 6) * ILLUMINATION;
+        lit * (7.5 + 3 * pulse + energy * 2.5) * ILLUMINATION;
+      light.rim.intensity = lit * (4 + 2 * pulse + energy * 1.5) * ILLUMINATION;
     }
 
     let bead = 0;
@@ -6287,7 +7477,8 @@ function build(
           const sprite = beads[bead++]!;
           sprite.visible = true;
           entry.sampler.pointAt(along, TRACE_H + 0.1, sprite.position);
-          sprite.material.opacity = Math.min(1, entry.on) * 0.9 * ILLUMINATION;
+          sprite.material.opacity =
+            Math.min(1, entry.on) * 0.225 * ILLUMINATION;
         }
       }
     }
@@ -6300,6 +7491,7 @@ function build(
       shadowFrames--;
     }
     renderer.render(scene, camera);
+    if (hovered && !card.hidden) placeCard(hovered);
     if (host.dataset.ready === undefined) host.dataset.ready = "";
   }
 
@@ -6386,6 +7578,11 @@ function build(
     document.removeEventListener("visibilitychange", visibility);
     root?.removeEventListener("flowstep", onStep);
     if (sway) removeEventListener("pointermove", onPointer);
+    canvas.removeEventListener("pointermove", onHover);
+    canvas.removeEventListener("pointerleave", onLeave);
+    cancelAnimationFrame(aimFrame);
+    canvas.style.cursor = "";
+    card.remove();
     disposeScene(
       scene,
       [

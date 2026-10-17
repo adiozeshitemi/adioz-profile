@@ -127,7 +127,7 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     }
   });
 
-  it("stacks the 3D board over the 2D diagram, above the step bar", async () => {
+  it("stacks the 3D board over the 2D diagram, above the step bar, the column carrying the board's aspect ratio", async () => {
     const doc = await renderPage(workflow, Page);
     const visual = doc.querySelector(".step-through > .flow-visual")!;
     const parts = [...visual.children].flatMap((child) =>
@@ -145,6 +145,11 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
       "true",
     );
     expect(board.hasAttribute("data-ready")).toBe(false);
+    const aspect = /--board-aspect: ([\d.]+)/;
+    expect(visual.getAttribute("style")).toMatch(aspect);
+    expect(visual.getAttribute("style")?.match(aspect)?.[1]).toBe(
+      board.getAttribute("style")?.match(aspect)?.[1],
+    );
   });
 
   it("pairs each weak point with its compensation, when the workflow names any", async () => {
@@ -164,7 +169,7 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     );
   });
 
-  it("renders the step bar hidden on step 1, with its knobs, Auto key, step entries and step keys", async () => {
+  it("renders the step bar hidden on step 1, with its knobs, Auto key, step entries, and step keys each with its step's card", async () => {
     const doc = await renderPage(workflow, Page);
     const { bar: labels } = workflows.page;
     const count = workflow.steps.length;
@@ -224,6 +229,22 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     expect(keys.map((key) => key.getAttribute("aria-current"))).toEqual(
       workflow.steps.map((_, index) => (index === 0 ? "step" : null)),
     );
+    const cards = [...list.querySelectorAll(":scope > li > .key-card")];
+    expect(cards.map((card) => card.getAttribute("aria-hidden"))).toEqual(
+      workflow.steps.map(() => "true"),
+    );
+    cards.forEach((card, index) => {
+      const step = workflow.steps[index]!;
+      expect(text(card.querySelector(".key-title"))).toBe(step.title);
+      expect(text(card.querySelector(".key-text"))).toBe(
+        step.text.replaceAll("**", ""),
+      );
+      expect(text(card.querySelector(".key-failure"))).toBe(
+        step.failure
+          ? `${workflows.page.failure} ${step.failure.replaceAll("**", "")}`
+          : "",
+      );
+    });
   });
 
   it("points the header home, marks Workflows current, and links back to the section", async () => {

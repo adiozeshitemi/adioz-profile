@@ -11,7 +11,10 @@
  * mono after an inlay swatch; and the next-step knob (.bar-next). Under the
  * strip, the step keys (.bar-key), one per step, in a list named by
  * `labels.steps`, each showing the step's number and named by it and the
- * step's title.
+ * step's title, and each with a card of the step's title, text and failure
+ * mode after `failure` (.key-card, hidden from assistive technology, which
+ * reads the same in the captions) that opens above the keys, over the
+ * board, while the mouse rests on its key.
  *
  * It renders hidden on step 1: every .now-entry but the first is hidden and
  * the first key carries aria-current="step". Every .now-entry shares one
@@ -24,15 +27,18 @@
  */
 import type { Workflow, WorkflowPageLabels } from "../../data/types";
 import { stepHops } from "../../scripts/flow";
+import Emphasis from "../UI/Emphasis.astro";
 import Knob from "../UI/Knob.astro";
 
 interface Props {
   workflow: Workflow;
   /** The words between step number and count, the knobs' names, the Auto key's label and the step keys' list name. */
   labels: WorkflowPageLabels["bar"];
+  /** The label before a step's failure mode, e.g. "What can go wrong:". */
+  failure: string;
 }
 
-const { workflow, labels } = Astro.props;
+const { workflow, labels, failure } = Astro.props;
 const { steps, nodes, edges } = workflow;
 const hops = stepHops(steps, edges);
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -95,6 +101,17 @@ const nodeOf = (id: string) => nodes.find((node) => node.id === id)!;
           {pad(index + 1)}
           <span class="sr-only"> {step.title}</span>
         </button>
+        <div class="key-card" aria-hidden="true">
+          <b class="key-title">{step.title}</b>
+          <p class="key-text">
+            <Emphasis text={step.text} />
+          </p>
+          {step.failure && (
+            <p class="key-failure">
+              <span>{failure}</span> <Emphasis text={step.failure} />
+            </p>
+          )}
+        </div>
       </li>
     ))}
   </ol>
@@ -393,6 +410,7 @@ const nodeOf = (id: string) => nodes.find((node) => node.id === id)!;
    * dark theme, bronze on the light one) and glowing.
    */
   .bar-keys {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -400,6 +418,67 @@ const nodeOf = (id: string) => nodes.find((node) => node.id === id)!;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  /*
+   * A step key's card: the step's title, text and failure mode on a panel
+   * centred above the keys, over the board, shown only while a mouse rests
+   * on the key and never in the pointer's way.
+   */
+  .key-card {
+    position: absolute;
+    z-index: 30;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    width: min(100%, 36rem);
+    padding: 16px 20px 18px;
+    border-radius: 14px;
+    background: var(--panel-face);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      0 22px 44px -16px rgb(0 0 0 / 0.6);
+    opacity: 0;
+    pointer-events: none;
+    translate: -50% 4px;
+    transition:
+      opacity 0.18s var(--ease-soft),
+      translate 0.18s var(--ease-soft);
+  }
+
+  @media (hover: hover) {
+    .bar-keys li:hover .key-card {
+      opacity: 1;
+      translate: -50% 0;
+    }
+  }
+
+  .key-title {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .key-text {
+    margin: 0;
+    color: var(--body);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  .key-failure {
+    margin: 10px 0 0;
+    color: var(--body);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .key-failure > span {
+    margin-right: 4px;
+    color: var(--ember);
+    font-weight: 600;
   }
 
   .bar-key {
@@ -450,7 +529,8 @@ const nodeOf = (id: string) => nodes.find((node) => node.id === id)!;
   @media (prefers-reduced-motion: reduce) {
     .auto-key,
     .bar-key,
-    .auto-key i {
+    .auto-key i,
+    .key-card {
       transition: none;
     }
   }
