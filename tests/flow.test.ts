@@ -310,19 +310,10 @@ describe("startFlow", () => {
     document.querySelector<HTMLElement>(selector)!.click();
   const press = (key: string, target: Element = autoKey()) =>
     target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
-  const spy = () =>
-    FakeObserver.all.find((observer) =>
-      observer.targets.includes(captions()[0]!),
-    )!;
   const view = () =>
     FakeObserver.all.find((observer) => observer.targets.includes(visual()))!;
-  /** Delivers the observers' initial entries: no caption across the middle of the viewport, .flow-visual in view. */
-  const settle = () => {
-    for (const item of captions()) spy().fire(item, false);
-    view().fire(visual(), true);
-  };
-  /** A caption scrolled across the middle of the viewport. */
-  const scrollTo = (index: number) => spy().fire(captions()[index]!, true);
+  /** Delivers the view observer's initial entry: .flow-visual in view. */
+  const settle = () => view().fire(visual(), true);
 
   it("draws every wire's line and head paths from the boxes' places, with the line's length as --len", () => {
     vi.spyOn(SVGPathElement.prototype, "getTotalLength").mockReturnValue(42.04);
@@ -370,10 +361,10 @@ describe("startFlow", () => {
     expect(events).toEqual([{ step: 0, all: false }]);
   });
 
-  it("lights the step whose caption crosses the middle, the earlier steps' as passed, and moves the step bar to it", () => {
+  it("lights a chosen step, the earlier steps' as passed, and moves the step bar to it", () => {
     stop = startFlow(root(), false);
     settle();
-    scrollTo(2);
+    keys()[2]!.click();
     expect(lit()).toEqual(["c"]);
     expect(current()).toBe(2);
     expect(root().dataset.step).toBe("2");
@@ -409,8 +400,8 @@ describe("startFlow", () => {
   it("reports each change of step once", () => {
     stop = startFlow(root(), false);
     settle();
-    scrollTo(1);
-    scrollTo(1);
+    keys()[1]!.click();
+    keys()[1]!.click();
     click(".bar-next");
     expect(events.map((event) => event.step)).toEqual([0, 1, 2]);
   });
@@ -485,17 +476,11 @@ describe("startFlow", () => {
       }
     });
 
-    it("keeps running through the scroll spy's initial entries and the current step's caption", () => {
+    it("watches only the diagram's column, so scrolling past the captions leaves the step alone", () => {
       stop = startFlow(root(), false);
-      spy().fire(captions()[0]!, false);
-      spy().fire(captions()[1]!, true);
-      spy().fire(captions()[2]!, false);
-      view().fire(visual(), true);
-      expect(current()).toBe(1);
-      scrollTo(1);
-      expect(autoKey().getAttribute("aria-pressed")).toBe("true");
-      vi.advanceTimersByTime(AUTO_STEP_MS);
-      expect(current()).toBe(2);
+      expect(FakeObserver.all.flatMap((observer) => observer.targets)).toEqual([
+        visual(),
+      ]);
     });
 
     it.each([
@@ -506,7 +491,6 @@ describe("startFlow", () => {
       ["ArrowLeft", () => press("ArrowLeft"), 0],
       ["Home", () => press("Home"), 0],
       ["End", () => press("End"), 2],
-      ["a caption scrolled across the middle", () => scrollTo(2), 2],
     ])("turns off and takes the reader's step from %s", (_, input, step) => {
       stop = startFlow(root(), false);
       settle();

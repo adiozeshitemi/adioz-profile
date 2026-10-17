@@ -1,9 +1,8 @@
 /*
  * A workflow's step-through: which hops each step lights, the 2D diagram's
  * wires, routed through the gutters of its grid so no wire crosses a box,
- * and the runner that keeps one step current, moved by Auto, the step bar
- * and the captions crossing the middle of the viewport, and reports it to
- * the 3D board with "flowstep" events.
+ * and the runner that keeps one step current, moved by Auto and the step
+ * bar, and reports it to the 3D board with "flowstep" events.
  */
 
 /**
@@ -489,9 +488,7 @@ export interface FlowStepDetail {
  * live region (.now-step) is aria-live="off". A step chosen by the reader
  * turns Auto off: a step key, a knob (.bar-prev, .bar-next, wrapping with
  * wrapStep), ArrowLeft, ArrowRight, Home or End in the step bar (stopping at
- * the ends, keyTarget), or a caption other than the current step's scrolled
- * across the middle of the viewport (the scroll spy, which ignores each
- * caption's initial entry). The Auto key (.auto-key, aria-pressed) turns
+ * the ends, keyTarget). The Auto key (.auto-key, aria-pressed) turns
  * Auto off and on, on again from the current step. Returns a function that
  * stops it.
  */
@@ -651,27 +648,6 @@ export function startFlow(
   if (bar) bar.hidden = false;
   showAuto();
 
-  /** Captions whose initial entry the scroll spy has had. */
-  const seen = new WeakSet<Element>();
-  const spy = new IntersectionObserver(
-    (records) => {
-      for (const record of records) {
-        const initial = !seen.has(record.target);
-        seen.add(record.target);
-        if (!record.isIntersecting) continue;
-        const step = items.indexOf(record.target as HTMLLIElement);
-        if (step === current) continue;
-        if (!initial) {
-          auto.on = false;
-          showAuto();
-        }
-        show(step);
-      }
-    },
-    { rootMargin: "-45% 0px -50% 0px" },
-  );
-  for (const item of items) spy.observe(item);
-
   const view = new IntersectionObserver((records) => {
     auto.inView = records.at(-1)?.isIntersecting ?? false;
     schedule();
@@ -711,7 +687,6 @@ export function startFlow(
 
   return () => {
     clearTimeout(auto.timer);
-    spy.disconnect();
     view.disconnect();
     resize.disconnect();
     document.removeEventListener("visibilitychange", schedule);

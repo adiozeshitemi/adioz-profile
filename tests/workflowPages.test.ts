@@ -169,7 +169,7 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     );
   });
 
-  it("renders the step bar hidden on step 1, with its knobs, Auto key, step entries and step keys", async () => {
+  it("renders the step bar hidden on step 1, with its knobs, Auto key, step entries, and step keys each with its step's card", async () => {
     const doc = await renderPage(workflow, Page);
     const { bar: labels } = workflows.page;
     const count = workflow.steps.length;
@@ -229,6 +229,22 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     expect(keys.map((key) => key.getAttribute("aria-current"))).toEqual(
       workflow.steps.map((_, index) => (index === 0 ? "step" : null)),
     );
+    const cards = [...list.querySelectorAll(":scope > li > .key-card")];
+    expect(cards.map((card) => card.getAttribute("aria-hidden"))).toEqual(
+      workflow.steps.map(() => "true"),
+    );
+    cards.forEach((card, index) => {
+      const step = workflow.steps[index]!;
+      expect(text(card.querySelector(".key-title"))).toBe(step.title);
+      expect(text(card.querySelector(".key-text"))).toBe(
+        step.text.replaceAll("**", ""),
+      );
+      expect(text(card.querySelector(".key-failure"))).toBe(
+        step.failure
+          ? `${workflows.page.failure} ${step.failure.replaceAll("**", "")}`
+          : "",
+      );
+    });
   });
 
   it("points the header home, marks Workflows current, and links back to the section", async () => {
