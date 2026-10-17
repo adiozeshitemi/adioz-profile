@@ -64,6 +64,19 @@ export interface BoardData {
   failure: string;
 }
 
+/**
+ * The board's silkscreen name: its designer's mark, "adioz" for the owner's
+ * workflows and a peer author's name in lower-case letters and digits for
+ * theirs, two spaces, then the workflow's slug, the author's mark taken off
+ * its front, as a .flow file.
+ */
+export function boardName(slug: string, author?: string): string {
+  if (!author) return `adioz  ${slug}.flow`;
+  const mark = author.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const file = slug.startsWith(`${mark}-`) ? slug.slice(mark.length + 1) : slug;
+  return `${mark}  ${file}.flow`;
+}
+
 /** A part's or a trace's state at a step. */
 export type PartState = "idle" | "passed" | "lit";
 

@@ -2,7 +2,7 @@
 /*
  * A workflow's 3D board, one island: div.board3d[data-board3d] holding a
  * canvas, hidden from assistive technology, and the board's data (its
- * silkscreen name, the parts' ids, names, cells and kinds, the hops, each
+ * silkscreen name, the designer's mark and the slug (boardName), the parts' ids, names, cells and kinds, the hops, each
  * step's lit parts and each step's card: its title, text and failure mode,
  * with the failure label) as JSON. The div takes the board's aspect ratio
  * (boardAspect) and stays invisible until src/scripts/board3d.ts sets
@@ -15,6 +15,7 @@ import { workflows } from "../../data/index";
 import type { Workflow } from "../../data/types";
 import {
   boardAspect,
+  boardName,
   kindOf,
   layoutBoard,
   type BoardData,
@@ -26,7 +27,7 @@ interface Props {
 
 const { workflow } = Astro.props;
 const data: BoardData = {
-  name: `adioz  ${workflow.slug}.flow`,
+  name: boardName(workflow.slug, workflow.author?.name),
   nodes: workflow.nodes.map(({ id, label, col, row, kind }) => ({
     id,
     label,

@@ -9,6 +9,7 @@ import {
   attachEnd,
   boardAspect,
   boardFills,
+  boardName,
   boardRoutes,
   cardStep,
   CELL_W,
@@ -535,6 +536,29 @@ describe("markPlans", () => {
         });
         check(kind, w, d);
       }
+    }
+  });
+});
+
+describe("boardName", () => {
+  it("marks the owner's boards adioz", () => {
+    expect(boardName("mlops-loop")).toBe("adioz  mlops-loop.flow");
+  });
+
+  it("marks a peer's board with the author's name, taken off the slug's front", () => {
+    expect(boardName("ruchitasingla-mlops-loop", "Ruchita Singla")).toBe(
+      "ruchitasingla  mlops-loop.flow",
+    );
+    expect(boardName("mlops-loop", "Ruchita Singla")).toBe(
+      "ruchitasingla  mlops-loop.flow",
+    );
+  });
+
+  it("names every peer's board after its author, never adioz", () => {
+    for (const workflow of allWorkflows.filter((each) => each.author)) {
+      expect(boardName(workflow.slug, workflow.author!.name)).not.toMatch(
+        /^adioz/,
+      );
     }
   });
 });
