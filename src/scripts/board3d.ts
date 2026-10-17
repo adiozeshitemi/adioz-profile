@@ -8,7 +8,8 @@
  * plans through the grid's gutters; the cells no node takes carry
  * board-level parts (boardFills). The current step's parts and traces are
  * lit, glowing softly (ILLUMINATION), earlier steps' passed, following the
- * step-through runner's "flowstep" events.
+ * step-through runner's "flowstep" events. The mouse resting on a part opens
+ * its step's card beside it (cardStep picks the step).
  */
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -45,11 +46,22 @@ export interface BoardEdge {
  * The data Board3D.astro embeds in a .board3d: the silkscreen name, the
  * parts, the hops, and each step's lit part ids.
  */
+/** A step's caption as the board's hover card shows it, `**` pairs marking strong emphasis in its text and failure mode. */
+export interface BoardCard {
+  title: string;
+  text: string;
+  failure?: string;
+}
+
 export interface BoardData {
   name: string;
   nodes: BoardNode[];
   edges: BoardEdge[];
   steps: string[][];
+  /** Each step's card, in step order. */
+  cards: BoardCard[];
+  /** The label before a card's failure mode, e.g. "What can go wrong:". */
+  failure: string;
 }
 
 /** A part's or a trace's state at a step. */
@@ -467,6 +479,21 @@ export function statesAt(
       lit.has(index) ? "lit" : earlierHops.has(index) ? "passed" : "idle",
     ),
   };
+}
+
+/**
+ * The step whose card a part shows while the mouse rests on it: the current
+ * `step` when it lights the part (and `all` does not light every step), else
+ * the first step that lights it; -1 for a part no step lights.
+ */
+export function cardStep(
+  steps: string[][],
+  id: string,
+  step: number,
+  all: boolean,
+): number {
+  if (!all && steps[step]?.includes(id)) return step;
+  return steps.findIndex((lights) => lights.includes(id));
 }
 
 /* ---------- Markings ---------- */
@@ -7065,6 +7092,180 @@ function build(
   /* ---------- Steps ---------- */
   let current = 0;
   let lightAll = false;
+
+  /* ---------- Hover card ---------- */
+  const canvas = renderer.domElement;
+  const hover = matchMedia("(hover: hover)").matches;
+  /** The card of the part under the mouse: its step's number, title, text and failure mode, beside the part. */
+  const card = document.createElement("div");
+  card.className = "board-card";
+  card.setAttribute("aria-hidden", "true");
+  card.hidden = true;
+  if (hover) host.append(card);
+  /** The part under the mouse, the step its card shows, and each part's bounds, taken at the first hover. */
+  let hovered: (typeof sceneNodes)[number] | null = null;
+  let cardIndex = -1;
+  let partBoxes: THREE.Box3[] | null = null;
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const hit = new THREE.Vector3();
+  const corner = new THREE.Vector3();
+  const boxOf = (entry: (typeof sceneNodes)[number]) => {
+    if (!partBoxes) {
+      scene.updateMatrixWorld(true);
+      partBoxes = sceneNodes.map((each) =>
+        new THREE.Box3().setFromObject(each.lift),
+      );
+    }
+    return partBoxes[sceneNodes.indexOf(entry)]!;
+  };
+
+  /** Appends `text` to `parent`, its `**` pairs as <strong>. */
+  function appendEmphasis(parent: HTMLElement, text: string) {
+    text.split("**").forEach((part, index) => {
+      if (index % 2 === 0) parent.append(part);
+      else {
+        const strong = document.createElement("strong");
+        strong.textContent = part;
+        parent.append(strong);
+      }
+    });
+  }
+
+  /** Fills the card with step `index`'s number plate, title, text and failure mode. */
+  function fillCard(index: number) {
+    const entry = data.cards[index]!;
+    const plate = document.createElement("span");
+    plate.className = "eyebrow-no";
+    plate.textContent = String(index + 1).padStart(2, "0");
+    const title = document.createElement("b");
+    title.className = "board-card-title";
+    title.textContent = entry.title;
+    const head = document.createElement("div");
+    head.className = "board-card-head";
+    head.append(plate, title);
+    const text = document.createElement("p");
+    text.className = "board-card-text";
+    appendEmphasis(text, entry.text);
+    card.replaceChildren(head, text);
+    if (entry.failure) {
+      const failure = document.createElement("p");
+      failure.className = "board-card-failure";
+      const key = document.createElement("span");
+      key.textContent = data.failure;
+      failure.append(key, " ");
+      appendEmphasis(failure, entry.failure);
+      card.append(failure);
+    }
+  }
+
+  /** Places the card beside `entry`'s part as the camera sees it, or above or below it when neither side has room, inside the board. */
+  function placeCard(entry: (typeof sceneNodes)[number]) {
+    const box = boxOf(entry);
+    const w = host.clientWidth;
+    const h = host.clientHeight;
+    let left = Infinity;
+    let right = -Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
+    for (let i = 0; i < 8; i++) {
+      corner
+        .set(
+          i & 1 ? box.max.x : box.min.x,
+          i & 2 ? box.max.y : box.min.y,
+          i & 4 ? box.max.z : box.min.z,
+        )
+        .project(camera);
+      const x = ((corner.x + 1) / 2) * w;
+      const y = ((1 - corner.y) / 2) * h;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+      top = Math.min(top, y);
+      bottom = Math.max(bottom, y);
+    }
+    const cw = card.offsetWidth;
+    const ch = card.offsetHeight;
+    const gap = 12;
+    const edge = 8;
+    let x: number;
+    let y: number;
+    if (right + gap + cw <= w - edge) {
+      x = right + gap;
+      y = top;
+    } else if (left - gap - cw >= edge) {
+      x = left - gap - cw;
+      y = top;
+    } else {
+      x = (left + right) / 2 - cw / 2;
+      y = bottom + gap + ch <= h - edge ? bottom + gap : top - gap - ch;
+    }
+    card.style.left = `${clamp(x, edge, Math.max(edge, w - cw - edge))}px`;
+    card.style.top = `${clamp(y, edge, Math.max(edge, h - ch - edge))}px`;
+  }
+
+  /** Shows `entry`'s card with a hand pointer over its part, or hides it for null. */
+  function showCard(entry: (typeof sceneNodes)[number] | null) {
+    hovered = entry;
+    const index = entry
+      ? cardStep(data.steps, entry.node.id, current, lightAll)
+      : -1;
+    canvas.style.cursor = index >= 0 ? "pointer" : "";
+    if (index < 0 || !data.cards?.[index]) {
+      card.hidden = true;
+      cardIndex = -1;
+      return;
+    }
+    if (index !== cardIndex) fillCard(index);
+    cardIndex = index;
+    card.hidden = false;
+    placeCard(entry!);
+  }
+
+  /** The pointer's last place on the canvas, tested for a part once per frame. */
+  let aim: { x: number; y: number } | null = null;
+  let aimFrame = 0;
+  const hits: THREE.Intersection[] = [];
+  /** The part whose surface is nearest under `aim`: its bounds pick the candidates, then its meshes decide. */
+  function partUnderAim() {
+    aimFrame = 0;
+    if (!aim) return;
+    const box = canvas.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    ndc.set(
+      ((aim.x - box.left) / box.width) * 2 - 1,
+      -((aim.y - box.top) / box.height) * 2 + 1,
+    );
+    raycaster.setFromCamera(ndc, camera);
+    let nearest: (typeof sceneNodes)[number] | null = null;
+    let distance = Infinity;
+    for (const entry of sceneNodes) {
+      if (!raycaster.ray.intersectBox(boxOf(entry), hit)) continue;
+      hits.length = 0;
+      raycaster.intersectObject(entry.lift, true, hits);
+      const first = hits.find((each) => !(each.object instanceof THREE.Sprite));
+      if (first && first.distance < distance) {
+        distance = first.distance;
+        nearest = entry;
+      }
+    }
+    showCard(nearest);
+  }
+  /** Tests the part under the mouse at `event` on the next frame. */
+  const onHover = (event: PointerEvent) => {
+    if (event.pointerType !== "mouse") return;
+    aim = { x: event.clientX, y: event.clientY };
+    if (!aimFrame) aimFrame = requestAnimationFrame(partUnderAim);
+  };
+  const onLeave = () => {
+    aim = null;
+    cancelAnimationFrame(aimFrame);
+    aimFrame = 0;
+    showCard(null);
+  };
+  if (hover) {
+    canvas.addEventListener("pointermove", onHover);
+    canvas.addEventListener("pointerleave", onLeave);
+  }
   /** Whether the next frame snaps every eased value to its target. */
   let settle = true;
   /** Whether the board has framed itself and drawn, so a step change renders. */
@@ -7114,6 +7315,7 @@ function build(
     });
     updateFocus();
     shadowFrames = 45;
+    if (hovered) showCard(hovered);
     if (!booted) return;
     if (still) {
       pause();
@@ -7276,6 +7478,7 @@ function build(
       shadowFrames--;
     }
     renderer.render(scene, camera);
+    if (hovered && !card.hidden) placeCard(hovered);
     if (host.dataset.ready === undefined) host.dataset.ready = "";
   }
 
@@ -7362,6 +7565,11 @@ function build(
     document.removeEventListener("visibilitychange", visibility);
     root?.removeEventListener("flowstep", onStep);
     if (sway) removeEventListener("pointermove", onPointer);
+    canvas.removeEventListener("pointermove", onHover);
+    canvas.removeEventListener("pointerleave", onLeave);
+    cancelAnimationFrame(aimFrame);
+    canvas.style.cursor = "";
+    card.remove();
     disposeScene(
       scene,
       [

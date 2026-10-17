@@ -2,14 +2,16 @@
 /*
  * A workflow's 3D board, one island: div.board3d[data-board3d] holding a
  * canvas, hidden from assistive technology, and the board's data (its
- * silkscreen name, the parts' ids, names, cells and kinds, the hops and
- * each step's lit parts) as JSON. The div takes the board's aspect ratio
+ * silkscreen name, the parts' ids, names, cells and kinds, the hops, each
+ * step's lit parts and each step's card: its title, text and failure mode,
+ * with the failure label) as JSON. The div takes the board's aspect ratio
  * (boardAspect) and stays invisible until src/scripts/board3d.ts sets
  * data-ready after its first frame. After first paint, when the browser is
  * idle and a WebGL2 context can be created, the script imports
  * src/scripts/board3d.ts, which loads with Three.js in chunks apart from the
  * page's script, and starts every board on the page.
  */
+import { workflows } from "../../data/index";
 import type { Workflow } from "../../data/types";
 import {
   boardAspect,
@@ -34,6 +36,10 @@ const data: BoardData = {
   })),
   edges: workflow.edges.map(({ from, to, label }) => ({ from, to, label })),
   steps: workflow.steps.map((step) => step.lights),
+  cards: workflow.steps.map(({ title, text, failure }) =>
+    failure ? { title, text, failure } : { title, text },
+  ),
+  failure: workflows.page.failure,
 };
 const aspect = boardAspect(layoutBoard(data.nodes)).toFixed(4);
 /** The data as JSON safe inside a script element. */
@@ -78,7 +84,8 @@ const json = JSON.stringify(data).replace(/</g, "\\u003c");
 <style>
   /*
    * The board: as wide as its container at the board's aspect ratio, clear
-   * to the pointer, and invisible until its first frame (data-ready). Behind
+   * to the pointer until its first frame (data-ready), invisible until then
+   * and, once ready, its canvas taking the pointer for the hover card. Behind
    * the canvas, ::before pools the page's light under the board, where its
    * shadow falls: a faint cool pool on the dark theme, a bright white one on
    * the light theme.
@@ -116,6 +123,62 @@ const json = JSON.stringify(data).replace(/</g, "\\u003c");
 
   .board3d[data-ready] {
     opacity: 1;
+  }
+
+  .board3d[data-ready] canvas {
+    pointer-events: auto;
+  }
+
+  /*
+   * The hover card (board3d.ts): the step's number plate, title, text and
+   * failure mode on a panel beside the part under the mouse, inside the
+   * board and clear of the pointer.
+   */
+  .board3d :global(.board-card) {
+    position: absolute;
+    z-index: 1;
+    width: min(26rem, calc(100% - 16px));
+    padding: 14px 18px 16px;
+    border-radius: 14px;
+    background: var(--panel-face);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      0 22px 44px -16px rgb(0 0 0 / 0.6);
+    pointer-events: none;
+  }
+
+  .board3d :global(.board-card-head) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .board3d :global(.board-card-title) {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .board3d :global(.board-card-text) {
+    margin: 0;
+    color: var(--body);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  .board3d :global(.board-card-failure) {
+    margin: 10px 0 0;
+    color: var(--body);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .board3d :global(.board-card-failure > span) {
+    margin-right: 4px;
+    color: var(--ember);
+    font-weight: 600;
   }
 
   .board3d canvas {

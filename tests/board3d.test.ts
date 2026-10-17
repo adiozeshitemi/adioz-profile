@@ -3,12 +3,14 @@ import Board3D from "../src/components/Workflow/Board3D.astro";
 import mlops from "../src/data/workflows/mlops-loop.json";
 import peer from "../src/data/workflows/peers/ruchitasingla-mlops-loop.json";
 import type { WorkflowPartKind } from "../src/data/types";
+import { workflows as workflowsSection } from "../src/data/index";
 import { allWorkflows, ownWorkflows } from "../src/lib/workflows";
 import {
   attachEnd,
   boardAspect,
   boardFills,
   boardRoutes,
+  cardStep,
   CELL_W,
   clearOf,
   CODE_SCALE,
@@ -537,6 +539,25 @@ describe("markPlans", () => {
   });
 });
 
+describe("cardStep", () => {
+  const steps = [["a", "b"], ["b"], ["c", "b"]];
+
+  it("takes the current step when it lights the part", () => {
+    expect(cardStep(steps, "b", 1, false)).toBe(1);
+    expect(cardStep(steps, "b", 2, false)).toBe(2);
+  });
+
+  it("takes the first step that lights the part when the current one does not, or every step is lit", () => {
+    expect(cardStep(steps, "c", 0, false)).toBe(2);
+    expect(cardStep(steps, "a", 1, false)).toBe(0);
+    expect(cardStep(steps, "b", 2, true)).toBe(0);
+  });
+
+  it("gives -1 for a part no step lights", () => {
+    expect(cardStep(steps, "z", 0, false)).toBe(-1);
+  });
+});
+
 describe("statesAt", () => {
   const data: Pick<BoardData, "nodes" | "edges" | "steps"> = {
     nodes: ["a", "b", "c"].map((id, col) => ({ id, label: id, col, row: 0 })),
@@ -620,7 +641,7 @@ describe("trace geometry", () => {
 describe("Board3D markup", () => {
   const [workflow] = ownWorkflows;
 
-  it("renders the board's host with a hidden canvas and its data", async () => {
+  it("renders the board's host with a hidden canvas and its data, each step's card among it", async () => {
     const doc = await render(Board3D, { props: { workflow } });
     const host = doc.querySelector<HTMLElement>("div.board3d[data-board3d]");
     expect(host).not.toBeNull();
@@ -639,6 +660,12 @@ describe("Board3D markup", () => {
       workflow!.edges.map(({ from, to, label }) => ({ from, to, label })),
     );
     expect(data.steps).toEqual(workflow!.steps.map((step) => step.lights));
+    expect(data.cards).toEqual(
+      workflow!.steps.map(({ title, text, failure }) =>
+        failure ? { title, text, failure } : { title, text },
+      ),
+    );
+    expect(data.failure).toBe(workflowsSection.page.failure);
   });
 
   it("sizes the host to the board's aspect ratio", async () => {
@@ -665,6 +692,8 @@ describe("startBoard", () => {
     nodes: [at(0, 0)],
     edges: [],
     steps: [["n00"]],
+    cards: [{ title: "One", text: "The first step." }],
+    failure: "What can go wrong:",
   };
 
   it("returns null without a canvas or data", () => {
