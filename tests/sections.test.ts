@@ -5,8 +5,10 @@ import ExperienceSection from "../src/components/Experience/ExperienceSection.as
 import Footer from "../src/components/Footer/Footer.astro";
 import Header from "../src/components/Header/Header.astro";
 import Hero from "../src/components/Hero/Hero.astro";
+import ProjectCard from "../src/components/Projects/ProjectCard.astro";
 import ProjectsSection from "../src/components/Projects/ProjectsSection.astro";
 import TechStackSection from "../src/components/TechStack/TechStackSection.astro";
+import WorkflowsSection from "../src/components/Workflow/WorkflowsSection.astro";
 import {
   about,
   contact,
@@ -19,7 +21,10 @@ import {
   stats,
   techStack,
   terminal,
+  workflows,
 } from "../src/data/index";
+import { periodFrom, periodLabel, periodPoints } from "../src/lib/period";
+import { ownWorkflows, peerWorkflows } from "../src/lib/workflows";
 import { traceOrder, yearOf } from "../src/scripts/trace";
 import { render, text } from "./render";
 
@@ -146,10 +151,11 @@ describe("Header", () => {
 });
 
 describe("Hero", () => {
-  it("renders the availability pill, gold headline and lede from profile.json", async () => {
+  it("renders the availability pill with the location, gold headline and lede from profile.json", async () => {
     const doc = await render(Hero);
     const pill = doc.querySelector("p.pill.panel.gold");
-    expect(text(pill)).toBe(profile.availability);
+    expect(text(pill)).toBe(`${profile.availability} ${profile.location}`);
+    expect(text(pill?.querySelector(".where") ?? null)).toBe(profile.location);
     expect(pill?.querySelector(".lamp.status")).not.toBeNull();
     const title = doc.querySelector("h1.display");
     expect(title?.id).toBe("hero-title");
@@ -513,11 +519,11 @@ describe("ExperienceSection", () => {
     expect(stops.map((stop) => text(stop.querySelector("h3")))).toEqual(
       experience.roles.map((role) => role.role),
     );
-    const starts = experience.roles.map((role) => role.period.start);
+    const starts = experience.roles.map((role) => periodFrom(role.period));
     expect(starts).toEqual([...starts].sort((a, b) => b - a));
   });
 
-  it("gives each role a rivet and a machined card with its years, company, tags and highlights", async () => {
+  it("gives each role a rivet and a machined card with its dates, company, tags and highlights", async () => {
     const doc = await render(ExperienceSection);
     const stops = [...doc.querySelectorAll("li.stop")];
     stops.forEach((stop, index) => {
@@ -528,18 +534,24 @@ describe("ExperienceSection", () => {
       expect(rivet?.getAttribute("aria-hidden")).toBe("true");
       expect(rivet?.classList.contains("spun")).toBe(!live);
       const card = stop.querySelector("article.panel.stop-card");
-      const years = [...(card?.querySelectorAll(".when time") ?? [])].map(
+      const { start, end } = periodPoints(item.period);
+      const dates = [...(card?.querySelectorAll(".when time") ?? [])].map(
         (time) => time.getAttribute("datetime"),
       );
-      expect(years[0]).toBe(String(item.period.start));
-      if (live) {
-        expect(text(card?.querySelector(".when") ?? null)).toBe(
-          `${item.period.start} — ${experience.ongoing}`,
-        );
-      } else {
-        expect(years[1]).toBe(String(item.period.end));
-      }
-      expect(text(card?.querySelector(".company") ?? null)).toBe(item.company);
+      expect(dates).toEqual(
+        end ? [start.datetime, end.datetime] : [start.datetime],
+      );
+      expect(text(card?.querySelector(".when") ?? null)).toBe(
+        periodLabel(item.period, experience.ongoing),
+      );
+      const company = card?.querySelector(".company");
+      expect(company?.firstChild?.textContent?.trim()).toBe(item.company);
+      expect(text(company ?? null)).toBe(
+        [item.company, item.location].filter(Boolean).join(" "),
+      );
+      expect(text(company?.querySelector(".location") ?? null)).toBe(
+        item.location ?? "",
+      );
       expect(texts(card?.querySelectorAll(".tags li.tag") ?? [])).toEqual(
         item.technologies,
       );
@@ -586,9 +598,9 @@ describe("ProjectsSection", () => {
         project.metric.replaceAll("**", ""),
       );
     });
-    expect(text(cards[0]!.querySelector(".metric strong"))).toBe(
-      "Baze streaming platform",
-    );
+    expect(
+      cards.map((card) => text(card.querySelector(".nameplate h3"))),
+    ).toEqual(["Baze (Safaricom platform)", "VybStreamz", "BBRaiN", "Hisiya"]);
   });
 
   it("links each port in a new tab, saying so to assistive technology", async () => {
@@ -601,8 +613,14 @@ describe("ProjectsSection", () => {
           text(port.querySelector(".port-label")),
           port.getAttribute("href"),
         ]),
-      ).toEqual(featured[index]!.links.map((link) => [link.title, link.url]));
-      for (const port of ports) {
+      ).toEqual(
+        [...featured[index]!.links, featured[index]!.caseStudy ?? []]
+          .flat()
+          .map((link) => [link.title, link.url]),
+      );
+      for (const port of ports.filter((port) =>
+        port.getAttribute("href")?.startsWith("https:"),
+      )) {
         expect(port.getAttribute("target")).toBe("_blank");
         expect(port.getAttribute("rel")).toBe("noopener noreferrer");
         expect(text(port.querySelector(".sr-only"))).toBe(site.newTab);
@@ -612,6 +630,33 @@ describe("ProjectsSection", () => {
         expect(port.querySelector(".port-disc svg")).not.toBeNull();
       }
     });
+  });
+});
+
+describe("ProjectCard", () => {
+  const project = {
+    ...projects.projects[0]!,
+    caseStudy: {
+      title: "Case study",
+      url: "/workflows/payments-rail",
+      icon: "arrow-right",
+    },
+  };
+
+  it("adds the case study as a port after the links, opening in the same tab", async () => {
+    const doc = await render(ProjectCard, { props: { project } });
+    const ports = [...doc.querySelectorAll("a.port")];
+    expect(ports).toHaveLength(project.links.length + 1);
+    const study = ports.at(-1)!;
+    expect(text(study.querySelector(".port-label"))).toBe("Case study");
+    expect(study.getAttribute("href")).toBe("/workflows/payments-rail");
+    expect(study.hasAttribute("target")).toBe(false);
+  });
+
+  it("shows only the links while the project has no case study", async () => {
+    const { caseStudy: _, ...plain } = project;
+    const doc = await render(ProjectCard, { props: { project: plain } });
+    expect(doc.querySelectorAll("a.port")).toHaveLength(project.links.length);
   });
 });
 
@@ -625,7 +670,7 @@ describe("ContactSection", () => {
     expect(section?.getAttribute("aria-labelledby")).toBe(
       `${contact.id}-title`,
     );
-    expect(text(doc.querySelector(".eyebrow"))).toBe(`05 ${contact.label}`);
+    expect(text(doc.querySelector(".eyebrow"))).toBe(`06 ${contact.label}`);
     expect(text(doc.querySelector("h2 .gilt"))).toBe(contact.headline);
     expect(text(doc.querySelector(".panel.contact-panel .lead"))).toBe(
       contact.lead,
@@ -694,15 +739,48 @@ describe("Footer", () => {
     );
   });
 
-  it("links the back-to-top knob to the top of the page, named for assistive technology", async () => {
+  it("downloads the résumé and links back to the top through two knobs, each named for assistive technology", async () => {
     const doc = await render(Footer);
-    const anchors = [...doc.querySelectorAll("footer a")];
-    expect(anchors).toHaveLength(1);
-    const knob = anchors[0]!;
-    expect(knob.classList.contains("knob")).toBe(true);
-    expect(knob.getAttribute("href")).toBe("#top");
-    expect(knob.getAttribute("href")).toBe(footer.top.url);
-    expect(knob.getAttribute("aria-label")).toBe(footer.top.title);
-    expect(knob.querySelector("svg")).not.toBeNull();
+    const anchors = [...doc.querySelectorAll("footer .footer-knobs a")];
+    expect(anchors).toHaveLength(2);
+    const [resume, top] = anchors as [Element, Element];
+    expect(resume.classList.contains("knob")).toBe(true);
+    expect(resume.getAttribute("href")).toBe(profile.resume.url);
+    expect(resume.getAttribute("download")).toBe(profile.resume.file);
+    expect(resume.getAttribute("aria-label")).toBe(profile.resume.label);
+    expect(resume.querySelector("svg")).not.toBeNull();
+    expect(top.classList.contains("knob")).toBe(true);
+    expect(top.getAttribute("href")).toBe("#top");
+    expect(top.getAttribute("href")).toBe(footer.top.url);
+    expect(top.getAttribute("aria-label")).toBe(footer.top.title);
+    expect(top.querySelector("svg")).not.toBeNull();
+  });
+});
+
+describe("WorkflowsSection", () => {
+  it("lists the owner's workflows, then the peers' under their own heading, each linked to its page", async () => {
+    const doc = await render(WorkflowsSection);
+    const section = doc.querySelector(`section#${workflows.id}`)!;
+    expect(text(section.querySelector("h2 .gilt"))).toBe(workflows.headline);
+    const cards = [...section.querySelectorAll("article.workflow-card")];
+    expect(cards.map((card) => text(card.querySelector("h3")))).toEqual(
+      [...ownWorkflows, ...peerWorkflows].map((w) => w.title),
+    );
+    expect(cards.map((card) => text(card.querySelector(".counts")))).toEqual(
+      [...ownWorkflows, ...peerWorkflows].map(
+        (w) =>
+          `${w.nodes.length} ${workflows.counts.nodes} · ${w.steps.length} ${workflows.counts.steps}`,
+      ),
+    );
+    expect(
+      cards.map((card) => card.querySelector(".open a")?.getAttribute("href")),
+    ).toEqual([...ownWorkflows, ...peerWorkflows].map((w) => w.path));
+    expect(text(section.querySelector("h3.peers"))).toBe(workflows.peers);
+    const peerCards = cards.slice(ownWorkflows.length);
+    peerCards.forEach((card, index) => {
+      expect(text(card.querySelector(".author"))).toBe(
+        `${workflows.contributedBy} ${peerWorkflows[index]!.author!.name}`,
+      );
+    });
   });
 });

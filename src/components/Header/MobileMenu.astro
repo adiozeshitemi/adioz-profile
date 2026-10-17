@@ -11,6 +11,15 @@
 import { navigation, sectionNumber } from "../../data/index";
 import Knob from "../UI/Knob.astro";
 
+interface Props {
+  /** Prefix for every link's url: "" on the home page, "/" elsewhere. */
+  base?: string;
+  /** The url of the link to mark aria-current, e.g. "#workflows". */
+  current?: string;
+}
+
+const { base = "", current } = Astro.props;
+
 const links = [...navigation.links, navigation.cta].map((link) => ({
   ...link,
   number: String(sectionNumber(link.url.slice(1))).padStart(2, "0"),
@@ -43,10 +52,13 @@ const links = [...navigation.links, navigation.cta].map((link) => ({
   <ol>
     {links.map((link) => (
       <li>
-        <a href={link.url}>
+        <a
+          href={`${base}${link.url}`}
+          aria-current={link.url === current ? "true" : undefined}
+        >
           <span class="menu-no" aria-hidden="true">
             {link.number}
-          </span>
+          </span>{" "}
           {link.title}
         </a>
       </li>

@@ -1,0 +1,1097 @@
+---
+/*
+ * A step-through diagram as a milled gunmetal plate, dark in both themes
+ * like the career trace (.slab-dark): the stage, a grid of raised machined
+ * steel plates (one per node, in its `col` and `row` cell, numbered by its
+ * place in `nodes`), over an SVG layer of channels cut into the plate, one
+ * g.wire per edge. Each g.wire holds its channel's layers; every path that
+ * draws the wire's polyline has data-shape="line" and every path that draws
+ * its arrow pocket has data-shape="head". src/scripts/flow.ts sets `d` on
+ * them from the plates' measured places, sets --len (the polyline's length
+ * in px) on each data-shape="line" path, and toggles .lit and .passed on
+ * the plates and wires. The figure is named for assistive technology by
+ * `label`, and its parts are hidden from it, since the step captions carry
+ * the same content.
+ */
+import type { WorkflowEdge, WorkflowNode } from "../../data/types";
+
+interface Props {
+  /** The figure's accessible name, e.g. workflows.json's page.diagram. */
+  label: string;
+  /** The parts, one plate each, numbered from 01 in this order. */
+  nodes: WorkflowNode[];
+  /** The hops, one channel each, from the `from` plate to the `to` plate. */
+  edges: WorkflowEdge[];
+}
+
+/** Slot angles of the plates' screws, in degrees: plate `i` takes SLOTS[i % 14] on its left screw and SLOTS[(i + 5) % 14] on its right. */
+const SLOTS = [28, -52, 74, 8, -30, 61, 15, -70, 40, -12, 83, -45, 22, 66];
+
+const { label, nodes, edges } = Astro.props;
+const cols = Math.max(...nodes.map((node) => node.col)) + 1;
+const rows = Math.max(...nodes.map((node) => node.row)) + 1;
+const titleOf = (id: string) =>
+  nodes.find((node) => node.id === id)?.label ?? id;
+/** An edge's tooltip, e.g. "Feature engineering → Teacher cache: training data". */
+const hopOf = (edge: WorkflowEdge) =>
+  `${titleOf(edge.from)} → ${titleOf(edge.to)}: ${edge.label}`;
+const slot = (index: number) => SLOTS[index % SLOTS.length]!;
+---
+
+<figure class="flow slab slab-dark" role="img" aria-label={label}>
+  <div class="flow-stage" style={`--cols: ${cols}; --rows: ${rows}`}>
+    <svg class="flow-wires" aria-hidden="true">
+      <defs>
+        <!--
+          The lit channels' light: #flow-bloom spreads it on the plate,
+          #flow-glow keeps it close, and #flow-melt softens the molten gold
+          over its own sharp copy. Each region is the whole stage in user
+          space, since a straight wire's bounding box has no height.
+        -->
+        <filter
+          id="flow-bloom"
+          filterUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          color-interpolation-filters="sRGB"
+        >
+          <feGaussianBlur stdDeviation="7"></feGaussianBlur>
+        </filter>
+        <filter
+          id="flow-glow"
+          filterUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          color-interpolation-filters="sRGB"
+        >
+          <feGaussianBlur stdDeviation="2.4"></feGaussianBlur>
+        </filter>
+        <filter
+          id="flow-melt"
+          filterUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          color-interpolation-filters="sRGB"
+        >
+          <feGaussianBlur stdDeviation="1.1" result="soft"></feGaussianBlur>
+          <feMerge>
+            <feMergeNode in="soft"></feMergeNode>
+            <feMergeNode in="SourceGraphic"></feMergeNode>
+          </feMerge>
+        </filter>
+        <!-- The arrow pockets' gold, shaded from the cut's upper wall down to its lit floor. -->
+        <linearGradient id="flow-inlay-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7a5713"></stop>
+          <stop offset="0.45" stop-color="#c4973a"></stop>
+          <stop offset="1" stop-color="#f0d27f"></stop>
+        </linearGradient>
+        <linearGradient id="flow-molten-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#b86e08"></stop>
+          <stop offset="0.4" stop-color="#f2b632"></stop>
+          <stop offset="0.85" stop-color="#fff0b0"></stop>
+          <stop offset="1" stop-color="#fffbea"></stop>
+        </linearGradient>
+      </defs>
+      {edges.map((edge) => (
+        <g class="wire" data-from={edge.from} data-to={edge.to}>
+          <title>{hopOf(edge)}</title>
+          <g class="wire-light">
+            <path class="bloom" data-shape="line" />
+            <path class="bloom" data-shape="head" />
+            <path class="glow" data-shape="line" />
+            <path class="glow" data-shape="head" />
+          </g>
+          <path class="lip" data-shape="line" />
+          <path class="lip" data-shape="head" />
+          <path class="cut" data-shape="line" />
+          <path class="cut" data-shape="head" />
+          <path class="floor" data-shape="line" />
+          <path class="floor" data-shape="head" />
+          <path class="glint" data-shape="line" />
+          <g class="wire-inlay">
+            <path class="inlay-base" data-shape="line" />
+            <path class="inlay-face" data-shape="line" />
+            <path class="inlay-streak" data-shape="line" />
+            <path class="inlay-edge" data-shape="line" />
+            <path class="inlay-pocket" data-shape="head" />
+          </g>
+          <g class="wire-molten">
+            <path class="molten-deep" data-shape="line" />
+            <path class="molten-mid" data-shape="line" />
+            <path class="molten-hot" data-shape="line" />
+            <path class="molten-flow" data-shape="line" />
+            <path class="molten-pocket" data-shape="head" />
+          </g>
+        </g>
+      ))}
+    </svg>
+    {nodes.map((node, index) => (
+      <div
+        class="flow-node"
+        data-node={node.id}
+        data-col={node.col}
+        data-row={node.row}
+        style={`grid-column: ${node.col + 1}; grid-row: ${node.row + 1}`}
+      >
+        <span class="node-rim" aria-hidden="true" />
+        <span class="node-sheen" aria-hidden="true" />
+        <span class="node-index" aria-hidden="true">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span class="node-jewel" aria-hidden="true" />
+        <i
+          class="node-screw node-screw-left spun"
+          style={`--slot: ${slot(index)}deg`}
+          aria-hidden="true"
+        />
+        <i
+          class="node-screw node-screw-right spun"
+          style={`--slot: ${slot(index + 5)}deg`}
+          aria-hidden="true"
+        />
+        <b>{node.label}</b>
+        <small>{node.detail}</small>
+      </div>
+    ))}
+  </div>
+</figure>
+
+<style>
+  /*
+   * The diagram (.flow): milled gunmetal on a .slab-dark wall, so every
+   * colour inside it is fixed in both themes. A fly-cutter's arcs and
+   * brushing streaks cross a dark face, lighter where the light from the top
+   * right lands.
+   * --cycle is one breath of a lit channel's glow and one flare of a lit
+   * plate's jewel; a lit channel fills from its source --pour after it
+   * lights, over --pour-time, and its target plate flares at --arrive.
+   */
+  .flow {
+    --cycle: 3s;
+    --pour: 0.25s;
+    --pour-time: 0.6s;
+    --arrive: 0.85s;
+
+    container: flow / inline-size;
+    overflow: hidden;
+    margin: 0;
+    border-radius: 18px;
+    background-color: #0d0f12;
+    background-image:
+      radial-gradient(
+        ellipse 70% 50% at 82% -4%,
+        rgb(200 215 235 / 0.075),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 10% 108%,
+        rgb(0 0 0 / 0.45),
+        transparent 70%
+      ),
+      repeating-radial-gradient(
+        circle at 128% -70%,
+        rgb(255 255 255 / 0) 0,
+        rgb(255 255 255 / 0.03) 0.9px,
+        rgb(255 255 255 / 0) 1.8px,
+        rgb(255 255 255 / 0) 3.4px
+      ),
+      var(--brush-noise-soft),
+      linear-gradient(190deg, #1c2026, #131619 55%, #0d0f12);
+    background-size:
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      320px 140px,
+      100% 100%;
+    background-blend-mode: normal, normal, normal, overlay, normal;
+    box-shadow:
+      0 0 0 1px rgb(214 222 232 / 0.08),
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.08),
+      var(--slab-wall),
+      var(--slab-drop);
+    color: #c9cfd7;
+  }
+
+  /*
+   * The stage: a grid of --cols columns and --rows rows whose gutters (the
+   * gaps, and the padding around the grid) carry the channels. Plates
+   * stretch to fill their cells, so every row's plates share a top and
+   * bottom and every column's a left and right, as flow.ts's routeWires
+   * expects; flow.ts reads the padding as the outer gutters' width.
+   */
+  .flow-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--rows), auto);
+    gap: 30px 40px;
+    padding: 28px;
+  }
+
+  .flow-wires {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .flow-wires path[data-shape="line"] {
+    fill: none;
+    stroke-linecap: butt;
+    stroke-linejoin: round;
+  }
+
+  /*
+   * An arrow pocket is the head flow.ts draws, widened by its own stroke on
+   * mitred corners; its tip runs on under the target plate. A filled layer
+   * set inside the pocket (.floor, .inlay-pocket, .molten-pocket) is the
+   * head scaled about its own centre.
+   */
+  .flow-wires path[data-shape="head"] {
+    stroke-linejoin: miter;
+  }
+
+  .floor[data-shape="head"],
+  .inlay-pocket,
+  .molten-pocket {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+  }
+
+  /*
+   * A channel stops 3.5px short of its tip, inside its arrow pocket: one
+   * dash --len long, started 3.5px before the path. Until flow.ts sets
+   * --len the dash list is invalid and the channel runs to the tip.
+   */
+  .bloom[data-shape="line"],
+  .glow[data-shape="line"],
+  .lip[data-shape="line"],
+  .cut[data-shape="line"],
+  .floor[data-shape="line"],
+  .glint,
+  .inlay-base,
+  .inlay-face,
+  .inlay-edge,
+  .molten-deep,
+  .molten-mid,
+  .molten-hot {
+    stroke-dasharray: var(--len) 100000;
+    stroke-dashoffset: 3.5px;
+  }
+
+  /*
+   * The cut: a lit lip on the plate below and left of it, the black cut, its
+   * shadowed floor and a glint along its lower inner wall. A passed channel's
+   * lip warms; a lit channel's lip catches its molten gold.
+   */
+  .lip {
+    transform: translate(calc(var(--lean) * var(--slant) * 1.15px), 1.15px);
+    transition:
+      stroke 0.4s var(--ease-soft),
+      fill 0.4s var(--ease-soft);
+  }
+
+  .lip[data-shape="line"] {
+    stroke: rgb(255 255 255 / 0.15);
+    stroke-width: 6.2;
+  }
+
+  .lip[data-shape="head"] {
+    fill: rgb(255 255 255 / 0.15);
+    stroke: rgb(255 255 255 / 0.15);
+    stroke-width: 2.6;
+  }
+
+  .wire.passed .lip[data-shape="line"] {
+    stroke: rgb(255 236 190 / 0.2);
+  }
+
+  .wire.passed .lip[data-shape="head"] {
+    fill: rgb(255 236 190 / 0.2);
+    stroke: rgb(255 236 190 / 0.2);
+  }
+
+  .wire.lit .lip[data-shape="line"] {
+    stroke: rgb(255 214 120 / 0.8);
+  }
+
+  .wire.lit .lip[data-shape="head"] {
+    fill: rgb(255 214 120 / 0.8);
+    stroke: rgb(255 214 120 / 0.8);
+  }
+
+  .cut[data-shape="line"] {
+    stroke: #010203;
+    stroke-width: 6.2;
+  }
+
+  .cut[data-shape="head"] {
+    fill: #010203;
+    stroke: #010203;
+    stroke-width: 2.6;
+  }
+
+  .floor[data-shape="line"] {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.9px), 0.9px);
+    stroke: #101318;
+    stroke-width: 3.2;
+  }
+
+  .floor[data-shape="head"] {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.9px), 0.9px)
+      scale(0.8);
+    fill: #101318;
+  }
+
+  .glint {
+    transform: translate(calc(var(--lean) * var(--slant) * 2.15px), 2.15px);
+    stroke: rgb(201 207 215 / 0.2);
+    stroke-width: 0.8;
+  }
+
+  /*
+   * A passed channel (.passed): brushed gold set into the cut, a darker base
+   * under a lower face, brushing streaks and a lit lower edge, with its
+   * pocket inlaid to match.
+   */
+  .wire-inlay {
+    opacity: 0;
+    transition: opacity 0.4s var(--ease-soft);
+  }
+
+  .wire.passed .wire-inlay {
+    opacity: 1;
+  }
+
+  .inlay-base {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.45px), 0.45px);
+    stroke: #7a5713;
+    stroke-width: 4;
+  }
+
+  .inlay-face {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.95px), 0.95px);
+    stroke: #c9a04a;
+    stroke-width: 2.6;
+  }
+
+  .inlay-streak {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.55px), 0.55px);
+    stroke: rgb(255 244 210 / 0.5);
+    stroke-width: 0.7;
+    stroke-dasharray: 4 1.6 7 2.2 2.5 3 5.5 1.3 3 2.8 8 1.9 2 3.4;
+  }
+
+  .inlay-edge {
+    transform: translate(calc(var(--lean) * var(--slant) * 1.75px), 1.75px);
+    stroke: #f6dd96;
+    stroke-width: 0.7;
+  }
+
+  .inlay-pocket {
+    transform: scale(0.9);
+    fill: url(#flow-inlay-gold);
+  }
+
+  /*
+   * A lit channel (.lit): molten gold in three tones under a surface that
+   * streams toward the target (.wire-molten, softened by #flow-melt), over
+   * a bloom on the plate (.bloom, #flow-bloom) and a breathing glow (.glow,
+   * #flow-glow) in .wire-light. .wire-light and .wire-molten stay hidden on
+   * every other channel, so the three filters run only for lit ones.
+   */
+  .wire-light,
+  .wire-molten {
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity 0.4s var(--ease-soft),
+      visibility 0s linear 0.4s;
+  }
+
+  .wire.lit .wire-light,
+  .wire.lit .wire-molten {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity 0.4s var(--ease-soft),
+      visibility 0s;
+  }
+
+  .wire-molten {
+    filter: url(#flow-melt);
+  }
+
+  .bloom {
+    opacity: 0.75;
+    filter: url(#flow-bloom);
+  }
+
+  .bloom[data-shape="line"] {
+    stroke: #ffa31a;
+    stroke-width: 22;
+  }
+
+  .bloom[data-shape="head"] {
+    fill: #ffa31a;
+  }
+
+  .glow {
+    filter: url(#flow-glow);
+  }
+
+  .glow[data-shape="line"] {
+    stroke: #ffc93d;
+    stroke-width: 9.5;
+  }
+
+  .glow[data-shape="head"] {
+    fill: #ffc93d;
+    stroke: #ffc93d;
+    stroke-width: 3;
+  }
+
+  .molten-deep {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.45px), 0.45px);
+    stroke: #b86e08;
+    stroke-width: 4.4;
+  }
+
+  .molten-mid {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.7px), 0.7px);
+    stroke: #f2b632;
+    stroke-width: 3.1;
+  }
+
+  .molten-hot {
+    transform: translate(calc(var(--lean) * var(--slant) * 1.05px), 1.05px);
+    stroke: #fff0b0;
+    stroke-width: 1.3;
+  }
+
+  .molten-flow {
+    transform: translate(calc(var(--lean) * var(--slant) * 0.6px), 0.6px);
+    stroke: rgb(255 250 228 / 0.75);
+    stroke-width: 0.9;
+    stroke-dasharray: 2 4 1 6 3 5;
+  }
+
+  .molten-pocket {
+    transform: scale(0.9);
+    fill: url(#flow-molten-gold);
+  }
+
+  /*
+   * Under data-flow="step", as a channel lights, its bloom, glow and molten
+   * gold pour from its source to its target (wire-pour: the dash runs in
+   * from --len back to its trimmed place), then its pockets and stream fade
+   * in (wire-fill, on opacity). The stream drifts toward the target by one
+   * repeat of .molten-flow's 21px dash list each turn (wire-stream), and the
+   * glow breathes every --cycle (wire-breathe, on fill and stroke opacity, so
+   * it composes with wire-fill). Before flow.ts sets --len the pour has no
+   * dash to move and the layers show at once.
+   */
+  :global([data-flow="step"]) .wire.lit .bloom[data-shape="line"],
+  :global([data-flow="step"]) .wire.lit .molten-deep,
+  :global([data-flow="step"]) .wire.lit .molten-mid,
+  :global([data-flow="step"]) .wire.lit .molten-hot {
+    animation: wire-pour var(--pour-time) cubic-bezier(0.5, 0, 0.25, 1)
+      var(--pour) both;
+  }
+
+  :global([data-flow="step"]) .wire.lit .glow[data-shape="line"] {
+    animation:
+      wire-pour var(--pour-time) cubic-bezier(0.5, 0, 0.25, 1) var(--pour) both,
+      wire-breathe var(--cycle) ease-in-out infinite;
+  }
+
+  :global([data-flow="step"]) .wire.lit .bloom[data-shape="head"],
+  :global([data-flow="step"]) .wire.lit .molten-pocket {
+    animation: wire-fill 0.25s ease-out
+      calc(var(--pour) + var(--pour-time) - 0.08s) both;
+  }
+
+  :global([data-flow="step"]) .wire.lit .glow[data-shape="head"] {
+    animation:
+      wire-fill 0.25s ease-out calc(var(--pour) + var(--pour-time) - 0.08s) both,
+      wire-breathe var(--cycle) ease-in-out infinite;
+  }
+
+  :global([data-flow="step"]) .wire.lit .molten-flow {
+    animation:
+      wire-stream 1.1s linear infinite,
+      wire-fill 0.3s ease-out calc(var(--pour) + var(--pour-time) - 0.1s) both;
+  }
+
+  @keyframes wire-pour {
+    from {
+      stroke-dashoffset: var(--len);
+    }
+  }
+
+  @keyframes wire-fill {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes wire-stream {
+    to {
+      stroke-dashoffset: -21;
+    }
+  }
+
+  @keyframes wire-breathe {
+    50% {
+      fill-opacity: 0.62;
+      stroke-opacity: 0.62;
+    }
+  }
+
+  /*
+   * A plate: raised machined steel on a 3px wall, its label carved over its
+   * detail in mono, its two-digit index stamped top left, a jewel lamp top
+   * right and two spun screws below. ::before is the brushed gold face a
+   * lit plate turns to; ::after is the halo a lit plate pulses.
+   */
+  .flow-node {
+    --radius: 9px;
+    --pad-x: 12px;
+
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    padding: 15px var(--pad-x) 13px;
+    border-radius: var(--radius);
+    background-image:
+      var(--brush-noise-soft),
+      radial-gradient(
+        ellipse 26% 170% at 70% 50%,
+        rgb(200 215 235 / 0.09),
+        transparent 70%
+      ),
+      linear-gradient(180deg, #30363d, #262b31 55%, #1e2227);
+    background-size:
+      320px 140px,
+      100% 100%,
+      100% 100%;
+    background-blend-mode: overlay, screen, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.17),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.5),
+      0 0 0 1px rgb(0 0 0 / 0.75),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #464b52,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #3a3e44,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #2f3237,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #2f3237,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 1px rgb(0 0 0 / 0.7),
+      0 0 0 2px rgb(255 226 150 / 0),
+      0 0 14px 1px rgb(242 201 76 / 0),
+      0 0 30px 2px rgb(230 160 40 / 0),
+      calc(var(--lean) * var(--slant) * 4px) 4px 3px 0 rgb(0 0 0 / 0.55),
+      calc(var(--lean) * var(--slant) * 8px) 8px 10px -4px rgb(0 0 0 / 0.7);
+    text-align: center;
+    transition: box-shadow 0.4s var(--ease-soft);
+  }
+
+  .flow-node::before,
+  .flow-node::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .flow-node::before {
+    background-image:
+      var(--brush-noise-soft),
+      radial-gradient(
+        ellipse 24% 160% at 70% 50%,
+        rgb(255 245 214 / 0.62),
+        transparent 70%
+      ),
+      linear-gradient(
+        190deg,
+        #ecd089 0%,
+        #d6ab55 30%,
+        #c4973a 60%,
+        #b98d34 85%,
+        #cfa654 100%
+      );
+    background-size:
+      320px 140px,
+      100% 100%,
+      100% 100%;
+    background-blend-mode: overlay, screen, normal;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.3);
+    transition: opacity 0.4s var(--ease-soft);
+  }
+
+  .flow-node::after {
+    box-shadow:
+      0 0 0 1px rgb(255 240 190 / 0.9),
+      0 0 26px 7px rgb(255 214 110 / 0.55);
+  }
+
+  /*
+   * Label and detail may run into the plate's side padding up to 2px from
+   * its edges; a longer word breaks there.
+   */
+  .flow-node b,
+  .flow-node small {
+    position: relative;
+    z-index: 2;
+    max-width: calc(100% + 2 * var(--pad-x) - 4px);
+    overflow-wrap: break-word;
+    transition: color 0.4s var(--ease-soft);
+  }
+
+  .flow-node b {
+    color: #c9cfd7;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-shadow:
+      0 -1px 0 rgb(0 0 0 / 0.85),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.1);
+    hyphens: auto;
+  }
+
+  .flow-node small {
+    color: #a3abb6;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 1.35;
+    text-shadow: 0 -1px 0 rgb(0 0 0 / 0.8);
+  }
+
+  .node-index {
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    z-index: 2;
+    color: #7f8894;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-shadow:
+      0 -1px 0 #000,
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.14);
+    transition: color 0.4s var(--ease-soft);
+  }
+
+  .node-jewel {
+    position: absolute;
+    top: 4px;
+    right: 7px;
+    z-index: 2;
+    width: 8px;
+    height: 8px;
+    border: 1.5px solid #0b0c0e;
+    border-radius: 50%;
+    background-clip: padding-box;
+    background-image: radial-gradient(
+      circle at 40% 35%,
+      #6a727c,
+      #2a2f36 55%,
+      #121418
+    );
+    box-shadow: calc(var(--lean) * var(--slant) * 1px) 1px 0
+      rgb(255 255 255 / 0.14);
+  }
+
+  .node-screw {
+    position: absolute;
+    bottom: 4px;
+    z-index: 2;
+    width: 7px;
+    height: 7px;
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.6),
+      calc(var(--lean) * var(--slant) * 1px) 1px 2px rgb(0 0 0 / 0.5);
+  }
+
+  .node-screw::after {
+    content: "";
+    position: absolute;
+    top: calc(50% - 0.5px);
+    right: 0.5px;
+    left: 0.5px;
+    height: 1px;
+    background: rgb(18 21 26 / 0.85);
+    transform: rotate(var(--slot));
+  }
+
+  .node-screw-left {
+    left: 6px;
+  }
+
+  .node-screw-right {
+    right: 6px;
+  }
+
+  /*
+   * A passed plate (.passed): a brighter label, its index and a rim inlaid
+   * in gold (.node-rim, a 1px gold ring masked out of a gradient, set in a
+   * cut), and an amber jewel at rest.
+   */
+  .node-rim {
+    position: absolute;
+    inset: 2px;
+    z-index: 0;
+    border-radius: calc(var(--radius) - 2px);
+    opacity: 0;
+    filter: drop-shadow(0 -0.6px 0 rgb(0 0 0 / 0.95))
+      drop-shadow(
+        calc(var(--lean) * var(--slant) * 0.9px) 0.9px 0 rgb(255 255 255 / 0.2)
+      );
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease-soft);
+  }
+
+  .node-rim::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      225deg,
+      #fff1c2,
+      #b8892b 30%,
+      #ffe9a3 52%,
+      #7e5b13 74%,
+      #e9c76b
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+
+  .flow-node.passed .node-rim {
+    opacity: 1;
+  }
+
+  .flow-node.passed b {
+    color: #eef1f4;
+  }
+
+  .flow-node.passed .node-index {
+    color: #d9b45a;
+    text-shadow:
+      0 -1px 0 #000,
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 240 200 / 0.18);
+  }
+
+  .flow-node.passed .node-jewel {
+    background-image: radial-gradient(
+      circle at 40% 35%,
+      #e9cf8a,
+      #8a6417 55%,
+      #3e2c07
+    );
+    box-shadow:
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.14),
+      0 0 3px rgb(242 201 76 / 0.25);
+  }
+
+  /*
+   * A lit plate (.lit): brushed gold on a 4px gold wall, ringed in gold,
+   * its label carved in dark ink and its jewel glowing. It sits under the
+   * other plates so its glow passes beneath them. Under data-flow="step",
+   * at --arrive, as its channel's pour lands, and every --cycle after, its
+   * jewel flares, its halo (::after) swells and a sheen (.node-sheen) sweeps
+   * the plate.
+   */
+  .flow-node.lit {
+    z-index: 1;
+    box-shadow:
+      inset calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 255 255 / 0.7),
+      inset calc(var(--lean) * var(--slant) * -1px) -1px 0 rgb(0 0 0 / 0.3),
+      0 0 0 1px rgb(0 0 0 / 0.6),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 #a8802a,
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 #987326,
+      calc(var(--lean) * var(--slant) * 3px) 3px 0 0 #876622,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 0 #644b18,
+      calc(var(--lean) * var(--slant) * 4px) 4px 0 1px rgb(0 0 0 / 0.6),
+      0 0 0 2px rgb(255 226 150 / 0.22),
+      0 0 14px 1px rgb(242 201 76 / 0.36),
+      0 0 30px 2px rgb(230 160 40 / 0.14),
+      calc(var(--lean) * var(--slant) * 5px) 5px 3px 0 rgb(0 0 0 / 0.55),
+      calc(var(--lean) * var(--slant) * 10px) 10px 12px -4px rgb(0 0 0 / 0.7);
+  }
+
+  .flow-node.lit::before {
+    opacity: 1;
+  }
+
+  .flow-node.lit .node-rim {
+    opacity: 0;
+  }
+
+  .flow-node.lit b {
+    color: #1a1102;
+    text-shadow:
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 240 200 / 0.6),
+      0 -1px 0 rgb(70 45 5 / 0.3);
+  }
+
+  .flow-node.lit small {
+    color: #2e2005;
+    text-shadow: calc(var(--lean) * var(--slant) * 1px) 1px 0
+      rgb(255 240 200 / 0.5);
+  }
+
+  .flow-node.lit .node-index {
+    color: #3a2906;
+    text-shadow:
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 rgb(255 240 200 / 0.6),
+      0 -1px 0 rgb(70 45 5 / 0.3);
+  }
+
+  .flow-node.lit .node-jewel {
+    top: 3px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #1a1206;
+    background-image: radial-gradient(
+      circle at 40% 35%,
+      #ffffff,
+      #fff1b8 30%,
+      #f2b632 65%,
+      #a8680f
+    );
+    box-shadow:
+      0 0 0 1px rgb(255 240 200 / 0.55),
+      0 0 6px 2px rgb(255 200 80 / 0.95),
+      0 0 14px 4px rgb(255 190 60 / 0.4);
+  }
+
+  .node-sheen {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    border-radius: inherit;
+    background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgb(255 252 236 / 0.8) 50%,
+        transparent 60%
+      )
+      no-repeat;
+    background-size: 250% 100%;
+    background-position: 110% 0;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+
+  :global([data-flow="step"]) .flow-node.lit::after {
+    animation: node-halo var(--cycle) ease-out var(--arrive) infinite;
+  }
+
+  :global([data-flow="step"]) .flow-node.lit .node-jewel {
+    animation: node-flare var(--cycle) ease-out var(--arrive) infinite;
+  }
+
+  :global([data-flow="step"]) .flow-node.lit .node-sheen {
+    display: block;
+    animation: node-sweep var(--cycle) var(--ease-soft) var(--arrive) infinite;
+  }
+
+  @keyframes node-flare {
+    0% {
+      box-shadow:
+        0 0 0 1px rgb(255 240 200 / 0.55),
+        0 0 10px 4px rgb(255 236 170 / 1),
+        0 0 26px 10px rgb(255 190 60 / 0.6);
+      filter: brightness(1.2);
+    }
+
+    40%,
+    100% {
+      box-shadow:
+        0 0 0 1px rgb(255 240 200 / 0.55),
+        0 0 6px 2px rgb(255 200 80 / 0.95),
+        0 0 14px 4px rgb(255 190 60 / 0.4);
+      filter: none;
+    }
+  }
+
+  @keyframes node-halo {
+    0% {
+      opacity: 1;
+    }
+
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes node-sweep {
+    0% {
+      background-position: 110% 0;
+    }
+
+    40%,
+    100% {
+      background-position: -10% 0;
+    }
+  }
+
+  /*
+   * Under data-flow="all" every plate and channel is lit at once and holds
+   * still, since the animations above run only under data-flow="step"; the
+   * bloom stays hidden (rendered, so flow.ts can still measure its path) and
+   * the face of .flow between the channels stays dark.
+   */
+  :global([data-flow="all"]) .bloom {
+    visibility: hidden;
+  }
+
+  /*
+   * Below 640px of .flow width the gutters narrow and the plates tighten;
+   * below 440px the plates drop their detail line and screws and the
+   * gutters narrow further.
+   */
+  @container flow (width < 40rem) {
+    .flow-stage {
+      gap: 22px 26px;
+      padding: 20px;
+    }
+
+    .flow-node {
+      --radius: 7px;
+      --pad-x: 9px;
+
+      gap: 2px;
+      padding: 14px var(--pad-x) 12px;
+    }
+
+    .flow-node b {
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .flow-node small {
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .node-index {
+      top: 3.5px;
+      left: 7px;
+    }
+
+    .node-jewel {
+      right: 6px;
+    }
+
+    .flow-node.lit .node-jewel {
+      right: 5px;
+    }
+
+    .node-screw {
+      bottom: 3.5px;
+    }
+
+    .node-screw-left {
+      left: 5px;
+    }
+
+    .node-screw-right {
+      right: 5px;
+    }
+  }
+
+  @container flow (width < 27.5rem) {
+    .flow-stage {
+      gap: 20px 18px;
+      padding: 16px;
+    }
+
+    .flow-node {
+      --pad-x: 5px;
+
+      padding: 13px var(--pad-x) 8px;
+    }
+
+    .flow-node b {
+      font-size: 10.5px;
+    }
+
+    .flow-node small,
+    .node-screw {
+      display: none;
+    }
+
+    .node-index {
+      top: 3px;
+      left: 5px;
+      font-size: 8px;
+    }
+
+    .node-jewel {
+      top: 3px;
+      right: 4px;
+      width: 7px;
+      height: 7px;
+    }
+
+    .flow-node.lit .node-jewel {
+      top: 2px;
+      right: 3px;
+      width: 9px;
+      height: 9px;
+    }
+  }
+
+  /*
+   * Under reduced motion nothing moves, whatever data-flow says: no layer of
+   * a channel or plate animates or eases (!important outranks the
+   * data-flow="step" rules), so each shows the finished look of its .lit or
+   * .passed class at once, and .node-sheen is gone.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .flow-wires *,
+    .flow-node,
+    .flow-node *,
+    .flow-node::before,
+    .flow-node::after {
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .flow-node .node-sheen {
+      display: none !important;
+    }
+  }
+</style>

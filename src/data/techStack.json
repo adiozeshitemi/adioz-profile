@@ -5,29 +5,29 @@
   "intro": "The languages, data systems, and ML runtimes behind production AI.",
   "skills": [
     {
+      "label": "Java & Spring Boot",
+      "level": "Expert",
+      "percent": 95
+    },
+    {
       "label": "Rust Systems & Tokio Async",
       "level": "Expert",
       "percent": 95
     },
     {
-      "label": "Java & Spring Boot",
+      "label": "Production AI (Distillation / INT8)",
       "level": "Expert",
       "percent": 92
     },
     {
       "label": "Kafka Streaming & ClickHouse",
-      "level": "Advanced",
-      "percent": 88
+      "level": "Expert",
+      "percent": 90
     },
     {
-      "label": "Cloud & DevOps (AWS / Docker / K8s)",
+      "label": "Cloud & DevOps (AWS / Terraform / Docker)",
       "level": "Advanced",
       "percent": 85
-    },
-    {
-      "label": "Embedded AI Engine (Burn / Candle)",
-      "level": "Advanced",
-      "percent": 80
     }
   ],
   "categories": [
@@ -36,6 +36,9 @@
       "tools": [
         "Tool-using and ReAct agents/evaluation",
         "Typed audited tools",
+        "LangGraph",
+        "LlamaIndex",
+        "Model Context Protocol (MCP)",
         "Retrieval (RAG)",
         "Local SLMs"
       ]
@@ -46,8 +49,12 @@
         "Burn",
         "Candle",
         "PyTorch",
+        "Hugging Face",
         "CLIP",
         "Embeddings",
+        "LoRA/QLoRA/PEFT",
+        "vLLM/TGI/Triton/Ollama",
+        "MLflow/W&B",
         "Model training and evaluation"
       ]
     },
@@ -55,7 +62,7 @@
       "name": "Resource-Aware AI",
       "tools": [
         "Multi-teacher distillation into small students",
-        "INT8 quantization",
+        "Quantization-aware training (QAT) and INT8",
         "Truncatable embeddings (MRL)",
         "CPU-only inference",
         "Zero-copy memory-mapped weights",
@@ -69,22 +76,26 @@
     {
       "name": "Backend",
       "tools": [
+        "Java 25 and Spring Boot 4",
+        "Spring WebFlux and R2DBC",
         "Rust (Tokio, Axum)",
-        "Java (Spring Boot)",
-        "Golang (gRPC)",
+        "Go (gRPC)",
         "Python",
-        "REST",
-        "Microservices"
+        "REST, GraphQL and WebSockets",
+        "Microservices",
+        "Testcontainers"
       ]
     },
     {
       "name": "Frontend",
       "tools": [
-        "Angular",
+        "Angular 22",
+        "Next.js",
+        "React",
+        "Astro",
         "TypeScript",
         "RxJS",
-        "Next.js",
-        "Rust/WebAssembly",
+        "Leptos/WASM",
         "HTML5/SCSS"
       ]
     },
@@ -104,15 +115,31 @@
     {
       "name": "DevOps & Security",
       "tools": [
-        "Kubernetes",
         "AWS",
-        "GCP",
+        "Terraform",
+        "Docker",
+        "Kubernetes",
         "GitHub Actions",
         "CI quality gates",
+        "SonarQube",
+        "Prometheus/Grafana",
         "JWT",
         "OAuth2",
         "RBAC",
         "Offensive Rust (Exploit PoCs, Custom Security Tooling, Low-Level Memory Security)"
+      ]
+    },
+    {
+      "name": "Working knowledge",
+      "tools": [
+        "Cloud TPU",
+        "JAX",
+        "DDP/FSDP",
+        "DeepSpeed",
+        "SageMaker",
+        "Vertex AI",
+        "Azure ML",
+        "CUDA"
       ]
     }
   ]

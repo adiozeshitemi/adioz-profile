@@ -4,18 +4,50 @@
   "headline": "Systems built for scale.",
   "projects": [
     {
+      "title": "Baze (Safaricom platform)",
+      "description": "Safaricom's video and music streaming platform on web, Android, iOS and TV. Built its revenue-sharing and analytics services, designed the payments rail for M-Pesa and carrier billing, led the upgrade to Java 21 and Spring Boot 4, and delivered features on Baze Web.",
+      "tags": [
+        "Java 21",
+        "Spring Boot 4",
+        "WebFlux",
+        "R2DBC",
+        "Kafka",
+        "ClickHouse",
+        "Redis",
+        "Next.js"
+      ],
+      "links": [
+        {
+          "title": "Website",
+          "url": "https://www.baze.co.ke",
+          "icon": "globe"
+        }
+      ],
+      "featured": true,
+      "metric": "Payments that never **double-charge**, and revenue shared with a **full audit trail**"
+    },
+    {
+      "title": "VybStreamz",
+      "description": "The entertainment hub powered by Safaricom. Built content moderation with BBRaiN AI for its operations team, integrated Safaricom single sign-on into the CMS, and configured BBRaiN as a separate tenant with its own catalogue and rules.",
+      "tags": ["Next.js", "React", "TypeScript", "SSO", "BBRaiN"],
+      "links": [
+        {
+          "title": "Website",
+          "url": "https://www.vybstreamz.safaricom.co.ke/home",
+          "icon": "globe"
+        }
+      ],
+      "featured": true,
+      "metric": "**BBRaiN** moderates its content and powers its search and recommendations"
+    },
+    {
       "title": "BBRaiN",
-      "description": "One AI engine for search, recommendations and personalization across all media.",
+      "description": "One AI engine for search, recommendations and personalization across all media: a Rust inference engine, a GPU training factory and a signed model hub that delivers models into each client's own cloud (VPC), run through an MLOps loop from training to drift monitoring. Replaced Recombee and Algolia on Baze (Safaricom platform).",
       "tags": ["Rust", "Axum", "Burn", "CLIP", "Tantivy"],
       "links": [
         {
           "title": "Website",
           "url": "https://www.thebbrain.io/",
-          "icon": "globe"
-        },
-        {
-          "title": "Baze streaming platform",
-          "url": "https://www.baze.co.ke",
           "icon": "globe"
         },
         {
@@ -30,7 +62,7 @@
         }
       ],
       "featured": true,
-      "metric": "Powers content discovery on **Baze streaming platform**"
+      "metric": "About **200,000 lines of Rust**, backed by about **4,000 tests**"
     },
     {
       "title": "Hisiya",

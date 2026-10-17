@@ -1,0 +1,292 @@
+{
+  "title": "The resource-aware MLOps loop",
+  "summary": "Large teacher models are distilled into one small student, trained for INT8 and served on CPU, shipped as signed bundles into each tenant's own cloud, and watched in production until drift starts the loop again.",
+  "problem": "A large model is accurate but costly: served on GPUs in every tenant's cloud, its cost and latency grow with each new client, and a model file copied between clouds can be swapped or corrupted on the way without anyone noticing.",
+  "nodes": [
+    {
+      "id": "features",
+      "label": "Feature engineering",
+      "detail": "Shared definitions",
+      "col": 0,
+      "row": 0,
+      "kind": "qfp"
+    },
+    {
+      "id": "cache",
+      "label": "Teacher cache",
+      "detail": "Computed once on GPU",
+      "col": 1,
+      "row": 0,
+      "kind": "memory"
+    },
+    {
+      "id": "teachers",
+      "label": "Teacher models",
+      "detail": "Video, audio and text",
+      "col": 2,
+      "row": 0,
+      "kind": "gpu"
+    },
+    {
+      "id": "tune",
+      "label": "Hyperparameter search",
+      "detail": "Every run tracked",
+      "col": 0,
+      "row": 1,
+      "kind": "trimmer"
+    },
+    {
+      "id": "distill",
+      "label": "Multi-teacher distillation",
+      "detail": "One compact student",
+      "col": 1,
+      "row": 1,
+      "kind": "die"
+    },
+    {
+      "id": "quantize",
+      "label": "Quantization-aware training",
+      "detail": "Ready for INT8",
+      "col": 1,
+      "row": 2,
+      "kind": "bga"
+    },
+    {
+      "id": "evaluate",
+      "label": "Evaluation",
+      "detail": "Accuracy, F1, fairness",
+      "col": 2,
+      "row": 2,
+      "kind": "socket"
+    },
+    {
+      "id": "tenant",
+      "label": "Tenant cloud",
+      "detail": "Verifies, then loads",
+      "col": 0,
+      "row": 3,
+      "kind": "rj45"
+    },
+    {
+      "id": "hub",
+      "label": "Model hub",
+      "detail": "Registry and distribution",
+      "col": 1,
+      "row": 3,
+      "kind": "radio"
+    },
+    {
+      "id": "sign",
+      "label": "Signed bundle",
+      "detail": "INT8 weights, Ed25519",
+      "col": 2,
+      "row": 3,
+      "kind": "secure"
+    },
+    {
+      "id": "abtest",
+      "label": "A/B test",
+      "detail": "Share of traffic",
+      "col": 0,
+      "row": 4,
+      "kind": "toggle"
+    },
+    {
+      "id": "serve",
+      "label": "CPU inference",
+      "detail": "No GPU runtime",
+      "col": 1,
+      "row": 4,
+      "kind": "cpu"
+    },
+    {
+      "id": "monitor",
+      "label": "Drift and latency monitoring",
+      "detail": "Live health checks",
+      "col": 2,
+      "row": 4,
+      "kind": "gauge"
+    },
+    {
+      "id": "alert",
+      "label": "Drift alert",
+      "detail": "Starts the next loop",
+      "col": 0,
+      "row": 5,
+      "kind": "beacon"
+    }
+  ],
+  "edges": [
+    {
+      "from": "features",
+      "to": "cache",
+      "label": "training data"
+    },
+    {
+      "from": "teachers",
+      "to": "cache",
+      "label": "soft targets"
+    },
+    {
+      "from": "cache",
+      "to": "distill",
+      "label": "cached outputs"
+    },
+    {
+      "from": "tune",
+      "to": "distill",
+      "label": "settings"
+    },
+    {
+      "from": "distill",
+      "to": "quantize",
+      "label": "student"
+    },
+    {
+      "from": "quantize",
+      "to": "evaluate",
+      "label": "INT8 candidate"
+    },
+    {
+      "from": "evaluate",
+      "to": "features",
+      "label": "rejected"
+    },
+    {
+      "from": "evaluate",
+      "to": "sign",
+      "label": "approved"
+    },
+    {
+      "from": "sign",
+      "to": "hub",
+      "label": "signed bundle"
+    },
+    {
+      "from": "hub",
+      "to": "tenant",
+      "label": "verified pull"
+    },
+    {
+      "from": "tenant",
+      "to": "abtest",
+      "label": "new model"
+    },
+    {
+      "from": "abtest",
+      "to": "serve",
+      "label": "winner"
+    },
+    {
+      "from": "serve",
+      "to": "monitor",
+      "label": "request logs"
+    },
+    {
+      "from": "monitor",
+      "to": "alert",
+      "label": "threshold crossed"
+    },
+    {
+      "from": "alert",
+      "to": "features",
+      "label": "retrain"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Prepare the features",
+      "text": "Raw events and content are turned into features from one shared set of definitions, so training and inference compute every input the same way.",
+      "lights": ["features"],
+      "failure": "A feature computed one way in training and another way in serving makes a model that scores well offline and misbehaves live."
+    },
+    {
+      "title": "Run the teachers once",
+      "text": "Large video, audio and text models label the training data with their outputs. Those outputs are computed once on a GPU and cached, so every training run after that reads the cache instead of reloading the teachers.",
+      "lights": ["teachers", "cache"],
+      "failure": "A cache built from an old version of the data quietly trains the student on stale targets; the cache is keyed by the data version so it is rebuilt when the data changes."
+    },
+    {
+      "title": "Distil many teachers into one student",
+      "text": "A single compact student learns to match all the teachers at once. One small model replaces several large ones, which is what makes CPU serving possible.",
+      "lights": ["distill"],
+      "failure": "Teachers can disagree; weighting one too heavily makes the student inherit its blind spots."
+    },
+    {
+      "title": "Search the settings, track every run",
+      "text": "An automated search tries combinations of learning rate, loss weights and model size. Each run records its code, data version, settings and scores, so any result can be explained and reproduced.",
+      "lights": ["tune", "distill"],
+      "failure": "Searching too long against one validation set overfits to it; a final check on data the search never saw keeps it honest."
+    },
+    {
+      "title": "Train for INT8",
+      "text": "Quantization-aware training simulates 8-bit arithmetic while the student trains, so it learns weights that keep their accuracy once they are stored as INT8: a model a quarter of the size, fast on an ordinary CPU.",
+      "lights": ["quantize"],
+      "failure": "Quantizing after training instead can cost accuracy the model never had the chance to recover."
+    },
+    {
+      "title": "Gate on held-out data",
+      "text": "The INT8 candidate is scored on data it never saw, for accuracy and F1, overall and per group, against the model in production. Scores are read beside the balance of the data, since an underrepresented class caps the accuracy any model can reach on it. A candidate that is worse, or unfair to a group, goes back to the data.",
+      "lights": ["evaluate"],
+      "failure": "An average score hides a group the model fails; without per-group results that failure ships."
+    },
+    {
+      "title": "Sign the bundle and publish it",
+      "text": "The approved weights are packed into a bundle with their metrics and signed with an Ed25519 key, then registered in the model hub, which keeps every version and its history.",
+      "lights": ["sign", "hub"],
+      "failure": "A leaked signing key lets anyone publish a model; the key stays offline and the hub accepts only bundles signed by it."
+    },
+    {
+      "title": "Deliver into each tenant's cloud",
+      "text": "Each tenant's cloud pulls new bundles from the hub and checks the signature before loading anything, so a model that was altered on the way, or never published, is refused.",
+      "lights": ["hub", "tenant"],
+      "failure": "Loading a bundle before its signature is checked turns the hub into a way to run any file in every tenant."
+    },
+    {
+      "title": "Test on a share of traffic",
+      "text": "The new model answers a small share of requests while the current one answers the rest. It takes over only if it wins on quality without breaking the latency budget.",
+      "lights": ["abtest"],
+      "failure": "Ending the test early can crown a model that only got lucky."
+    },
+    {
+      "title": "Serve on CPU",
+      "text": "One service runs all the models on CPU, with no GPU runtime, inside a fixed latency budget. The weights are memory-mapped, so a new model loads without copying them.",
+      "lights": ["serve"],
+      "failure": "A model that fits the budget on average can still miss it under load; latency is measured at the slow tail, not the mean."
+    },
+    {
+      "title": "Watch drift and latency",
+      "text": "Monitoring compares live inputs and predictions with the training data and tracks how long each response takes. When drift stays past its limit, an alert fires and starts the loop again from the features.",
+      "lights": ["monitor", "alert", "features"],
+      "failure": "A limit set too low causes alert fatigue; set too high, drift is caught late."
+    }
+  ],
+  "compensations": [
+    {
+      "weakness": "A small student keeps less of what the large teachers know, and loses most on rare cases.",
+      "compensation": "Several teachers train it at once through **soft targets**, which carry how sure each teacher is and not just its answer; the student is scored class by class on held-out data, and a class that falls behind gets more of its examples in the next run."
+    },
+    {
+      "weakness": "INT8 weights round away detail that a full-precision model keeps.",
+      "compensation": "**Quantization-aware training** lets the student learn around the rounding while it trains, and the release gate compares the INT8 model with its full-precision copy on the same held-out data, failing a bundle that loses more than an agreed margin."
+    },
+    {
+      "weakness": "A class with little training data caps the accuracy any model can reach on it.",
+      "compensation": "Evaluation reports each class's accuracy beside its **share of the data**, so a weak class is traced to its data rather than to the model, and the fix is more or better examples of it."
+    },
+    {
+      "weakness": "A latency budget on CPU limits how large the model can grow.",
+      "compensation": "**Truncatable embeddings** let one model serve a short, fast vector where speed matters and its full length where precision does, so accuracy is spent only where it pays."
+    },
+    {
+      "weakness": "Accuracy measured offline fades as live data drifts away from the training data.",
+      "compensation": "An **A/B test** confirms the gain on real traffic before a model takes over, and drift monitoring starts retraining before the loss shows in results."
+    }
+  ],
+  "tradeoffs": [
+    "Distillation and INT8 make CPU serving possible and cut cost per tenant, but the student gives up some of the teachers' accuracy on rare cases.",
+    "Caching teacher outputs makes training cheap to repeat, but the cache has to be rebuilt whenever the data or a teacher changes.",
+    "Signed bundles in each tenant's cloud keep every tenant's data in its own cloud, but every release has to reach many clouds instead of one."
+  ],
+  "stack": ["PyTorch", "Burn", "Rust", "MLflow", "Ed25519", "Prometheus"]
+}

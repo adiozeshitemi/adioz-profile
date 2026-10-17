@@ -1,10 +1,11 @@
 {
   "name": "Adioz",
   "role": "Full-stack AI engineer",
-  "specialty": "Agents & Resource-aware AI",
-  "headline": "takes AI into production.",
-  "summary": "Builds **backend systems and web applications**, and takes AI into production for enterprise clients, owning each system from design to support: tool-using agents that make real, auditable changes, and **small, quantized models** that meet tight latency budgets on CPU.",
-  "availability": "Available for Senior/Staff Engineering Roles",
+  "specialty": "Backend Systems & Production AI",
+  "headline": "ships backends and AI.",
+  "summary": "Leads backend and AI engineering on a streaming platform's **Java 21 and Spring Boot** services: payments that never double-charge, auditable revenue sharing and real-time analytics. Builds AI the same way, owned from design to support: tool-using agents that make real, auditable changes, and **small, quantized models** that meet tight latency budgets on CPU.",
+  "availability": "Open to Principal, Staff & leadership roles",
+  "location": "Nairobi, Kenya (Remote)",
   "actions": [
     {
       "title": "View selected work",

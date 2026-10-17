@@ -5,13 +5,18 @@
     "label": "Years experience"
   },
   {
-    "value": 30,
-    "suffix": "%",
-    "label": "Inter-service overhead cut"
+    "value": 10,
+    "suffix": "+",
+    "label": "Architectures designed"
   },
   {
-    "value": 99,
-    "suffix": "%",
-    "label": "Uptime held"
+    "value": 150,
+    "suffix": "+",
+    "label": "Dependency CVEs cleared"
+  },
+  {
+    "value": 4,
+    "suffix": "k",
+    "label": "Automated tests"
   }
 ]

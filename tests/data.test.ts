@@ -11,6 +11,7 @@ import {
   sectionNumber,
   techStack,
   terminal,
+  workflows,
 } from "../src/data/index";
 import type { TechStack, TerminalTone } from "../src/data/types";
 
@@ -84,9 +85,10 @@ describe("data", () => {
       techStack.id,
       experience.id,
       projects.id,
+      workflows.id,
       contact.id,
     ];
-    expect(ids.map(sectionNumber)).toEqual([1, 2, 3, 4, 5]);
+    expect(ids.map(sectionNumber)).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it("throws for a section that no navigation link targets", () => {

@@ -1,6 +1,7 @@
 ---
 /*
- * The first screen: profile.json's availability pill, gold headline, lede,
+ * The first screen: profile.json's availability pill (the availability and
+ * location, split by a groove), gold headline, lede,
  * actions and the stats panel, beside the 3D agent pipeline and its agent
  * log.
  */
@@ -28,7 +29,8 @@ const ICON_REST: Record<string, number> = {
       <div class="copy">
         <Panel as="p" gold class="pill">
           <Lamp />
-          {profile.availability}
+          <span class="avail">{profile.availability}</span>{" "}
+          <span class="where">{profile.location}</span>
         </Panel>
         <h1 id="hero-title" class="display">
           <span class="gilt">
@@ -102,6 +104,10 @@ const ICON_REST: Record<string, number> = {
     min-width: 0;
   }
 
+  .copy {
+    container-type: inline-size;
+  }
+
   .system {
     display: grid;
     gap: 18px;
@@ -119,6 +125,38 @@ const ICON_REST: Record<string, number> = {
     color: var(--text);
     font-size: 12.5px;
     letter-spacing: 0.02em;
+  }
+
+  .avail,
+  .where {
+    white-space: nowrap;
+  }
+
+  /* The location sits after a groove cut into the pill, in the label tone. */
+  .where {
+    padding-left: 10px;
+    box-shadow: inset 1px 0 0 var(--metal-outline);
+    color: var(--label);
+  }
+
+  /* In a copy column too narrow for one line, the location sits under the availability, aligned with it, without the groove. */
+  @container (width < 32rem) {
+    .copy :global(.panel.pill) {
+      display: inline-grid;
+      grid-template-columns: auto auto;
+      gap: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .avail {
+      white-space: normal;
+    }
+
+    .where {
+      grid-column: 2;
+      padding-left: 0;
+      box-shadow: none;
+    }
   }
 
   .lede {

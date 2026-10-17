@@ -2,7 +2,8 @@
  * The experience section's career trace, and the switch between the trace
  * and the timeline.
  */
-import type { YearRange } from "../data/types";
+import type { RolePeriod } from "../data/types";
+import { periodFrom, periodTo } from "../lib/period";
 
 /** `date` as a fractional year, e.g. 2026.75 for the start of October 2026. */
 export const yearOf = (date: Date) =>
@@ -27,9 +28,10 @@ export interface Tick {
  * The trace's time scale for `periods` at fractional year `now`: from the
  * earliest start to the year after now (`years` years), a tick per year,
  * the now marker's place, and each period's span from the start of its
- * first year to the end of its last, or to now while it is ongoing.
+ * first month (or year) to the end of its last, or to now while it is
+ * ongoing.
  */
-export function traceLayout(periods: YearRange[], now: number) {
+export function traceLayout(periods: RolePeriod[], now: number) {
   const first = Math.min(...periods.map((period) => period.start));
   const last = Math.floor(now) + 1;
   const at = (year: number) => (year - first) / (last - first);
@@ -44,8 +46,8 @@ export function traceLayout(periods: YearRange[], now: number) {
     });
   }
   const spans: Span[] = periods.map((period) => ({
-    from: at(period.start),
-    to: period.end === null ? nowAt : at(period.end + 1),
+    from: at(periodFrom(period)),
+    to: at(periodTo(period, now)),
     live: period.end === null,
   }));
   return { first, years: last - first, nowAt, ticks, spans };
@@ -55,13 +57,13 @@ export function traceLayout(periods: YearRange[], now: number) {
  * The order of `periods` on the trace, as indexes: earliest start first,
  * then earliest end (an ongoing role ends at `now`), then data order.
  */
-export const traceOrder = (periods: YearRange[], now: number) =>
+export const traceOrder = (periods: RolePeriod[], now: number) =>
   periods
     .map((period, index) => ({ period, index }))
     .sort(
       (a, b) =>
-        a.period.start - b.period.start ||
-        (a.period.end ?? now) - (b.period.end ?? now) ||
+        periodFrom(a.period) - periodFrom(b.period) ||
+        periodTo(a.period, now) - periodTo(b.period, now) ||
         a.index - b.index,
     )
     .map(({ index }) => index);
