@@ -127,7 +127,7 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
     }
   });
 
-  it("stacks the 3D board over the 2D diagram, above the step bar", async () => {
+  it("stacks the 3D board over the 2D diagram, above the step bar, the column carrying the board's aspect ratio", async () => {
     const doc = await renderPage(workflow, Page);
     const visual = doc.querySelector(".step-through > .flow-visual")!;
     const parts = [...visual.children].flatMap((child) =>
@@ -145,6 +145,11 @@ describe.each(pages)("$workflow.path", ({ workflow, Page }) => {
       "true",
     );
     expect(board.hasAttribute("data-ready")).toBe(false);
+    const aspect = /--board-aspect: ([\d.]+)/;
+    expect(visual.getAttribute("style")).toMatch(aspect);
+    expect(visual.getAttribute("style")?.match(aspect)?.[1]).toBe(
+      board.getAttribute("style")?.match(aspect)?.[1],
+    );
   });
 
   it("pairs each weak point with its compensation, when the workflow names any", async () => {

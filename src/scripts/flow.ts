@@ -456,12 +456,6 @@ export function keyTarget(
 export const AUTO_STEP_MS = 4500;
 
 /**
- * Milliseconds after a step chosen in the step bar during which the scroll
- * spy ignores every caption but that step's, while the page scrolls to it.
- */
-const STEERING_MS = 1200;
-
-/**
  * The detail of the "flowstep" event startFlow dispatches on its root: the
  * current step's index with `all` false, or -1 with `all` true while every
  * step is lit at once.
@@ -497,11 +491,9 @@ export interface FlowStepDetail {
  * wrapStep), ArrowLeft, ArrowRight, Home or End in the step bar (stopping at
  * the ends, keyTarget), or a caption other than the current step's scrolled
  * across the middle of the viewport (the scroll spy, which ignores each
- * caption's initial entry and the STEERING_MS after a step bar choice). The
- * Auto key (.auto-key, aria-pressed) turns Auto off and on, on again from
- * the current step. A step chosen in the step bar while .flow-visual is
- * sticky also scrolls its caption to the middle of the viewport. Returns a
- * function that stops it.
+ * caption's initial entry). The Auto key (.auto-key, aria-pressed) turns
+ * Auto off and on, on again from the current step. Returns a function that
+ * stops it.
  */
 export function startFlow(
   root: HTMLElement,
@@ -591,8 +583,6 @@ export function startFlow(
   const autoKey = bar?.querySelector<HTMLElement>(".auto-key");
   const count = items.length;
   let current = -1;
-  /** The step a step bar choice is scrolling to; the scroll spy ignores every other caption until it arrives or `until` passes. */
-  let steering: { step: number; until: number } | null = null;
   /** Auto's state: whether it is on, whether .flow-visual is in view, and the timer of its next step. */
   const auto: {
     on: boolean;
@@ -650,15 +640,11 @@ export function startFlow(
     if (auto.on) schedule();
   }
 
-  /** A step chosen in the step bar: turns Auto off, shows `step` (clamped to the steps) and, while .flow-visual is sticky, scrolls its caption to the middle of the viewport. */
+  /** A step chosen in the step bar: turns Auto off and shows `step`, clamped to the steps. */
   function choose(step: number) {
     auto.on = false;
     showAuto();
-    const target = Math.min(count - 1, Math.max(0, step));
-    show(target);
-    if (getComputedStyle(visual).position !== "sticky") return;
-    steering = { step: target, until: performance.now() + STEERING_MS };
-    items[target]!.scrollIntoView({ behavior: "smooth", block: "center" });
+    show(Math.min(count - 1, Math.max(0, step)));
   }
 
   show(0);
@@ -674,11 +660,6 @@ export function startFlow(
         seen.add(record.target);
         if (!record.isIntersecting) continue;
         const step = items.indexOf(record.target as HTMLLIElement);
-        if (steering && performance.now() < steering.until) {
-          if (step === steering.step) steering = null;
-          continue;
-        }
-        steering = null;
         if (step === current) continue;
         if (!initial) {
           auto.on = false;

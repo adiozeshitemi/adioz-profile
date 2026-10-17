@@ -8,19 +8,20 @@
  * then a port back to the home page's workflows section.
  *
  * The step-through ([data-workflow-steps]) holds the diagram's column
- * (.flow-visual) beside the captions, an ordered list of every step with its
+ * (.flow-visual) above the captions, an ordered list of every step with its
  * text and its failure mode, each item carrying the parts and edges its step
  * lights in data-lights and data-hops. The column stacks the 2D
  * gold-inlay diagram (figure.flow) and the 3D board (.board3d) in one grid
- * cell, over the step bar. Without JavaScript only the list shows, in one
- * column; src/scripts/flow.ts sets data-flow, which shows the column, sticky
- * beside the list from 1080px on screens at least 760px tall, and above it
- * otherwise. The 2D diagram shows until the board has drawn its first frame
+ * cell, over the step bar. Without JavaScript only the list shows;
+ * src/scripts/flow.ts sets data-flow, which shows the column above the list.
+ * The column carries the board's aspect ratio (--board-aspect) for its
+ * width. The 2D diagram shows until the board has drawn its first frame
  * (.board3d[data-ready]); then the board takes the cell and fades in while
  * the diagram fades out, so without WebGL the 2D diagram stays.
  */
 import { sectionNumber, workflows } from "../../data/index";
 import type { Workflow } from "../../data/types";
+import { boardAspect, layoutBoard } from "../../scripts/board3d";
 import { stepHops } from "../../scripts/flow";
 import Emphasis from "../UI/Emphasis.astro";
 import Panel from "../UI/Panel.astro";
@@ -38,6 +39,7 @@ const { workflow } = Astro.props;
 const { page } = workflows;
 const number = String(sectionNumber(workflows.id)).padStart(2, "0");
 const hops = stepHops(workflow.steps, workflow.edges);
+const aspect = boardAspect(layoutBoard(workflow.nodes)).toFixed(4);
 const pad = (value: number) => String(value).padStart(2, "0");
 ---
 
@@ -85,7 +87,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
       {page.steps}
     </h2>
     <div class="step-through">
-      <div class="flow-visual">
+      <div class="flow-visual" style={`--board-aspect: ${aspect}`}>
         <FlowDiagram
           label={page.diagram}
           nodes={workflow.nodes}
@@ -281,13 +283,16 @@ const pad = (value: number) => String(value).padStart(2, "0");
   }
 
   /*
-   * The step-through: the captions alone in one column until flow.ts sets
-   * data-flow; then the diagram's column (.flow-visual) sits above them, and
-   * from 1080px beside them, sticky under the header while the captions
-   * scroll on screens at least 760px tall.
+   * The step-through: the captions alone until flow.ts sets data-flow; then
+   * the diagram's column (.flow-visual) sits above them, as wide as the page
+   * and, from 1080px, wider: up to 1400px and the viewport less 28px each
+   * side, centred on the page, but no wider than keeps the board and the step
+   * bar (16rem with the header and gaps) within the viewport's height, and
+   * at least 640px.
    */
   .step-through {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 32px;
   }
 
@@ -351,25 +356,22 @@ const pad = (value: number) => String(value).padStart(2, "0");
   }
 
   @media (width >= 67.5rem) {
-    :global([data-flow]) > .step-through {
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-      align-items: start;
-      gap: 48px;
-    }
-  }
-
-  @media (width >= 67.5rem) and (height >= 47.5rem) {
     :global([data-flow]) > .step-through .flow-visual {
-      position: sticky;
-      top: calc(var(--spacing-header) + 16px);
+      --visual-width: min(
+        100vw - 3.5rem,
+        87.5rem,
+        max(40rem, (100svh - 16rem) * var(--board-aspect))
+      );
+      width: var(--visual-width);
+      margin-inline: calc((100% - var(--visual-width)) / 2);
     }
   }
 
   /*
    * The captions: each step numbered on an engraved plate, its title, its
-   * text and its failure mode in --ember. The current step
-   * (aria-current="step") is lit gold from the left; with the diagram shown,
-   * the others dim so the current one reads first.
+   * text and its failure mode in --ember, the text at most 72ch wide. The
+   * current step (aria-current="step") is lit gold from the left; with the
+   * diagram shown, the others dim so the current one reads first.
    */
   .steps {
     display: grid;
@@ -421,6 +423,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
   }
 
   .step-text {
+    max-width: 72ch;
     margin: 0;
     color: var(--body);
     font-size: 15.5px;
@@ -428,6 +431,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
   }
 
   .step-failure {
+    max-width: 72ch;
     margin: 12px 0 0;
     color: var(--body);
     font-size: 13.5px;

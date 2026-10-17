@@ -446,22 +446,16 @@ describe("startFlow", () => {
     expect(document.activeElement).toBe(keys()[2]);
   });
 
-  it("scrolls a step chosen in the step bar to the middle of the viewport while the diagram is sticky, following only that caption until it arrives", () => {
+  it("keeps the page still when a step is chosen in the step bar", () => {
     stop = startFlow(root(), false);
     settle();
     keys()[2]!.click();
-    expect(captions()[2]!.scrollIntoView).not.toHaveBeenCalled();
-    visual().style.position = "sticky";
-    keys()[1]!.click();
-    expect(captions()[1]!.scrollIntoView).toHaveBeenCalledWith({
-      behavior: "smooth",
-      block: "center",
-    });
-    scrollTo(2);
-    expect(current()).toBe(1);
-    scrollTo(1);
-    scrollTo(0);
+    click(".bar-prev");
+    press("Home");
     expect(current()).toBe(0);
+    for (const item of captions()) {
+      expect(item.scrollIntoView).not.toHaveBeenCalled();
+    }
   });
 
   describe("Auto", () => {
@@ -470,7 +464,6 @@ describe("startFlow", () => {
     });
 
     it("is on from the start with the step bar silent, and walks the steps once in view, from the last round to the first, without scrolling", () => {
-      visual().style.position = "sticky";
       stop = startFlow(root(), false);
       expect(autoKey().getAttribute("aria-pressed")).toBe("true");
       expect(live().getAttribute("aria-live")).toBe("off");
@@ -539,18 +532,6 @@ describe("startFlow", () => {
       expect(live().getAttribute("aria-live")).toBe("off");
       vi.advanceTimersByTime(AUTO_STEP_MS);
       expect(current()).toBe(0);
-    });
-
-    it("stays on while a step bar choice scrolls its caption into place", () => {
-      visual().style.position = "sticky";
-      stop = startFlow(root(), false);
-      settle();
-      keys()[2]!.click();
-      autoKey().click();
-      scrollTo(1);
-      scrollTo(2);
-      expect(current()).toBe(2);
-      expect(autoKey().getAttribute("aria-pressed")).toBe("true");
     });
 
     it("holds while the diagram is out of view or the tab is hidden", () => {
