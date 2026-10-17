@@ -16,9 +16,10 @@
  * src/scripts/flow.ts sets data-flow, which shows the column above the list,
  * and with data-flow="step" only the current step's caption shows.
  * The column carries the board's aspect ratio (--board-aspect) for its
- * width. The 2D diagram shows until the board has drawn its first frame
- * (.board3d[data-ready]); then the board takes the cell and fades in while
- * the diagram fades out, so without WebGL the 2D diagram stays.
+ * width. The 3D board takes the cell from the start, its outline glowing
+ * faintly until it has drawn its first frame (.board3d[data-ready]), then
+ * fading in, with the 2D diagram unseen under it; where the board cannot
+ * run, Board3D.astro hides it (hidden) and the 2D diagram shows instead.
  */
 import { sectionNumber, workflows } from "../../data/index";
 import type { Workflow } from "../../data/types";
@@ -310,14 +311,14 @@ const pad = (value: number) => String(value).padStart(2, "0");
 
   /*
    * The 2D diagram and the 3D board share the column's first cell, over the
-   * step bar in the second row. Until the board has drawn its first frame
-   * (data-ready) the diagram sizes the cell and the board, still invisible
-   * (Board3D.astro), lies over its top at the board's own aspect ratio. Once
-   * the board is ready it sizes the cell and fades in, and the diagram lies
-   * under it, clipped to the board's box, fading out, clear of the pointer
-   * and with every animation paused (!important outranks FlowDiagram.astro's
-   * more specific data-flow="step" animation rules). Each grid-area names its
-   * end lines, since an absolutely positioned item's auto end line is the
+   * step bar in the second row. The board sizes the cell from the start, at
+   * its own aspect ratio, its outline glowing faintly until its first frame
+   * (Board3D.astro); the diagram lies under it, clipped to the board's box,
+   * unseen, clear of the pointer and with every animation paused
+   * (!important outranks FlowDiagram.astro's more specific data-flow="step"
+   * animation rules). Where the board cannot run, Board3D.astro hides it and
+   * the diagram sizes the cell and shows. Each grid-area names its end
+   * lines, since an absolutely positioned item's auto end line is the
    * column's padding edge.
    */
   .flow-visual > :global(.flow),
@@ -326,27 +327,24 @@ const pad = (value: number) => String(value).padStart(2, "0");
     min-width: 0;
   }
 
-  .flow-visual > :global(.board3d:not([data-ready])) {
-    position: absolute;
-    inset: 0 0 auto;
-  }
-
   .flow-visual > :global(.flow) {
     transition: opacity 0.6s var(--ease-soft);
   }
 
-  .flow-visual:has(> :global(.board3d[data-ready])) > :global(.flow) {
+  .flow-visual:has(> :global(.board3d:not([hidden]))) > :global(.flow) {
     position: absolute;
     inset: 0;
     opacity: 0;
     pointer-events: none;
   }
 
-  .flow-visual:has(> :global(.board3d[data-ready])) > :global(.flow) :global(*),
-  .flow-visual:has(> :global(.board3d[data-ready]))
+  .flow-visual:has(> :global(.board3d:not([hidden])))
+    > :global(.flow)
+    :global(*),
+  .flow-visual:has(> :global(.board3d:not([hidden])))
     > :global(.flow)
     :global(*)::before,
-  .flow-visual:has(> :global(.board3d[data-ready]))
+  .flow-visual:has(> :global(.board3d:not([hidden])))
     > :global(.flow)
     :global(*)::after {
     animation-play-state: paused !important;
