@@ -1,0 +1,530 @@
+{
+  "title": "The event-driven order path",
+  "summary": "An order on a Kubernetes platform is checked at the edge, recorded once with its event, carried by Kafka through services that reserve the stock and authorise the card, with the payment captured only when the order ships, and traced from checkout to dispatch.",
+  "problem": "Split across services, one order becomes several writes in separate databases, with no transaction around them. A retried call can hold the funds twice, an event can be lost between a commit and the broker, a slow payment provider can tie up every caller, and an order can stall halfway with no single place showing where.",
+  "nodes": [
+    {
+      "id": "client",
+      "label": "Client apps",
+      "detail": "Web and mobile",
+      "col": 0,
+      "row": 0,
+      "kind": "radio"
+    },
+    {
+      "id": "lb",
+      "label": "Cloud load balancer",
+      "detail": "Spreads across zones",
+      "col": 1,
+      "row": 0,
+      "kind": "qfp"
+    },
+    {
+      "id": "ingress",
+      "label": "Ingress gateway",
+      "detail": "Envoy: TLS, JWT, limits",
+      "col": 2,
+      "row": 0,
+      "kind": "rj45"
+    },
+    {
+      "id": "redis",
+      "label": "Redis clusters",
+      "detail": "Limits, idempotency, sessions, caches",
+      "col": 3,
+      "row": 0,
+      "kind": "memory"
+    },
+    {
+      "id": "idp",
+      "label": "Identity provider",
+      "detail": "OIDC, publishes JWKS",
+      "col": 0,
+      "row": 1,
+      "kind": "secure"
+    },
+    {
+      "id": "orderdb",
+      "label": "Orders Postgres",
+      "detail": "Orders and outbox",
+      "col": 1,
+      "row": 1,
+      "kind": "memory"
+    },
+    {
+      "id": "order",
+      "label": "Order service",
+      "detail": "Owns order state",
+      "col": 2,
+      "row": 1,
+      "kind": "cpu"
+    },
+    {
+      "id": "mesh",
+      "label": "Istio control plane",
+      "detail": "mTLS certs, route policy",
+      "col": 3,
+      "row": 1,
+      "kind": "trimmer"
+    },
+    {
+      "id": "invdb",
+      "label": "Inventory Postgres",
+      "detail": "Stock, reservations, outbox",
+      "col": 0,
+      "row": 2,
+      "kind": "memory"
+    },
+    {
+      "id": "cdc",
+      "label": "Debezium connectors",
+      "detail": "Kafka Connect, reads outboxes",
+      "col": 1,
+      "row": 2,
+      "kind": "qfp"
+    },
+    {
+      "id": "paydb",
+      "label": "Payments Postgres",
+      "detail": "Payments and outbox",
+      "col": 2,
+      "row": 2,
+      "kind": "memory"
+    },
+    {
+      "id": "rabbit",
+      "label": "RabbitMQ scheduler",
+      "detail": "Timers and sweeps",
+      "col": 3,
+      "row": 2,
+      "kind": "toggle"
+    },
+    {
+      "id": "inventory",
+      "label": "Inventory service",
+      "detail": "Reserves the stock",
+      "col": 0,
+      "row": 3,
+      "kind": "socket"
+    },
+    {
+      "id": "kafka",
+      "label": "Kafka cluster",
+      "detail": "Topics keyed by order",
+      "col": 1,
+      "row": 3,
+      "kind": "die"
+    },
+    {
+      "id": "payment",
+      "label": "Payment service",
+      "detail": "Authorise, capture, void",
+      "col": 2,
+      "row": 3,
+      "kind": "bga"
+    },
+    {
+      "id": "provider",
+      "label": "Payment provider",
+      "detail": "Holds the funds",
+      "col": 3,
+      "row": 3,
+      "kind": "radio"
+    },
+    {
+      "id": "notify",
+      "label": "Notification service",
+      "detail": "Email, SMS, push",
+      "col": 0,
+      "row": 4,
+      "kind": "qfp"
+    },
+    {
+      "id": "fulfil",
+      "label": "Fulfilment service",
+      "detail": "Picks, packs, ships",
+      "col": 1,
+      "row": 4,
+      "kind": "qfp"
+    },
+    {
+      "id": "otel",
+      "label": "OpenTelemetry collector",
+      "detail": "Spans, logs, metrics",
+      "col": 2,
+      "row": 4,
+      "kind": "qfp"
+    },
+    {
+      "id": "prom",
+      "label": "Prometheus and Grafana",
+      "detail": "Scrapes pods and sidecars",
+      "col": 3,
+      "row": 4,
+      "kind": "gauge"
+    },
+    {
+      "id": "stream",
+      "label": "Stream processing",
+      "detail": "Live order metrics",
+      "col": 0,
+      "row": 5,
+      "kind": "gpu"
+    },
+    {
+      "id": "clickhouse",
+      "label": "ClickHouse analytics",
+      "detail": "Dashboards and reporting",
+      "col": 1,
+      "row": 5,
+      "kind": "memory"
+    },
+    {
+      "id": "tracing",
+      "label": "Tracing backend",
+      "detail": "Traces linked by order",
+      "col": 2,
+      "row": 5,
+      "kind": "memory"
+    },
+    {
+      "id": "alert",
+      "label": "Alertmanager paging",
+      "detail": "SLO burn-rate alerts",
+      "col": 3,
+      "row": 5,
+      "kind": "beacon"
+    }
+  ],
+  "edges": [
+    {
+      "from": "client",
+      "to": "lb",
+      "label": "HTTPS"
+    },
+    {
+      "from": "lb",
+      "to": "ingress",
+      "label": "TCP, every zone"
+    },
+    {
+      "from": "idp",
+      "to": "ingress",
+      "label": "JWKS signing keys"
+    },
+    {
+      "from": "redis",
+      "to": "ingress",
+      "label": "shared rate counters"
+    },
+    {
+      "from": "ingress",
+      "to": "order",
+      "label": "verified call, mTLS"
+    },
+    {
+      "from": "mesh",
+      "to": "order",
+      "label": "certs and routes"
+    },
+    {
+      "from": "rabbit",
+      "to": "order",
+      "label": "order deadline"
+    },
+    {
+      "from": "order",
+      "to": "redis",
+      "label": "idempotency key"
+    },
+    {
+      "from": "order",
+      "to": "orderdb",
+      "label": "order + outbox row"
+    },
+    {
+      "from": "orderdb",
+      "to": "cdc",
+      "label": "outbox via WAL"
+    },
+    {
+      "from": "payment",
+      "to": "paydb",
+      "label": "payment + outbox row"
+    },
+    {
+      "from": "paydb",
+      "to": "cdc",
+      "label": "outbox via WAL"
+    },
+    {
+      "from": "cdc",
+      "to": "kafka",
+      "label": "domain events"
+    },
+    {
+      "from": "kafka",
+      "to": "order",
+      "label": "payment or stock outcome"
+    },
+    {
+      "from": "kafka",
+      "to": "inventory",
+      "label": "order.placed, cancelled"
+    },
+    {
+      "from": "inventory",
+      "to": "invdb",
+      "label": "reservation + outbox row"
+    },
+    {
+      "from": "invdb",
+      "to": "cdc",
+      "label": "outbox via WAL"
+    },
+    {
+      "from": "kafka",
+      "to": "notify",
+      "label": "order events"
+    },
+    {
+      "from": "kafka",
+      "to": "fulfil",
+      "label": "order.confirmed"
+    },
+    {
+      "from": "fulfil",
+      "to": "kafka",
+      "label": "order.shipped, via outbox"
+    },
+    {
+      "from": "kafka",
+      "to": "payment",
+      "label": "placed, reserved, shipped, cancelled"
+    },
+    {
+      "from": "payment",
+      "to": "provider",
+      "label": "authorise, capture, void"
+    },
+    {
+      "from": "payment",
+      "to": "rabbit",
+      "label": "re-drive, expiry timers"
+    },
+    {
+      "from": "rabbit",
+      "to": "payment",
+      "label": "re-drive, expiry check"
+    },
+    {
+      "from": "kafka",
+      "to": "stream",
+      "label": "order events"
+    },
+    {
+      "from": "stream",
+      "to": "kafka",
+      "label": "live order metrics"
+    },
+    {
+      "from": "payment",
+      "to": "otel",
+      "label": "spans, logs"
+    },
+    {
+      "from": "fulfil",
+      "to": "otel",
+      "label": "spans, logs"
+    },
+    {
+      "from": "otel",
+      "to": "kafka",
+      "label": "logs"
+    },
+    {
+      "from": "kafka",
+      "to": "clickhouse",
+      "label": "orders, clickstream, logs, metrics"
+    },
+    {
+      "from": "otel",
+      "to": "tracing",
+      "label": "sampled traces"
+    },
+    {
+      "from": "payment",
+      "to": "prom",
+      "label": "scraped metrics"
+    },
+    {
+      "from": "otel",
+      "to": "prom",
+      "label": "OTLP metrics"
+    },
+    {
+      "from": "prom",
+      "to": "alert",
+      "label": "SLO burn rate"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Enter at the edge",
+      "text": "The client has already passed the card issuer's 3-D Secure check and traded the card for a payment token, so no card number travels with the order. It sends the order over HTTPS with the user's access token and an Idempotency-Key header, one ID per checkout. The cloud load balancer spreads connections across the ingress gateway's Envoy pods in every zone, and TLS ends at the gateway.",
+      "lights": ["client", "lb", "ingress"],
+      "failure": "A lost zone takes its gateway pods with it; health checks steer traffic to the other zones, and every service ships as a Helm release with replicas across zones and a pod disruption budget that stops maintenance draining every replica at once."
+    },
+    {
+      "title": "Check the token and the rate",
+      "text": "The gateway checks the JWT, the user's signed access token, against the keys the identity provider publishes (JWKS), and refuses a bad one with 401. Envoy's rate-limit service counts each caller's requests in Redis, shared by every gateway pod, and answers 429 with Retry-After past the limit. Network policies admit only the gateway and Prometheus to a service's pods, and the gateway passes each call on with the token's verified claims, such as the user ID.",
+      "lights": ["ingress", "idp", "redis"],
+      "failure": "A Redis outage could stop every checkout at the limiter; the rate-limit counters sit on a Redis cluster of their own, and without it the gateway falls back to a limit per pod."
+    },
+    {
+      "title": "Record the order once",
+      "text": "Istio's sidecar proxies, one in each pod, carry the call over mutual TLS with certificates from the Istio control plane. The order service claims the Idempotency-Key in Redis, then writes the PENDING order, its deadline and an order.placed outbox row (the event, saved with the change) in one Postgres transaction. It answers 202 with the order ID and stores that response under the key.",
+      "lights": ["mesh", "order", "redis", "orderdb"],
+      "failure": "A client that resends after a timeout gets the first response stored under its key, and a unique index on the key in the orders table stops a second order even if Redis loses the key."
+    },
+    {
+      "title": "Publish through the outbox",
+      "text": "Debezium, a change data capture connector on Kafka Connect, reads committed outbox rows from the Postgres write-ahead log (WAL), its record of every change, and publishes them to Kafka. Each event is keyed by order ID, so one order's events stay in sequence within a topic, and several brokers confirm each write before it counts. No service writes its domain events to Kafka itself.",
+      "lights": ["orderdb", "cdc", "kafka"],
+      "failure": "Committing and then calling Kafka could save an order that no other service ever hears about; the outbox makes the order and its event one commit."
+    },
+    {
+      "title": "Reserve the stock",
+      "text": "The inventory service consumes order.placed and reserves the items with a conditional update that succeeds only while enough stock remains. The reservation and a stock.reserved outbox row commit together, and Debezium publishes the event. If stock runs short, the inventory service writes stock.rejected instead, and the order service cancels the order before any card is touched.",
+      "lights": ["kafka", "inventory", "invdb"],
+      "failure": "Kafka can deliver an event twice, so the service records each event ID it applies in the same transaction and skips repeats, and an event that keeps failing goes to a dead-letter topic with an alert."
+    },
+    {
+      "title": "Authorise with an idempotency key",
+      "text": "The payment service keeps the amount and payment token from order.placed, and on stock.reserved asks the payment provider to authorise that amount on the token: the funds are held on the card, and nothing is taken yet. The call carries an idempotency key made from the order ID, so a repeated request returns the first authorisation instead of placing a second hold.",
+      "lights": ["payment", "provider"],
+      "failure": "A decline is an answer, not a fault: it is never retried, the payment service publishes payment.declined, the order service cancels the order, and the cancellation releases its stock."
+    },
+    {
+      "title": "Confirm the order",
+      "text": "The authorisation, its expiry and a payment.authorised outbox row commit together in the payments database, and Debezium publishes the event. The order service marks the order CONFIRMED and publishes order.confirmed through its own outbox. This chain of local steps, each with an undo, is a choreographed saga: no orchestrator directs it.",
+      "lights": ["paydb", "cdc", "kafka", "order"],
+      "failure": "Events on different topics arrive in no fixed order, so the order service makes only the moves its state machine allows: a payment.authorised that lands after a cancellation never revives the order, and the payment service voids that authorisation."
+    },
+    {
+      "title": "Tell the customer",
+      "text": "The notification service consumes the order's events (placed, confirmed, shipped, cancelled) and sends email, SMS or push through outside providers. It reads as its own consumer group, keeping its own place in each topic, so a slow email provider delays no other service reading the same events.",
+      "lights": ["kafka", "notify"],
+      "failure": "A redelivered event could send the same message twice, so the service records each event ID it has sent for and skips repeats."
+    },
+    {
+      "title": "Ship, then capture",
+      "text": "The fulfilment service consumes order.confirmed, packs the order and hands it to a carrier, then publishes order.shipped through its outbox. Only then does the payment service capture the held amount, under the capture's own idempotency key: the one moment money moves. Refunds are never automatic; they follow the refund policy through support and back-office tools.",
+      "lights": ["kafka", "fulfil", "payment", "provider"],
+      "failure": "A card hold lapses after a period the card network sets, so a RabbitMQ sweep over uncaptured authorisations re-authorises each confirmed order still waiting to ship, under a new key, before its hold runs out, then voids the old authorisation so the card never carries two holds."
+    },
+    {
+      "title": "Retry with backoff",
+      "text": "When an authorisation times out or the provider answers 503, the payment pod's sidecar retries under the mesh's route policy; the service has no retry loop around the call. With backoff, each retry waits longer than the last, plus random jitter so pods do not retry in step, and reuses the same idempotency key. Calls to the provider leave through Istio's egress gateway, which opens the TLS connection itself, so Envoy sees each status code and knows what to retry.",
+      "lights": ["payment", "provider"],
+      "failure": "Retries add load just as the provider struggles, so attempts are capped inside an overall deadline, and declines and other 4xx answers are never retried."
+    },
+    {
+      "title": "Open the circuit",
+      "text": "If the provider keeps failing, the mesh's outlier detection, applied at the egress gateway, takes the provider's endpoints out of rotation, and calls then fail at once: the circuit is open. The payment service keeps the payment pending and parks a re-drive on RabbitMQ, a delayed message that brings the payment back later. After a set pause, calls pass again and the re-drive repeats the authorisation under the same key.",
+      "lights": ["payment", "provider", "rabbit"],
+      "failure": "Retrying inside the Kafka consumer would hold up every later order on the same partition, the slice of a topic read strictly in sequence; the delayed message frees the partition, and the order's deadline decides when to stop."
+    },
+    {
+      "title": "Cancel at the deadline",
+      "text": "RabbitMQ holds the platform's timers as delayed messages: each order's deadline, published once the order commits; the payment service's re-drives and hold expiries; and reminders. Before the deadline, the order service re-drives a stalled order by publishing order.placed again through its outbox, and a service that already handled the order publishes the outcome it recorded again. When the deadline fires on an order still PENDING, the order service marks it CANCELLED and writes order.cancelled to its outbox.",
+      "lights": ["rabbit", "order", "orderdb"],
+      "failure": "A crash between the order's commit and publishing its deadline would lose the timer, so a recurring RabbitMQ sweep has the order service query Postgres for PENDING orders past their deadline."
+    },
+    {
+      "title": "Release the stock, void the card hold",
+      "text": "Debezium publishes order.cancelled. The inventory service releases the reservation, the payment service voids the authorisation under the void's own idempotency key, and the notification service tells the customer. No money moved, so there is nothing to refund: compensation is a release, a void and a cancellation.",
+      "lights": [
+        "cdc",
+        "kafka",
+        "inventory",
+        "invdb",
+        "payment",
+        "provider",
+        "notify"
+      ],
+      "failure": "A void lost to a crash would leave the funds held, so RabbitMQ's expiry check on each uncaptured authorisation voids any hold whose order was cancelled."
+    },
+    {
+      "title": "Page on the error budget",
+      "text": "Prometheus scrapes every pod and Envoy sidecar for requests, errors and latency, takes the services' own metrics from the OpenTelemetry collector, and tracks how far Kafka consumers and Debezium lag and how many due timers sit unconsumed in RabbitMQ. Service level objectives (SLOs) set targets for checkout success, latency and time to confirm; each leaves an error budget, the share of requests allowed to miss the target, and Alertmanager pages when that budget burns fast. Grafana charts it all.",
+      "lights": ["otel", "prom", "alert"],
+      "failure": "Paging on every cause floods on-call, so pages fire only on a fast budget burn, such as a provider outage, and causes like one slow pod open tickets instead."
+    },
+    {
+      "title": "Follow the order's traces",
+      "text": "OpenTelemetry carries a W3C trace context, an ID shared by every span (one timed piece of work) of a request, from the gateway through the sidecars and services. The outbox row stores it and Debezium copies it into Kafka headers, so checkout is one trace from placed to confirmed. Dispatch and capture start new traces linked back to the checkout's, and every span and log line carries the order ID.",
+      "lights": [
+        "ingress",
+        "order",
+        "orderdb",
+        "cdc",
+        "kafka",
+        "inventory",
+        "payment",
+        "notify",
+        "fulfil",
+        "otel",
+        "tracing"
+      ],
+      "failure": "The collector's tail sampling keeps every slow or failed trace but decides within seconds, so a trace held open from checkout to dispatch would be cut; dispatch and capture link back to it instead."
+    },
+    {
+      "title": "Stream into ClickHouse",
+      "text": "A stream job (Kafka Streams or Flink) reads the order topics and writes live metrics, such as authorisation rate and orders stuck in each state, back to Kafka. Logs and the apps' clickstream travel on their own topics, with producer quotas, Kafka's per-client write limits, capping how much broker capacity a burst can take from order events. ClickHouse ingests orders, clickstream, logs and metrics for dashboards and reporting.",
+      "lights": ["kafka", "stream", "clickhouse"],
+      "failure": "Replays and connector restarts deliver duplicates, so tables keyed by event ID (ClickHouse's ReplacingMergeTree) drop repeats when they merge in the background, and dashboards query with FINAL to count each event once before that merge."
+    }
+  ],
+  "compensations": [
+    {
+      "weakness": "No transaction spans the services' databases, so a failure halfway leaves an order half done.",
+      "compensation": "A **choreographed saga** undoes each step: release the stock, void the authorisation, cancel the order. Money moves only at capture, on dispatch, so a failure before then has nothing to refund."
+    },
+    {
+      "weakness": "An event can be lost between a commit and the broker, or delivered twice.",
+      "compensation": "Each change and its event commit together as an **outbox row** that Debezium publishes, and consumers record the event IDs they apply, so a repeat changes nothing."
+    },
+    {
+      "weakness": "A timeout hides whether a call to the payment provider succeeded.",
+      "compensation": "**Idempotency keys** on checkout and on every authorise, capture and void make a repeated call return the first result, which is what makes the mesh's retries safe; checkout keys sit on a Redis cluster that never evicts."
+    },
+    {
+      "weakness": "Choreography has no clock: nothing notices an order that stops moving.",
+      "compensation": "**RabbitMQ timers** carry each order's deadline, payment re-drives and hold expiries, and a recurring RabbitMQ sweep over Postgres catches any timer that was lost."
+    },
+    {
+      "weakness": "Asynchronous hops, and the days between checkout and dispatch, break a trace apart.",
+      "compensation": "The **trace context** rides in the outbox row and the Kafka headers, and dispatch and capture link back to the checkout's trace by span link and order ID."
+    }
+  ],
+  "tradeoffs": [
+    "Choreography keeps each service independent, but the flow lives in no single place; it is read from the order service's state machine and the traces.",
+    "The outbox and change data capture publish every committed event, but add connectors, replication slots and log retention to run.",
+    "Kafka for events and RabbitMQ for timers each do what they are built for, but two brokers are two systems to run, watch and upgrade."
+  ],
+  "stack": [
+    "Kubernetes",
+    "Helm",
+    "Istio",
+    "Envoy",
+    "Postgres",
+    "Debezium",
+    "Kafka",
+    "RabbitMQ",
+    "Redis",
+    "ClickHouse",
+    "OpenTelemetry",
+    "Prometheus"
+  ]
+}

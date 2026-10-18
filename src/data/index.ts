@@ -18,6 +18,7 @@ import siteJson from "./site.json";
 import statsJson from "./stats.json";
 import techStackJson from "./techStack.json";
 import terminalJson from "./terminal.json";
+import workflowsJson from "./workflows.json";
 import type {
   AboutContent,
   GitHubActivity,
@@ -35,6 +36,7 @@ import type {
   TerminalContent,
   TerminalLine,
   TerminalTone,
+  WorkflowsContent,
 } from "./types";
 
 /** Every TerminalTone; the Record type makes the compiler require each one. */
@@ -94,6 +96,8 @@ export const terminal: TerminalContent = {
   ...terminalJson,
   lines: terminalJson.lines.map(toTerminalLine),
 };
+/** Copy for the workflows section and pages; `src/lib/workflows.ts` loads the workflows themselves. */
+export const workflows: WorkflowsContent = workflowsJson;
 
 /**
  * The number shown before a section's label: its position among the

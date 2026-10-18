@@ -1,0 +1,537 @@
+---
+/*
+ * The step bar under a workflow's diagram. A machined strip holds the
+ * previous-step knob (.bar-prev); the counter: the step number inlaid in
+ * gold over "<of> <count>" (.readout, hidden from assistive technology) and,
+ * under it, the Auto key (.auto-key, aria-pressed), whose lamp is lit gold
+ * while Auto walks the steps; an engraved groove; the step entries in the
+ * .now-step live region, one .now-entry per step: the step's title (after a
+ * visually hidden "<number> <of> <count>:"), the parts it lights, each name
+ * in gold beside its detail, and the labels of the hops it lights in gold
+ * mono after an inlay swatch; and the next-step knob (.bar-next). Under the
+ * strip, the step keys (.bar-key), one per step, in a list named by
+ * `labels.steps`, each showing the step's number and named by it and the
+ * step's title, and each with a card of the step's title, text and failure
+ * mode after `failure` (.key-card, hidden from assistive technology, which
+ * reads the same in the captions) that opens above the keys, over the
+ * board, while the mouse rests on its key.
+ *
+ * It renders hidden on step 1: every .now-entry but the first is hidden and
+ * the first key carries aria-current="step". Every .now-entry shares one
+ * grid cell, a hidden one invisible but still sized, so the strip is as
+ * tall as its tallest entry on every step. src/scripts/flow.ts shows it,
+ * keeps the readout, entries and keys on the current step (the current key
+ * lit gold, earlier keys' numbers gold through .passed) and runs the knobs,
+ * keys and Auto key; under reduced motion the bar stays hidden. The strip
+ * is brushed gunmetal on the dark theme and satin aluminium on the light one.
+ */
+import type { Workflow, WorkflowPageLabels } from "../../data/types";
+import { stepHops } from "../../scripts/flow";
+import Emphasis from "../UI/Emphasis.astro";
+import Knob from "../UI/Knob.astro";
+
+interface Props {
+  workflow: Workflow;
+  /** The words between step number and count, the knobs' names, the Auto key's label and the step keys' list name. */
+  labels: WorkflowPageLabels["bar"];
+  /** The label before a step's failure mode, e.g. "What can go wrong:". */
+  failure: string;
+}
+
+const { workflow, labels, failure } = Astro.props;
+const { steps, nodes, edges } = workflow;
+const hops = stepHops(steps, edges);
+const pad = (value: number) => String(value).padStart(2, "0");
+const nodeOf = (id: string) => nodes.find((node) => node.id === id)!;
+---
+
+<div class="step-bar" hidden>
+  <div class="bar-strip">
+    <Knob compact icon="arrow-left" label={labels.previous} class="bar-prev" />
+    <div class="counter">
+      <p class="readout" aria-hidden="true">
+        <b class="inlaid">01</b>
+        <small class="inlaid-steel">
+          {labels.of} {pad(steps.length)}
+        </small>
+      </p>
+      <button type="button" class="auto-key" aria-pressed="false">
+        <i aria-hidden="true"></i>
+        {labels.auto}
+      </button>
+    </div>
+    <span class="groove" aria-hidden="true"></span>
+    <div class="now-step" aria-live="polite">
+      {steps.map((step, index) => (
+        <div class="now-entry" hidden={index > 0}>
+          <b class="now-title">
+            <span class="sr-only">
+              {index + 1} {labels.of} {steps.length}:{" "}
+            </span>
+            {step.title}
+          </b>
+          <ul class="now-parts">
+            {step.lights.map((id) => (
+              <li>
+                <b>{nodeOf(id).label}</b> <span>{nodeOf(id).detail}</span>
+              </li>
+            ))}
+          </ul>
+          {hops[index]!.length > 0 && (
+            <p class="now-hops">
+              <i aria-hidden="true"></i>
+              <span>
+                {hops[index]!.map((edge) => edges[edge]!.label).join(" → ")}
+              </span>
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+    <Knob compact icon="arrow-right" label={labels.next} class="bar-next" />
+  </div>
+  <ol class="bar-keys" aria-label={labels.steps}>
+    {steps.map((step, index) => (
+      <li>
+        <button
+          type="button"
+          class="bar-key"
+          aria-current={index === 0 ? "step" : undefined}
+        >
+          {pad(index + 1)}
+          <span class="sr-only"> {step.title}</span>
+        </button>
+        <div class="key-card" aria-hidden="true">
+          <b class="key-title">{step.title}</b>
+          <p class="key-text">
+            <Emphasis text={step.text} />
+          </p>
+          {step.failure && (
+            <p class="key-failure">
+              <span>{failure}</span> <Emphasis text={step.failure} />
+            </p>
+          )}
+        </div>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  /*
+   * The strip's metal per theme: its face (--strip-face), lit and shaded
+   * lips and rim (--strip-rim), the colour of its drop shadow (--strip-drop)
+   * and the engraved groove (--groove): brushed gunmetal on the dark theme,
+   * satin aluminium on the light one.
+   */
+  .step-bar {
+    --strip-face: linear-gradient(180deg, #2b3138, #1b1f24);
+    --strip-rim:
+      inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -1px 0 rgb(0 0 0 / 0.6),
+      0 0 0 1px rgb(214 222 232 / 0.07);
+    --strip-drop: rgb(0 0 0 / 0.85);
+    --groove: linear-gradient(
+      90deg,
+      #010203 0 2px,
+      rgb(255 255 255 / 0.12) 2px
+    );
+
+    display: grid;
+    gap: 14px;
+  }
+
+  :global([data-theme="light"]) .step-bar {
+    --strip-face: linear-gradient(180deg, #f6f7f9, #d9dde2);
+    --strip-rim:
+      inset 0 1px 0 rgb(255 255 255 / 0.95),
+      inset 0 -1px 0 rgb(22 30 42 / 0.16), 0 0 0 1px rgb(22 30 42 / 0.12);
+    --strip-drop: rgb(22 30 42 / 0.4);
+    --groove: linear-gradient(
+      90deg,
+      rgb(22 30 42 / 0.28) 0 2px,
+      rgb(255 255 255 / 0.95) 2px
+    );
+  }
+
+  .step-bar[hidden] {
+    display: none;
+  }
+
+  /* The strip: knob, counter, groove, the current step's entry, knob. */
+  .bar-strip {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 11px 16px;
+    border-radius: 14px;
+    background-image: var(--brush-noise-soft), var(--strip-face);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      var(--strip-rim),
+      calc(var(--lean) * var(--slant) * 6px) 6px 16px -8px var(--strip-drop);
+  }
+
+  /* The counter: the readout over the Auto key. */
+  .counter {
+    display: grid;
+    flex: none;
+    justify-items: center;
+    gap: 8px;
+  }
+
+  .readout {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    min-width: 4ch;
+    margin: 0;
+    font-family: var(--font-mono);
+    line-height: 1;
+  }
+
+  .readout b {
+    font-size: 26px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .readout small {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * The Auto key and the step keys: small machined keys on a 2px wall in the
+   * tag metal, their labels in --label mono.
+   */
+  .auto-key,
+  .bar-key {
+    border: 0;
+    background-image: var(--brush-noise-soft), var(--tag-face);
+    background-size:
+      320px 140px,
+      100% 100%;
+    background-blend-mode: overlay, normal;
+    box-shadow:
+      inset 0 1px 0 var(--tag-lip),
+      0 0 0 1px var(--tag-outline),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--tag-wall-1),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--tag-wall-2),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 1px var(--tag-outline);
+    color: var(--label);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color 0.25s var(--ease-soft),
+      transform 0.2s var(--ease-soft);
+  }
+
+  .auto-key:hover,
+  .bar-key:hover {
+    color: var(--text);
+  }
+
+  .auto-key:active,
+  .bar-key:active {
+    transform: translateY(1px);
+  }
+
+  .auto-key:focus-visible,
+  .bar-key:focus-visible {
+    outline: 2px solid var(--gold-text);
+    outline-offset: 3px;
+  }
+
+  .auto-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* The Auto key's lamp: a dark lens, lit gold (--lamp-lens) while Auto runs. */
+  .auto-key i {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #3a3f46, #14171b 70%);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.55),
+      inset 0 1px 2px rgb(0 0 0 / 0.8);
+    transition:
+      background 0.25s var(--ease-soft),
+      box-shadow 0.25s var(--ease-soft);
+  }
+
+  .auto-key[aria-pressed="true"] i {
+    background: var(--lamp-lens);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.55),
+      0 0 7px 1px rgb(var(--lamp-glow) / 0.75);
+  }
+
+  /* An engraved groove between the counter and the step's entry. */
+  .groove {
+    flex: none;
+    align-self: stretch;
+    width: 3px;
+    margin: 6px 0;
+    background: var(--groove);
+  }
+
+  /*
+   * The entries, stacked in one cell, each centred in it. A hidden entry
+   * keeps its box under visibility: hidden, which also keeps it out of the
+   * accessibility tree.
+   */
+  .now-step {
+    display: grid;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .now-entry {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .now-entry[hidden] {
+    display: block;
+    visibility: hidden;
+  }
+
+  .now-title {
+    display: block;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  /*
+   * The parts the step lights: each its name in gold and its detail after a
+   * gold jewel, wrapping onto the next line when they do not fit on one.
+   */
+  .now-parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 16px;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+
+  .now-parts li {
+    min-width: 0;
+  }
+
+  .now-parts li::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 7px;
+    border-radius: 50%;
+    background: var(--lamp-lens);
+    box-shadow:
+      0 0 0 1px #010203,
+      0 0 6px rgb(var(--lamp-glow) / 0.7);
+    vertical-align: 1px;
+  }
+
+  .now-parts b {
+    color: var(--gold-text);
+    font-weight: 600;
+  }
+
+  .now-parts span {
+    margin-left: 3px;
+    color: var(--body);
+    font-weight: 500;
+  }
+
+  /* The hops the step lights, in gold mono after a short molten inlay swatch. */
+  .now-hops {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 6px 0 0;
+    color: var(--gold-text);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+
+  .now-hops i {
+    flex: none;
+    width: 22px;
+    height: 5px;
+    border-radius: 1px;
+    background: linear-gradient(
+      180deg,
+      #8f6718,
+      #f2c94c 45%,
+      #fff6d8 80%,
+      #f2c94c
+    );
+    box-shadow:
+      0 0 0 1px #010203,
+      calc(var(--lean) * var(--slant) * 1.6px) 1.6px 0 rgb(255 255 255 / 0.16),
+      0 0 8px rgb(242 201 76 / 0.6);
+    transform: translateY(-2px);
+  }
+
+  .now-hops span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /*
+   * The step keys: one per step, centred and wrapping; earlier steps' numbers
+   * gold (.passed), the current key brushed in the accent metal (gold on the
+   * dark theme, bronze on the light one) and glowing.
+   */
+  .bar-keys {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /*
+   * A step key's card: the step's title, text and failure mode on a panel
+   * centred above the keys, over the board, shown only while a mouse rests
+   * on the key and never in the pointer's way.
+   */
+  .key-card {
+    position: absolute;
+    z-index: 30;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    width: min(100%, 36rem);
+    padding: 16px 20px 18px;
+    border-radius: 14px;
+    background: var(--panel-face);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      0 22px 44px -16px rgb(0 0 0 / 0.6);
+    opacity: 0;
+    pointer-events: none;
+    translate: -50% 4px;
+    transition:
+      opacity 0.18s var(--ease-soft),
+      translate 0.18s var(--ease-soft);
+  }
+
+  @media (hover: hover) {
+    .bar-keys li:hover .key-card {
+      opacity: 1;
+      translate: -50% 0;
+    }
+  }
+
+  .key-title {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .key-text {
+    margin: 0;
+    color: var(--body);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  .key-failure {
+    margin: 10px 0 0;
+    color: var(--body);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .key-failure > span {
+    margin-right: 4px;
+    color: var(--ember);
+    font-weight: 600;
+  }
+
+  .bar-key {
+    min-width: 38px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar-key.passed {
+    color: var(--gold-text);
+  }
+
+  .bar-key[aria-current="step"] {
+    background-image: var(--brush-noise-soft), var(--button-metal);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.6),
+      0 0 0 1px rgb(0 0 0 / 0.6),
+      calc(var(--lean) * var(--slant) * 1px) 1px 0 0 var(--button-wall-1),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 0 var(--button-wall-4),
+      calc(var(--lean) * var(--slant) * 2px) 2px 0 1px rgb(0 0 0 / 0.6),
+      0 0 12px rgb(var(--lamp-glow) / 0.4);
+    color: #1a1102;
+  }
+
+  @media (width <= 37.5rem) {
+    .bar-strip {
+      gap: 10px;
+      padding: 10px 12px;
+    }
+
+    .readout b {
+      font-size: 21px;
+    }
+
+    .now-title {
+      font-size: 13.5px;
+    }
+
+    .now-parts {
+      gap: 4px 12px;
+      font-size: 12px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auto-key,
+    .bar-key,
+    .auto-key i,
+    .key-card {
+      transition: none;
+    }
+  }
+</style>

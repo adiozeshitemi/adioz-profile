@@ -111,6 +111,9 @@ describe("ActivityPanel", () => {
     expect(
       panel!.querySelector(".activity-head time")?.getAttribute("datetime"),
     ).toBe(activity.fetchedAt);
+    expect(
+      text(panel!.querySelector(".activity-head time")!.parentElement),
+    ).toBe(`${labels.read} ${formatDay(activity.fetchedAt)}`);
   });
 
   it("reads out the total and both streaks as text behind their drums", async () => {

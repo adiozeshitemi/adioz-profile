@@ -1,6 +1,6 @@
 ## Development
 
-Requires Node.js 22.12 or newer; `.nvmrc` pins Node.js 24. The `package.json` scripts:
+Requires Node.js 22.22 or newer; `.nvmrc` pins Node.js 24. The `package.json` scripts:
 
 - `npm run dev`: starts the Astro dev server, at `http://localhost:4321` by default. It runs in the foreground until stopped.
 - `npm run build`: runs `astro check` (strict TypeScript), then `astro build`, writing the static site to `dist/`.

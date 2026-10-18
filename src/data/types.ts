@@ -2,7 +2,7 @@
  * Content types for the portfolio's data layer. Every type holds only
  * JSON-compatible values: strings, numbers, booleans, null, arrays and plain
  * objects. Every link is a LinkItem, so link labels, URLs and icon names live
- * in the data.
+ * in the data; NavLink carries a URL without an icon.
  */
 
 /** A labelled link with an icon. */
@@ -38,8 +38,10 @@ export interface Profile {
   headline: string;
   /** Hero summary paragraph; text inside `**` pairs renders as strong emphasis. */
   summary: string;
-  /** Availability badge text, e.g. "Available for Senior/Staff Engineering Roles". */
+  /** Availability badge text, e.g. "Open to Principal, Staff & leadership roles". */
   availability: string;
+  /** Where the owner works from, shown in the availability badge, e.g. "Nairobi, Kenya (Remote)". */
+  location: string;
   /** Hero call-to-action buttons in display order. */
   actions: LinkItem[];
   /** The résumé in public/, downloaded from the knob after the hero's call-to-action buttons. */
@@ -255,19 +257,23 @@ export interface ExperienceItem {
   company: string;
   /** Work location, e.g. "Nairobi / Remote"; omitted when not stated. */
   location?: string;
-  period: YearRange;
+  period: RolePeriod;
   /** Description bullet points; text inside `**` pairs renders as strong emphasis. */
   highlights: string[];
   /** Technologies used in the role. */
   technologies: string[];
 }
 
-/** An inclusive span of calendar years. */
-export interface YearRange {
+/** An inclusive span of a role's years, each optionally narrowed to a month. */
+export interface RolePeriod {
   /** First year, e.g. 2021. */
   start: number;
+  /** Month of `start`, 1 to 12; omitted when only the year is given. */
+  startMonth?: number;
   /** Last year, or null while the role is ongoing. */
   end: number | null;
+  /** Month of `end`, 1 to 12; omitted when only the year is given or the role is ongoing. */
+  endMonth?: number;
 }
 
 /** Content of the featured projects section. */
@@ -290,6 +296,8 @@ export interface ProjectItem {
   tags: string[];
   /** Source repository and public site links in display order, e.g. a "Source" link with the "github" icon. */
   links: LinkItem[];
+  /** The project's system workflow page, shown as a port after `links`; omitted until the page exists. */
+  caseStudy?: LinkItem;
   /** Whether the project is listed under Featured Projects. */
   featured: boolean;
   /** One-line outcome shown under the tags beside a lamp; text inside `**` pairs renders as strong emphasis. */
@@ -320,6 +328,159 @@ export interface FooterContent {
   copyright: string;
   /** The back-to-top knob: its accessible name, its target and its icon. */
   top: LinkItem;
+}
+
+/** Copy for the home page's workflows section and for every workflow page. */
+export interface WorkflowsContent {
+  /** Section id, the target of its navigation.json link, e.g. "workflows". */
+  id: string;
+  /** Section name after its number, e.g. "Workflows". */
+  label: string;
+  /** Section headline, a sentence ending in a full stop. */
+  headline: string;
+  /** The paragraph under the headline. */
+  intro: string;
+  /** Heading over the workflows by other engineers, e.g. "From peers". */
+  peers: string;
+  /** Words before a peer workflow's author, e.g. "Contributed by". */
+  contributedBy: string;
+  /** Label of each card's link to its workflow page, e.g. "Step through it". */
+  open: string;
+  /** Words after a workflow's node count and step count on its card, e.g. "parts" and "steps". */
+  counts: { nodes: string; steps: string };
+  /** Headings and labels of a workflow page. */
+  page: WorkflowPageLabels;
+}
+
+/** Headings and labels shared by every workflow page. */
+export interface WorkflowPageLabels {
+  /** Text after the workflow's title in the page title, e.g. "Adioz D Eshitemi". */
+  titleSuffix: string;
+  /** Heading over `Workflow.problem`, e.g. "The problem". */
+  problem: string;
+  /** Heading over the ordered steps, e.g. "Step by step". */
+  steps: string;
+  /** Words before a step's failure mode, e.g. "What can go wrong:". */
+  failure: string;
+  /** Heading over `Workflow.compensations`, and the words before each weak point and its compensation. */
+  compensations: { title: string; weakness: string; compensation: string };
+  /** Heading over `Workflow.tradeoffs`, e.g. "Trade-offs". */
+  tradeoffs: string;
+  /** Heading over `Workflow.stack`, e.g. "Stack". */
+  stack: string;
+  /** The link back to the home page's workflows section; its url is that section's `#id`. */
+  back: LinkItem;
+  /**
+   * The step bar: the words between the step number and the count (e.g.
+   * "of"), the step knobs' names, the Auto key's label, and the step keys'
+   * list name (e.g. "Steps").
+   */
+  bar: {
+    of: string;
+    previous: string;
+    next: string;
+    auto: string;
+    steps: string;
+  };
+  /** The diagram's (figure.flow) accessible name, e.g. "Diagram of the workflow's parts and the hops between them". */
+  diagram: string;
+}
+
+/** The kinds of component a workflow part is built as on the 3D board. */
+export type WorkflowPartKind =
+  | "qfp"
+  | "bga"
+  | "socket"
+  | "memory"
+  | "gpu"
+  | "trimmer"
+  | "die"
+  | "rj45"
+  | "radio"
+  | "secure"
+  | "toggle"
+  | "cpu"
+  | "gauge"
+  | "beacon";
+
+/** A part of a workflow, drawn as a box in the cell at `col` and `row` of the diagram's grid. */
+export interface WorkflowNode {
+  /** Unique within the workflow; edges and steps name the node by it, e.g. "features". */
+  id: string;
+  /** The box's name, e.g. "Feature engineering". */
+  label: string;
+  /** The line under the label, e.g. "Shared definitions". */
+  detail: string;
+  /** Grid column, from 0 at the left; at most 3. */
+  col: number;
+  /** Grid row, from 0 at the top. */
+  row: number;
+  /** The component the 3D board builds for the part, e.g. "gpu"; "qfp" (a chip) when omitted. */
+  kind?: WorkflowPartKind;
+}
+
+/** A hop between two nodes, drawn as an arrow from `from` to `to`. */
+export interface WorkflowEdge {
+  /** The id of the node the hop leaves. */
+  from: string;
+  /** The id of the node the hop reaches. */
+  to: string;
+  /** What travels along the hop, e.g. "training data". */
+  label: string;
+}
+
+/** One step of a workflow: its caption and the nodes it lights. */
+export interface WorkflowStep {
+  title: string;
+  /** What happens at this step; text inside `**` pairs renders as strong emphasis. */
+  text: string;
+  /** Ids of the nodes the step lights, e.g. ["teachers", "cache"]. */
+  lights: string[];
+  /** What can go wrong at this step; omitted when the step names none. */
+  failure?: string;
+}
+
+/** A weak point of a workflow's design and what makes up for it. */
+export interface WorkflowCompensation {
+  /** Where the design falls short, e.g. "INT8 weights round away detail a full-precision model keeps." */
+  weakness: string;
+  /** What the workflow does about it; text inside `**` pairs renders as strong emphasis. */
+  compensation: string;
+}
+
+/** The engineer behind a workflow in src/data/workflows/peers/. */
+export interface WorkflowAuthor {
+  name: string;
+  /** Their links in display order, each an https: URL, e.g. a "Portfolio" link with the "globe" icon. */
+  links: LinkItem[];
+}
+
+/** One workflow file in src/data/workflows/ or src/data/workflows/peers/. */
+export interface WorkflowContent {
+  title: string;
+  /** One or two sentences: the page's description and link preview text. */
+  summary: string;
+  /** Set on a workflow in peers/, and only there. */
+  author?: WorkflowAuthor;
+  /** What goes wrong without the workflow. */
+  problem: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  /** The steps in reading order; every node is lit by at least one. */
+  steps: WorkflowStep[];
+  /** The design's weak points, each with its compensation; omitted when the workflow names none. */
+  compensations?: WorkflowCompensation[];
+  tradeoffs: string[];
+  /** Public technologies the workflow uses, shown as tags. */
+  stack: string[];
+}
+
+/** A loaded workflow: its content, the slug from its file name, and its page path. */
+export interface Workflow extends WorkflowContent {
+  /** The file name without .json, e.g. "mlops-loop". */
+  slug: string;
+  /** The page path, ending in a slash, e.g. "/workflows/mlops-loop/" or "/workflows/peers/ruchitasingla-mlops-loop/". */
+  path: string;
 }
 
 /** The parts of the hero's agent pipeline, in the order a request reaches them. */

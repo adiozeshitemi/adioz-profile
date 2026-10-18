@@ -1,7 +1,7 @@
 /*
  * Renders the GitHub profile README (the README.md of
  * adiozeshitemi/adiozeshitemi) from the site's data: the hero's headline,
- * role and summary, the tool categories, the featured projects, the activity
+ * role, summary, availability and location, the tool categories, the featured projects, the activity
  * cards served from the site, and the contact links. Text inside `**` pairs
  * stays Markdown strong emphasis.
  */
@@ -70,7 +70,7 @@ export function renderProfileReadme(data: ProfileReadmeData): string {
     "",
     profile.summary,
     "",
-    `🟢 ${profile.availability}`,
+    `🟢 ${profile.availability} · 📍 ${profile.location}`,
     "",
     `## 🛠️ ${techStack.label}`,
     "",

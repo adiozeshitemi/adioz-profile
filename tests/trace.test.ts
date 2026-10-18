@@ -39,6 +39,32 @@ describe("trace scale", () => {
     expect(spans[2]).toEqual({ from: 0, to: 7 / 9, live: false });
   });
 
+  it("spans a role with months from the start of its first month to the end of its last", () => {
+    const { spans } = traceLayout(
+      [
+        { start: 2026, startMonth: 4, end: null },
+        { start: 2025, end: 2026, endMonth: 4 },
+        { start: 2018, end: 2024 },
+      ],
+      2026.5,
+    );
+    expect(spans[0]!.from).toBeCloseTo((8 + 3 / 12) / 9);
+    expect(spans[1]!.from).toBeCloseTo(7 / 9);
+    expect(spans[1]!.to).toBeCloseTo((8 + 4 / 12) / 9);
+  });
+
+  it("orders roles in the same year by their start month", () => {
+    expect(
+      traceOrder(
+        [
+          { start: 2026, startMonth: 4, end: null },
+          { start: 2026, startMonth: 1, end: 2026, endMonth: 3 },
+        ],
+        2026.5,
+      ),
+    ).toEqual([1, 0]);
+  });
+
   it("orders the roles earliest start first, then earliest end", () => {
     expect(traceOrder(periods, 2026.5)).toEqual([2, 1, 0]);
     expect(

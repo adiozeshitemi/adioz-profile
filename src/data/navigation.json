@@ -5,10 +5,29 @@
     "close": "Close sections menu"
   },
   "links": [
-    { "title": "About", "url": "#about" },
-    { "title": "Stack", "url": "#stack" },
-    { "title": "Experience", "url": "#experience" },
-    { "title": "Projects", "url": "#projects" }
+    {
+      "title": "About",
+      "url": "#about"
+    },
+    {
+      "title": "Stack",
+      "url": "#stack"
+    },
+    {
+      "title": "Experience",
+      "url": "#experience"
+    },
+    {
+      "title": "Projects",
+      "url": "#projects"
+    },
+    {
+      "title": "Workflows",
+      "url": "#workflows"
+    }
   ],
-  "cta": { "title": "Get in touch", "url": "#contact" }
+  "cta": {
+    "title": "Get in touch",
+    "url": "#contact"
+  }
 }

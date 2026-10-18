@@ -1,0 +1,98 @@
+---
+/*
+ * The home page's workflows section from workflows.json: the gold headline
+ * and intro over a WorkflowCard per workflow in src/data/workflows/, then,
+ * under their own heading, one per workflow in src/data/workflows/peers/;
+ * two cards to a row from 860px.
+ */
+import { workflows } from "../../data/index";
+import { ownWorkflows, peerWorkflows } from "../../lib/workflows";
+import SectionTitle from "../UI/SectionTitle.astro";
+import WorkflowCard from "./WorkflowCard.astro";
+
+const titleId = `${workflows.id}-title`;
+---
+
+<section id={workflows.id} class="flows" aria-labelledby={titleId}>
+  <div class="inner">
+    <SectionTitle
+      section={workflows.id}
+      label={workflows.label}
+      title={workflows.headline}
+      id={titleId}
+    >
+      <p>{workflows.intro}</p>
+    </SectionTitle>
+    <div class="cards">
+      {ownWorkflows.map((workflow) => (
+        <WorkflowCard workflow={workflow} />
+      ))}
+    </div>
+    {peerWorkflows.length > 0 && (
+      <>
+        <h3 class="peers">{workflows.peers}</h3>
+        <div class="cards">
+          {peerWorkflows.map((workflow) => (
+            <WorkflowCard workflow={workflow} />
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+</section>
+
+<style>
+  .flows {
+    padding-block: clamp(84px, 10vw, 140px);
+  }
+
+  .inner {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 28px;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  /* The peers' heading: gold spaced capitals led by a short gold rule. */
+  .peers {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 56px 0 0;
+    color: var(--gold-text);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .peers::before {
+    content: "";
+    width: 22px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .peers + .cards {
+    margin-top: 20px;
+  }
+
+  @media (width <= 53.75rem) {
+    .cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width <= 40rem) {
+    .inner {
+      padding-inline: 16px;
+    }
+  }
+</style>

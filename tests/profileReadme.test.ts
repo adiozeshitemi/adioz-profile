@@ -17,6 +17,7 @@ const FIXTURE: ProfileReadmeData = {
     headline: "ships queues.",
     summary: "Builds **durable queues** for payments.",
     availability: "Open to staff roles",
+    location: "Lisbon (Remote)",
     actions: [],
     resume: {
       ...link("Résumé", "/resume.pdf", "download"),
@@ -95,11 +96,11 @@ describe("renderProfileReadme", () => {
     expect(readme.endsWith("\n\n")).toBe(false);
   });
 
-  it("opens with the hero's headline, role, summary and availability", () => {
+  it("opens with the hero's headline, role, summary, availability and location", () => {
     expect(lines).toContain("# Octo ships queues.");
     expect(lines).toContain("**Platform engineer · Queues & Caches**");
     expect(lines).toContain("Builds **durable queues** for payments.");
-    expect(lines).toContain("🟢 Open to staff roles");
+    expect(lines).toContain("🟢 Open to staff roles · 📍 Lisbon (Remote)");
   });
 
   it("lists each tool category with its tools", () => {

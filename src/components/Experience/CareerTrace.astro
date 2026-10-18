@@ -5,11 +5,12 @@
  * engraved title, the span count and the red live lamp. Under a year axis
  * sits one tab per role, earliest first, its company and title beside a
  * track holding its span; under them, one tab panel per role with its
- * years, title, company, highlights and technologies, the ongoing role's
+ * dates, title, company, highlights and technologies, the ongoing role's
  * selected. The scale is laid out at build time; src/scripts/trace.ts runs
  * the tabs and draws the spans in.
  */
 import { experience } from "../../data/index";
+import { periodLabel } from "../../lib/period";
 import { traceLayout, traceOrder, yearOf } from "../../scripts/trace";
 import Emphasis from "../UI/Emphasis.astro";
 import Lamp from "../UI/Lamp.astro";
@@ -27,10 +28,7 @@ const order = traceOrder(
 );
 const liveIndex = order.findIndex((index) => roles[index]!.period.end === null);
 const selected = Math.max(0, liveIndex);
-const when = (index: number) => {
-  const { start, end } = roles[index]!.period;
-  return `${start} — ${end ?? ongoing}`;
-};
+const when = (index: number) => periodLabel(roles[index]!.period, ongoing);
 /** Milliseconds between one span drawing in and the next. */
 const STAGGER = 160;
 ---
@@ -438,7 +436,7 @@ const STAGGER = 160;
     }
   }
 
-  /* A tab panel: the role's years, title and company beside its highlights and technologies. */
+  /* A tab panel: the role's dates, title and company beside its highlights and technologies. */
   .trace-detail {
     display: grid;
     grid-template-columns: var(--label) minmax(0, 1fr);

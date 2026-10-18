@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.22.0"
   },
   "scripts": {
     "dev": "astro dev",
@@ -19,27 +19,19 @@
     "activity:snapshot": "node --env-file-if-exists=.env scripts/activity-snapshot.ts && prettier --write src/data/activity.json"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.4",
+    "@astrojs/check": "^0.9.10",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^5.1.0",
+    "astro": "^7.4.0",
     "tailwindcss": "^4.3.3",
     "three": "^0.186.1",
     "typescript": "^5.7.2"
-  },
-  "overrides": {
-    "braces": "^3.0.3",
-    "chokidar": "^3.6.0",
-    "devalue": "^5.1.1",
-    "esbuild": "^0.25.0",
-    "http-cache-semantics": "^4.1.1",
-    "sharp": "^0.33.5",
-    "vite": "^6.1.0"
   },
   "devDependencies": {
     "@types/three": "^0.186.0",
     "happy-dom": "^20.14.5",
     "prettier": "^3.9.9",
     "prettier-plugin-astro": "^1.1.0",
-    "vitest": "^5.0.3"
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
   }
 }

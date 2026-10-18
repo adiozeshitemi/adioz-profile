@@ -5,27 +5,37 @@ import BrandLogo from "./BrandLogo.astro";
 import MobileMenu from "./MobileMenu.astro";
 import NavLinks from "./NavLinks.astro";
 import ThemeToggle from "./ThemeToggle.astro";
+
+interface Props {
+  /** Whether the header is on the home page; elsewhere every section link points to the home page ("/#about"). */
+  home?: boolean;
+  /** Off the home page, the navigation.json url (e.g. "#workflows") of the section the page belongs to, marked aria-current. */
+  current?: string;
+}
+
+const { home = true, current } = Astro.props;
+const base = home ? "" : "/";
 ---
 
 <header class="site-header">
   <div class="inner">
-    <BrandLogo />
+    <BrandLogo home={home} />
     <nav class="links" aria-label={navigation.label}>
-      <NavLinks />
+      <NavLinks base={base} current={current} />
     </nav>
     <div class="controls">
       <ThemeToggle />
       <Button
         variant="accent"
         compact
-        href={navigation.cta.url}
+        href={`${base}${navigation.cta.url}`}
         icon="arrow-right"
         rest={90}
         class="contact"
       >
         {navigation.cta.title}
       </Button>
-      <MobileMenu />
+      <MobileMenu base={base} current={current} />
     </div>
   </div>
   <div class="edge" aria-hidden="true">
