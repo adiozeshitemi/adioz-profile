@@ -1,0 +1,284 @@
+{
+  "title": "From commit to production",
+  "summary": "A change travels from a pull request through code review into dev, where quality gates, security scans, performance and smoke tests run before a deployment change request promotes it into main as a signed artifact, through staging acceptance and business sign-off to every user.",
+  "problem": "Without a pipeline, a commit reaches production on someone's word: review is skipped, quality drifts, a vulnerable dependency ships, a slow or broken release is found by users, infrastructure changes by hand, and a bad release has no way back except another hurried commit.",
+  "nodes": [
+    {
+      "id": "pr",
+      "label": "Pull request",
+      "detail": "Proposed change",
+      "col": 0,
+      "row": 0,
+      "kind": "socket"
+    },
+    {
+      "id": "review",
+      "label": "Code review",
+      "detail": "Business, security, format",
+      "col": 1,
+      "row": 0,
+      "kind": "qfp"
+    },
+    {
+      "id": "dev",
+      "label": "Dev branch",
+      "detail": "Rework and integrate",
+      "col": 2,
+      "row": 0,
+      "kind": "bga"
+    },
+    {
+      "id": "sonar",
+      "label": "SonarQube gate",
+      "detail": "Quality gate",
+      "col": 3,
+      "row": 0,
+      "kind": "gauge"
+    },
+    {
+      "id": "devenv",
+      "label": "Dev environment",
+      "detail": "Deployed dev",
+      "col": 0,
+      "row": 1,
+      "kind": "cpu"
+    },
+    {
+      "id": "security",
+      "label": "Security scans",
+      "detail": "CVE and analysis",
+      "col": 1,
+      "row": 1,
+      "kind": "secure"
+    },
+    {
+      "id": "risk",
+      "label": "Risk management",
+      "detail": "Exception decision",
+      "col": 2,
+      "row": 1,
+      "kind": "trimmer"
+    },
+    {
+      "id": "perf",
+      "label": "Performance tests",
+      "detail": "Latency budgets",
+      "col": 3,
+      "row": 1,
+      "kind": "gpu"
+    },
+    {
+      "id": "smoke",
+      "label": "Smoke tests",
+      "detail": "Sprint and edge cases",
+      "col": 0,
+      "row": 2,
+      "kind": "die"
+    },
+    {
+      "id": "change",
+      "label": "Change request",
+      "detail": "Deployment gates",
+      "col": 1,
+      "row": 2,
+      "kind": "rj45"
+    },
+    {
+      "id": "main",
+      "label": "Main branch",
+      "detail": "Release branch",
+      "col": 2,
+      "row": 2,
+      "kind": "qfp"
+    },
+    {
+      "id": "artifact",
+      "label": "Signed artifact",
+      "detail": "Pinned digest",
+      "col": 3,
+      "row": 2,
+      "kind": "secure"
+    },
+    {
+      "id": "staging",
+      "label": "Staging UAT",
+      "detail": "User acceptance",
+      "col": 0,
+      "row": 3,
+      "kind": "memory"
+    },
+    {
+      "id": "cvm",
+      "label": "CVM and features",
+      "detail": "Business sign-off",
+      "col": 1,
+      "row": 3,
+      "kind": "toggle"
+    },
+    {
+      "id": "release",
+      "label": "Production rollout",
+      "detail": "Promoted to all users",
+      "col": 2,
+      "row": 3,
+      "kind": "bga"
+    },
+    {
+      "id": "observe",
+      "label": "Observe and rollback",
+      "detail": "Auto rollback",
+      "col": 3,
+      "row": 3,
+      "kind": "beacon"
+    },
+    {
+      "id": "sprint",
+      "label": "Sprint UAT",
+      "detail": "This sprint's stories",
+      "col": 0,
+      "row": 4,
+      "kind": "memory"
+    },
+    {
+      "id": "regress",
+      "label": "Regression checks",
+      "detail": "Nothing else broke",
+      "col": 1,
+      "row": 4,
+      "kind": "qfp"
+    }
+  ],
+  "edges": [
+    { "from": "pr", "to": "review", "label": "ready for review" },
+    { "from": "review", "to": "dev", "label": "approved" },
+    { "from": "review", "to": "pr", "label": "rework" },
+    { "from": "dev", "to": "sonar", "label": "merged" },
+    { "from": "sonar", "to": "devenv", "label": "gate passed" },
+    { "from": "sonar", "to": "dev", "label": "gate failed" },
+    { "from": "devenv", "to": "security", "label": "running dev" },
+    { "from": "security", "to": "perf", "label": "clean report" },
+    { "from": "security", "to": "risk", "label": "security report" },
+    { "from": "risk", "to": "dev", "label": "sent to dev" },
+    { "from": "perf", "to": "smoke", "label": "within budget" },
+    { "from": "perf", "to": "dev", "label": "perf failed" },
+    { "from": "smoke", "to": "sprint", "label": "smoke passed" },
+    { "from": "smoke", "to": "dev", "label": "smoke failed" },
+    { "from": "sprint", "to": "regress", "label": "stories accepted" },
+    { "from": "sprint", "to": "dev", "label": "UAT failed" },
+    { "from": "regress", "to": "change", "label": "no regressions" },
+    { "from": "regress", "to": "dev", "label": "regression found" },
+    { "from": "change", "to": "main", "label": "approved" },
+    { "from": "main", "to": "artifact", "label": "signed digest" },
+    { "from": "artifact", "to": "staging", "label": "staged image" },
+    { "from": "staging", "to": "cvm", "label": "UAT passed" },
+    { "from": "staging", "to": "dev", "label": "RCA to dev" },
+    { "from": "cvm", "to": "release", "label": "signed off" },
+    { "from": "release", "to": "observe", "label": "release metrics" },
+    { "from": "observe", "to": "release", "label": "rollback" }
+  ],
+  "steps": [
+    {
+      "title": "Open a pull request",
+      "text": "Each change starts as a branch and a pull request. The request is the unit of discussion: what changed, why, and what it touches.",
+      "lights": ["pr"],
+      "failure": "A change pushed straight to a shared branch skips every check below."
+    },
+    {
+      "title": "Review business, security and format",
+      "text": "Reviewers check if the code obeys three rules: the business rules behind the change, the security rules that close holes before they ship, and the code format the team shares. If the change fails any of them, it goes back to rework and the process begins again; if it passes, it merges into dev.",
+      "lights": ["review", "pr", "dev"],
+      "failure": "A review that only checks style passes a change that misunderstands the requirement."
+    },
+    {
+      "title": "Merge to dev and gate on quality",
+      "text": "The approved change merges into dev, and the SonarQube quality gate runs over it. If the gate fails, the change goes back to rework and the process starts again; if it passes, dev deploys to the dev environment.",
+      "lights": ["dev", "sonar", "devenv"],
+      "failure": "A gate that only warns is eventually ignored; blocking by default is what makes the gate matter."
+    },
+    {
+      "title": "Scan for vulnerabilities",
+      "text": "Security scans run over the running dev: dependency CVEs and static analysis. If the report is clean, the change moves on to performance tests; if it fails, the report goes to risk management, which either sends an exception-gated change back to dev or routes it straight back to dev for a fix, depending on the report.",
+      "lights": ["security", "risk", "dev", "perf"],
+      "failure": "A scan report with no owner becomes a list everyone has read and no one acts on."
+    },
+    {
+      "title": "Run performance and smoke tests",
+      "text": "Performance tests replay production-like traffic and fail the change when latency or error budgets break. Then a continuously updated smoke suite runs: this sprint's tasks, edge cases, previous UAT cases and the newly proposed tests. A failure sends the change back to dev work with a report; if both pass, the image is promoted to dev staging.",
+      "lights": ["perf", "smoke", "dev"],
+      "failure": "A smoke suite frozen from last quarter stops testing what this sprint changed."
+    },
+    {
+      "title": "Accept the sprint and check regressions",
+      "text": "Working in the dev staging environment, sprint UAT has the team and stakeholders walk this sprint's stories on the promoted image: each story is accepted or sent back with a report. Then regression checks run the suites for everything around it, so a fix in one story has not broken another. A failure in either returns the change to dev work; only a clean pair reaches the change request.",
+      "lights": ["sprint", "regress", "dev"],
+      "failure": "Reaching the change request with unaccepted stories turns the approver into the tester."
+    },
+    {
+      "title": "Raise the deployment change request",
+      "text": "The change request names the artifact, links the quality gate, the security report, the perf results, the smoke report, the sprint acceptance and the regression results, and lists the infrastructure change as code with its plan. Its gates check every one of them before an approver who did not write the change signs.",
+      "lights": ["change"],
+      "failure": "A change request that links nothing is just a signature on a page."
+    },
+    {
+      "title": "Approve, merge to main and sign",
+      "text": "On approval the change merges into main, the release branch, and the approved artifact is signed and pinned by digest. Main always describes what production should run.",
+      "lights": ["main", "artifact"],
+      "failure": "A tag that moves lets the release pull different bytes than the ones that were tested."
+    },
+    {
+      "title": "Accept on staging",
+      "text": "The signed artifact deploys to staging, where user acceptance testing has real users confirm the change does what was asked. On failure the change returns to dev work with an RCA number, so the root cause is tracked, not just the symptom.",
+      "lights": ["staging", "dev"],
+      "failure": "A staging that drifts from production proves nothing: acceptance there is acceptance of a different system."
+    },
+    {
+      "title": "Business sign-off",
+      "text": "Once UAT passes, the customer value teams and the feature owners sign off: the change is worth releasing, documented, and its rollout communicated.",
+      "lights": ["cvm", "release"],
+      "failure": "Shipping without sign-off releases a change nobody asked to receive first."
+    },
+    {
+      "title": "Promote to all users",
+      "text": "The image is promoted to all users: the release controller sends it a growing share of production traffic, or stands it up beside the current version, while telemetry watches error rate and latency. When a budget burns too fast the release rolls back to the previous digest on its own.",
+      "lights": ["release", "observe"],
+      "failure": "A rollout nobody watches is just a slow accident; automatic rollback is what makes gradual release safe."
+    }
+  ],
+  "compensations": [
+    {
+      "weakness": "A review that only checks style passes a change that misunderstands the requirement.",
+      "compensation": "Require the **business check** first in the review: what was asked, named by ticket; no ticket, no merge."
+    },
+    {
+      "weakness": "A critical CVE has no fixed version on release day.",
+      "compensation": "Risk management issues a time-boxed, named exception with an expiry; the **dependency bot** opens the bump the day a fix lands."
+    },
+    {
+      "weakness": "A smoke suite frozen from last quarter stops testing what this sprint changed.",
+      "compensation": "Regenerate the suite each sprint from **sprint tasks, edge cases, previous UAT cases and proposed tests**; a suite with no new case in a sprint is itself a failure."
+    },
+    {
+      "weakness": "A staging failure without a root cause returns as the same failure next sprint.",
+      "compensation": "Every staging rejection carries an **RCA number** back to dev, linked from the change request, so the rework names the cause, not the symptom."
+    },
+    {
+      "weakness": "A signed artifact is only as safe as its key.",
+      "compensation": "Keys live in the pipeline identity service with short lifetimes, and the fleet **verifies the signature** before starting anything; an unsigned or mismatched image is refused."
+    }
+  ],
+  "tradeoffs": [
+    "Every failure loops back to dev, which keeps main releasable but means a change can cycle many times before it promotes; the RCA numbers and reports are what keep the loops converging instead of spinning.",
+    "Risk management can exception-gate a security finding through, which unblocks the release but records a debt with an expiry that someone must own.",
+    "Staging acceptance plus business sign-off catches misunderstood and unwanted changes before all users, at the cost of a full staging environment and a sign-off queue on every release."
+  ],
+  "stack": [
+    "GitHub Actions",
+    "Java",
+    "Spring Boot",
+    "Testcontainers",
+    "SonarQube",
+    "Sigstore",
+    "OpenTelemetry",
+    "Prometheus"
+  ]
+}
